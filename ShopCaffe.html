@@ -1,0 +1,6237 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#3E1F00">
+<title>☕ Shop Caffè</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --br:#3E1F00;--br2:#6B3A1F;--br3:#C8956C;
+  --cr:#FFF8F0;--cr2:#F5E6D3;
+  --go:#D4A017;--go2:#F5D170;
+  --gn:#1A5C2A;--gn2:#E8F5E9;
+  --rd:#8B0000;--rd2:#FFEBEE;
+  --bl:#1F3864;--bl2:#DDEEFF;
+  --wh:#FFFFFF;--gy:#F0F0F0;--gy2:#CCCCCC;
+  --r:14px;--sh:0 2px 12px rgba(0,0,0,0.12);
+  --st:env(safe-area-inset-top,0px);
+  --sb:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--cr);color:#222}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh}
+/* HEADER */
+#hdr{background:var(--br);color:#fff;padding:calc(var(--st)+10px) 16px 10px;flex-shrink:0;display:flex;align-items:center;gap:10px;min-height:56px}
+#hdr h1{font-size:18px;font-weight:700;flex:1}
+#hdr .sub{font-size:11px;opacity:.7;display:block}
+.hbtn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+/* CONTENT */
+#cnt{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 8px}
+/* NAV */
+#nav{display:flex;background:var(--br);padding:0 0 calc(var(--sb)) 0;flex-shrink:0}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px;background:none;border:none;color:rgba(255,255,255,.6);font-size:9px;font-weight:600;cursor:pointer;gap:2px;min-height:56px;text-transform:uppercase;letter-spacing:.3px;position:relative}
+.nb .ic{font-size:20px;line-height:1}
+.nb.active{color:#fff;background:rgba(255,255,255,.12)}
+.nb .bdg{position:absolute;top:6px;right:calc(50% - 14px);background:var(--go);color:var(--br);border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;min-width:16px;text-align:center}
+/* CARDS */
+.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden}
+.card-h{padding:12px 14px;background:var(--cr2);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--gy)}
+.card-h h2{font-size:14px;font-weight:700;color:var(--br);flex:1}
+/* KPI */
+.kg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.kpi{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:14px 12px;display:flex;flex-direction:column;gap:4px}
+.kpi .lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.kpi .val{font-size:24px;font-weight:800;line-height:1}
+.kpi .sub{font-size:11px;color:#666}
+.kpi.br{background:var(--br);color:#fff}.kpi.br .lbl,.kpi.br .sub{color:rgba(255,255,255,.7)}.kpi.br .val{color:#fff}
+.kpi.go{background:var(--go2)}.kpi.go .val{color:var(--br)}
+.kpi.gn{background:var(--gn2)}.kpi.gn .val{color:var(--gn)}
+.kpi.rd{background:var(--rd2)}.kpi.rd .val{color:var(--rd)}
+/* LIST */
+.li{display:flex;align-items:center;padding:12px 14px;gap:10px;border-bottom:1px solid var(--gy);cursor:pointer;transition:background .1s;-webkit-user-select:none}
+.li:last-child{border-bottom:none}
+.li:active{background:var(--cr)}
+.li .av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.li .nf{flex:1;min-width:0}
+.li .nf .nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .nf .sb{font-size:12px;color:#888;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .rt{text-align:right;flex-shrink:0}
+.li .rt .am{font-size:15px;font-weight:700}
+.li .rt .sb{font-size:11px;color:#888}
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 20px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;width:100%;margin-bottom:8px;transition:opacity .15s,transform .1s}
+.btn:active{opacity:.8;transform:scale(.98)}
+.btn-p{background:var(--br);color:#fff}
+.btn-s{background:var(--cr2);color:var(--br)}
+.btn-ok{background:var(--gn);color:#fff}
+.btn-x{background:var(--rd);color:#fff}
+.btn-g{background:var(--go);color:var(--br)}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto;margin-bottom:0;border-radius:8px}
+/* FORMS */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--br2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.fc{width:100%;padding:12px 14px;border:2px solid var(--gy2);border-radius:10px;font-size:15px;background:#fff;-webkit-appearance:none;appearance:none;outline:none;transition:border-color .15s}
+.fc:focus{border-color:var(--go)}
+select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+/* TAGS */
+.tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.tg{background:var(--gn2);color:var(--gn)}
+.tr{background:var(--rd2);color:var(--rd)}
+.to{background:var(--go2);color:var(--br)}
+.tb{background:var(--bl2);color:var(--bl)}
+.ty{background:var(--gy);color:#555}
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.mo.open{opacity:1;pointer-events:all}
+.mc{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:20px 16px calc(20px + var(--sb));transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.mo.open .mc{transform:translateY(0)}
+.mh{width:36px;height:4px;background:var(--gy2);border-radius:2px;margin:0 auto 16px}
+.mc h3{font-size:18px;font-weight:800;color:var(--br);margin-bottom:16px}
+/* SEARCH */
+.sb{display:flex;align-items:center;background:#fff;border-radius:12px;box-shadow:var(--sh);padding:10px 14px;gap:8px;margin-bottom:10px}
+.sb input{flex:1;border:none;outline:none;font-size:15px;background:transparent}
+/* SECTION TITLE */
+.st{font-size:11px;font-weight:800;color:var(--br2);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 8px;padding:0 2px}
+/* EMPTY */
+.em{text-align:center;padding:40px 20px;color:#aaa}
+.em .ic{font-size:40px;margin-bottom:8px}
+/* ALERT */
+.al{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.aw{background:var(--go2);color:var(--br)}
+.ae{background:var(--rd2);color:var(--rd)}
+.as{background:var(--gn2);color:var(--gn)}
+/* TOAST */
+#tst{position:fixed;bottom:calc(80px + var(--sb));left:16px;right:16px;z-index:200;pointer-events:none}
+.tm{background:var(--br);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:600;margin-top:8px;opacity:0;transform:translateY(10px);transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.tm.show{opacity:1;transform:translateY(0)}
+/* PCHIP */
+.pc{background:var(--cr2);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.pc .pn{flex:1;font-size:13px;font-weight:600;color:var(--br)}
+.pc .pp{font-size:13px;color:#555}
+/* PROGRESS */
+.pb{flex:1;height:4px;background:var(--gy);border-radius:2px;overflow:hidden}
+.pbf{height:100%;border-radius:2px}
+/* DIVIDER */
+.dv{height:1px;background:var(--gy);margin:10px 0}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div style="flex:1">
+      <h1>☕ Shop Caffè</h1>
+      <span class="sub" id="hdr-sub">Dashboard</span>
+    </div>
+    <button class="hbtn" onclick="apriMenu()">⚙️</button>
+  </div>
+  <div id="cnt"></div>
+  <nav id="nav">
+    <button class="nb active" onclick="go('home')" id="nb-home"><span class="ic">🏠</span>Home</button>
+    <button class="nb" onclick="go('ordini')" id="nb-ordini"><span class="ic">📋</span>Ordini<span class="bdg" id="bdg-o" style="display:none"></span></button>
+    <button class="nb" onclick="go('clienti')" id="nb-clienti"><span class="ic">👤</span>Clienti</button>
+    <button class="nb" onclick="go('cassa')" id="nb-cassa"><span class="ic">💰</span>Cassa</button>
+    <button class="nb" onclick="go('magazzino')" id="nb-magazzino"><span class="ic">📦</span>Magazzino<span class="bdg" id="bdg-m" style="display:none"></span></button>
+  </nav>
+</div>
+<div id="mo" class="mo" onclick="closeMO(event)"><div class="mc" id="mc"></div></div>
+<div id="tst"></div>
+
+<script>
+const INITIAL_DATA = {
+  "prodotti": [
+    {
+      "codice": "44 21 CAFFE SHOP NERA",
+      "formato": "C44",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "prezzo_vendita": 0.18,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1365
+    },
+    {
+      "codice": "44 22 CAFFE SHOP ROSSA",
+      "formato": "C44",
+      "marchio": "CAFFE SHOP",
+      "miscela": "RED",
+      "prezzo_vendita": 0.19,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 31 CIALDORO PALERMO",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "prezzo_vendita": 0.22,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 33 CIALDORO ROMA",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "prezzo_vendita": 0.22,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 34 CIALDORO FIRENZE",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "FIRENZE",
+      "prezzo_vendita": 0.22,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 35 CIALDORO MILANO",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "prezzo_vendita": 0.22,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 36 CIALDORO CAGLIARI",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "CAGLIARI",
+      "prezzo_vendita": 0.22,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 37 CIALDORO VENEZIA",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "prezzo_vendita": 0.22,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 38 CIALDORO SAN MARINO",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1599
+    },
+    {
+      "codice": "44 41 MOKONE GRAN RISERVA",
+      "formato": "C44",
+      "marchio": "MOKONE",
+      "miscela": "GRAN RISERVA",
+      "prezzo_vendita": 0.22,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 42 MOKONE ETNA",
+      "formato": "C44",
+      "marchio": "MOKONE",
+      "miscela": "ETNA",
+      "prezzo_vendita": 0.22,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1406
+    },
+    {
+      "codice": "44 SANDEMETRIO AGRUMI",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "AGRUMI",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 18,
+      "prezzo_acquisto": 0.2344
+    },
+    {
+      "codice": "44 SANDEMETRIO CAFFE' AL GINSENG",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "GINSENG",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 18,
+      "prezzo_acquisto": 0.2344
+    },
+    {
+      "codice": "44 SANDEMETRIO ORZO",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "ORZO",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 18,
+      "prezzo_acquisto": 0.2189
+    },
+    {
+      "codice": "NES 21 CAFFE SHOP BLACK",
+      "formato": "NES",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.165
+    },
+    {
+      "codice": "NES 31 CIALDORO PALERMO",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1728
+    },
+    {
+      "codice": "NES 33 CIALDORO ROMA",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1728
+    },
+    {
+      "codice": "NES 35 CIALDORO MILANO",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1728
+    },
+    {
+      "codice": "NES 37 CIALDORO VENEZIA",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "NES 38 CIALDORO SAN MARINO",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.183
+    },
+    {
+      "codice": "NES 41 MOKONE BAR DOLCE",
+      "formato": "NES",
+      "marchio": "MOKONE",
+      "miscela": "BAR DOLCE",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1744
+    },
+    {
+      "codice": "NES 42 MOKONE BAR FORTE",
+      "formato": "NES",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "NES BORBONE BLU",
+      "formato": "NES",
+      "marchio": "BORBONE",
+      "miscela": "BLU",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1699
+    },
+    {
+      "codice": "NES DOLCE VITA ORZO 10 PZ",
+      "formato": "NES",
+      "marchio": "DOLCEVITA",
+      "miscela": "ORZO",
+      "prezzo_vendita": 3.5,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 1.9599
+    },
+    {
+      "codice": "NES DOLCE VITA NOCCIOLINO 10 PZ",
+      "formato": "NES",
+      "marchio": "DOLCEVITA",
+      "miscela": "NOCCIOLINO",
+      "prezzo_vendita": 3.5,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 2.7
+    },
+    {
+      "codice": "AMM 03 BORBONE BLU",
+      "formato": "AMM",
+      "marchio": "BORBONE",
+      "miscela": "BLU",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1699
+    },
+    {
+      "codice": "AMM 31 CIALDORO PALERMO",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "AMM 33 CIALDORO ROMA",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "AMM 35 CIALDORO MILANO",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "AMM 37 CIALDORO VENEZIA",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "AMM 38 CIALDORO SAN MARINO",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "AMM 42 MOKONE BAR FORTE",
+      "formato": "AMM",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "POINT 01 BORBONE BLU",
+      "formato": "POINT",
+      "marchio": "BORBONE",
+      "miscela": "NERO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.15
+    },
+    {
+      "codice": "POINT 21 CAFFE SHOP BLACK",
+      "formato": "POINT",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1551
+    },
+    {
+      "codice": "POINT 31 CIALDORO PALERMO",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1727
+    },
+    {
+      "codice": "POINT 33 CIALDORO ROMA",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1727
+    },
+    {
+      "codice": "POINT 35 CIALDORO MILANO",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1727
+    },
+    {
+      "codice": "POINT 37 CIALDORO VENEZIA",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.1727
+    },
+    {
+      "codice": "POINT 38 CIALDORO SAN MARINO",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.183
+    },
+    {
+      "codice": "POINT 41 MOKONE BAR DOLCE",
+      "formato": "POINT",
+      "marchio": "MOKONE",
+      "miscela": "BAR DOLCE",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "POINT 42 MOKONE BAR FORTE",
+      "formato": "POINT",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "prezzo_vendita": 0.24,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.168
+    },
+    {
+      "codice": "POINT AROMALIGHT GINSENG",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "GINSENG",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 30,
+      "prezzo_acquisto": 0.18
+    },
+    {
+      "codice": "POINT AROMALIGHT NOCCIOLINO",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "NOCCIOLINO",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 30,
+      "prezzo_acquisto": 0.18
+    },
+    {
+      "codice": "POINT AROMALIGHT ORZO",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "ORZO",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 30,
+      "prezzo_acquisto": 0.18
+    },
+    {
+      "codice": "POINT AROMALIGHT TE LIMONE",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "LIMONE",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 30,
+      "prezzo_acquisto": 0.18
+    },
+    {
+      "codice": "DG 21 CAFFE SHOP BLACK",
+      "formato": "DG",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "prezzo_vendita": 0.3,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "DG 22 CAFFE SHOP RED",
+      "formato": "DG",
+      "marchio": "CAFFE SHOP",
+      "miscela": "RED",
+      "prezzo_vendita": 0.3,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "DG 30 CIALDORO ETNA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "ETNA",
+      "prezzo_vendita": 0.3,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0.2168
+    },
+    {
+      "codice": "DG 31 CIALDORO PALERMO",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "prezzo_vendita": 0.3,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0.2168
+    },
+    {
+      "codice": "DG 33 CIALDORO ROMA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "prezzo_vendita": 0.3,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0.218
+    },
+    {
+      "codice": "DG 35 CIALDORO MILANO",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "prezzo_vendita": 0.3,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0.2168
+    },
+    {
+      "codice": "DG 37 CIALDORO VENEZIA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "prezzo_vendita": 0.3,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0.2168
+    },
+    {
+      "codice": "DG 38 CIALDORO SAN MARINO",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "prezzo_vendita": 0.32,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0.2168
+    },
+    {
+      "codice": "DG CIALDORO GINSENG 12PZ",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "GINSENG",
+      "prezzo_vendita": 4.2,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "DG DOLCEVITA GIANDUIA 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "GIANDUIA",
+      "prezzo_vendita": 4.2,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "DG DOLCEVITA GINSENG 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "GINSENG",
+      "prezzo_vendita": 4.2,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "DG DOLCEVITA MAXI CIOCK 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "MAXI CIOCC",
+      "prezzo_vendita": 4.2,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "DG DOLCEVITA NOCCIOLONE 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "NOCCIOLNE",
+      "prezzo_vendita": 4.2,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "CFY 30 CIALDORO ETNA",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "ETNA",
+      "prezzo_vendita": 0.325,
+      "pz_cartone": 80,
+      "prezzo_acquisto": 0.2562
+    },
+    {
+      "codice": "CFY 32 CIALDORO NAPOLI",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "NAPOLI",
+      "prezzo_vendita": 0.325,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.2562
+    },
+    {
+      "codice": "CFY 35 CIALDORO MILANO",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "prezzo_vendita": 0.325,
+      "pz_cartone": 80,
+      "prezzo_acquisto": 0.2562
+    },
+    {
+      "codice": "CFY 38 CIALDORO SAN MARINO",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "prezzo_vendita": 0.325,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.2562
+    },
+    {
+      "codice": "CFY 42 MOKONE BAR FORTE",
+      "formato": "CFY",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "prezzo_vendita": 0.325,
+      "pz_cartone": 80,
+      "prezzo_acquisto": 0.2562
+    },
+    {
+      "codice": "MKD MOKADOR 01 MARYLIN 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "MARYLIN",
+      "prezzo_vendita": 9.5,
+      "pz_cartone": 4,
+      "prezzo_acquisto": 5.8
+    },
+    {
+      "codice": "MKD MOKADOR 02 SOPHIA 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "SOPHIA",
+      "prezzo_vendita": 9.5,
+      "pz_cartone": 4,
+      "prezzo_acquisto": 5.8
+    },
+    {
+      "codice": "MKD MOKADOR 03 BRIGITTE 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "BRIGITTE",
+      "prezzo_vendita": 9.5,
+      "pz_cartone": 4,
+      "prezzo_acquisto": 5.8
+    },
+    {
+      "codice": "MKD MOKADOR 04 GRACE DEC 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "GRACE",
+      "prezzo_vendita": 9.9,
+      "pz_cartone": 4,
+      "prezzo_acquisto": 5.8
+    },
+    {
+      "codice": "MKD MOKADOR 05 ORZO 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "ORZO",
+      "prezzo_vendita": 9.9,
+      "pz_cartone": 4,
+      "prezzo_acquisto": 5.8
+    },
+    {
+      "codice": "MKD MOKADOR 06 TE LIMONE 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "LIMONE",
+      "prezzo_vendita": 9.9,
+      "pz_cartone": 4,
+      "prezzo_acquisto": 5.8
+    },
+    {
+      "codice": "MKD MOKADOR 07 GINSENG 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "GINSENG",
+      "prezzo_vendita": 9.9,
+      "pz_cartone": 4,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "MKT MOKADOR 01 PIU' CREMA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "PIU CREMA",
+      "prezzo_vendita": 0.33,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.2001
+    },
+    {
+      "codice": "MKT MOKADOR 02 CREMA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "CREMA",
+      "prezzo_vendita": 0.33,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.2001
+    },
+    {
+      "codice": "MKT MOKADOR 03 AROMA TOP",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "AROMA TOP",
+      "prezzo_vendita": 0.33,
+      "pz_cartone": 100,
+      "prezzo_acquisto": 0.2001
+    },
+    {
+      "codice": "MKT MOKADOR 04 DECA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "DECA",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0.2001
+    },
+    {
+      "codice": "MKT MOKADOR 05 ORZO",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "ORZO",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "MKT MOKADOR 06 THE' LIMONE",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "LIMONE",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "MKT MOKADOR 08 GINSENG",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "GINSENG",
+      "prezzo_vendita": 0.35,
+      "pz_cartone": 50,
+      "prezzo_acquisto": 0
+    },
+    {
+      "codice": "GRA 03 CIALDORO GRANI \"ROMA\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "prezzo_vendita": 16.0,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 11.0
+    },
+    {
+      "codice": "GRA 05 CIALDORO GRANI \"MILANO\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "prezzo_vendita": 17.0,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 11.0
+    },
+    {
+      "codice": "GRA 07 CIALDORO GRANI \"VENEZIA\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "prezzo_vendita": 18.0,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 11.0
+    },
+    {
+      "codice": "GRA 08 CIALDORO GRANI \"DECAFFEINATO\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "DECA",
+      "prezzo_vendita": 20.0,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 12.0
+    },
+    {
+      "codice": "ACC BICCHIERI CARTA CIALDORO 50 pz",
+      "formato": "ACC",
+      "marchio": "ACCESSORI",
+      "miscela": "BICCHIERI 80CC",
+      "prezzo_vendita": 1.0,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 0.6
+    },
+    {
+      "codice": "ESSSECAFFE SEGAFREDO CAPSULE",
+      "formato": "ESSSE",
+      "marchio": "CIALDORO",
+      "miscela": "BLACK",
+      "prezzo_vendita": 0.31,
+      "pz_cartone": 1,
+      "prezzo_acquisto": 0.2
+    }
+  ],
+  "clienti": [
+    {
+      "id": "CLI-001",
+      "nome": "ALLAINI MONICA",
+      "telefono": "+39 339 45 18 596",
+      "indirizzo": "VIA DUCA DELLA VITTORIA 157",
+      "zona": "RUFINA",
+      "formato_abituale": "C44",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "02/07/2026",
+      "ultima_consegna_3": "02/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-002",
+      "nome": "ALLAINI PADRE",
+      "telefono": "",
+      "indirizzo": "VIA ZNOJMO",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "DG",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 50,
+      "prezzo_abituale": 0.3,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-003",
+      "nome": "Autocarrozzeria Molin del Piano",
+      "telefono": "+39 339 46 370 76",
+      "indirizzo": "Via di Serravalle, 2",
+      "zona": "MOLINO",
+      "formato_abituale": "C44",
+      "miscela_abituale": "VENEZIA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 22.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "09/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-004",
+      "nome": "BABBINI SARA",
+      "telefono": "+39 338 453 93 20",
+      "indirizzo": "VIA POGGIO BOSCONE 23",
+      "zona": "PELAGO",
+      "formato_abituale": "GR",
+      "miscela_abituale": "VENEZIA",
+      "qty_abituale": 2,
+      "prezzo_abituale": 18.0,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "08/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-005",
+      "nome": "BALLI FRANCO",
+      "telefono": "+39 333 41 89 093",
+      "indirizzo": "VIA ALDO MORO",
+      "zona": "PELAGO",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-006",
+      "nome": "BARBIERI GIUSY",
+      "telefono": "+39 366 486 34 07",
+      "indirizzo": "VIA FRATELLI ROSELLI 15",
+      "zona": "RUFINA",
+      "formato_abituale": "GRA",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 2,
+      "prezzo_abituale": 16.0,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-007",
+      "nome": "BETTARELLI-SAMMATARO",
+      "telefono": "+39 334 24 61 953",
+      "indirizzo": "VIA VERDI",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "ESSE",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.32,
+      "sospeso": 1.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "04/07/2026",
+      "ultima_consegna_3": "04/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-008",
+      "nome": "BATISTONI MARCO",
+      "telefono": "+39 320 11 96 575",
+      "indirizzo": "VIALE HANOI 1",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "PIU CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-009",
+      "nome": "BERTI ANGELA",
+      "telefono": "+39 340 71 36 532",
+      "indirizzo": "C/O FRESCOBALDI RECEPTION",
+      "zona": "SIECI",
+      "formato_abituale": "NES",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "22/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-010",
+      "nome": "BERTI SIMONETTA",
+      "telefono": "+39 353 406 37 56",
+      "indirizzo": "VIA LABIZI",
+      "zona": "SAN FRANCESCO",
+      "formato_abituale": "AMM",
+      "miscela_abituale": "B.BLU",
+      "qty_abituale": 200,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-011",
+      "nome": "BETTINI",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-012",
+      "nome": "BINI ANTONELLA",
+      "telefono": "+39 338 16 00 842",
+      "indirizzo": "via tanzini 11 TAPPEZZERIA rIGACCI",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "09/06/2026",
+      "ultima_consegna_3": "30/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-013",
+      "nome": "BRACCINI ANTONIO",
+      "telefono": "+39 335 655 05 88",
+      "indirizzo": "",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "C44",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-014",
+      "nome": "BRUSCANTINI MIRKO",
+      "telefono": "+39 333 63 57 420",
+      "indirizzo": "VIA LISBONA 21/B",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "NES",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-015",
+      "nome": "BURBERI PAOLO",
+      "telefono": "+39 339 168 38 46",
+      "indirizzo": "",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "NES",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "09/06/2026",
+      "ultima_consegna_3": "10/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-016",
+      "nome": "CAPPELLI LUCA",
+      "telefono": "+39 366 72 22 29",
+      "indirizzo": "VIA PIANA 2/C",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "POINT",
+      "miscela_abituale": "BLACK",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-017",
+      "nome": "CASO ROBERTO",
+      "telefono": "+39 342 58 41 859",
+      "indirizzo": "VIA TORRACCIA 49",
+      "zona": "REGGELLO",
+      "formato_abituale": "C44",
+      "miscela_abituale": "BLACK",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "22/06/2026",
+      "ultima_consegna_2": "30/06/2026",
+      "ultima_consegna_3": "06/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-018",
+      "nome": "CEVEST PRODUZIONE",
+      "telefono": "",
+      "indirizzo": "VIA PUCCINI 8, SIECI",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "C44",
+      "miscela_abituale": "PALERMO",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-019",
+      "nome": "CEVEST UFFICIO",
+      "telefono": "",
+      "indirizzo": "VIA PUCCINI 8, SIECI",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "C44",
+      "miscela_abituale": "PALERMO",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-020",
+      "nome": "CHECCHI ALESSANDRA",
+      "telefono": "+39 347 65 32 343",
+      "indirizzo": "via di reginaldo giuliani 02",
+      "zona": "Pelago",
+      "formato_abituale": "MKD",
+      "miscela_abituale": "4",
+      "qty_abituale": 4,
+      "prezzo_abituale": 9.9,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-021",
+      "nome": "CHIARA - TAGLIATI X IL SUCCESSO",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "",
+      "formato_abituale": "GRA",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 2,
+      "prezzo_abituale": 16.0,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-022",
+      "nome": "CI SERVICE SNC",
+      "telefono": "+39 334 39 55 687",
+      "indirizzo": "VIA FRATELLI CERVI 46",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "C44",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-023",
+      "nome": "CIOLLI FIGLIA",
+      "telefono": "",
+      "indirizzo": "VIA PRAGA 9",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "Più CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-024",
+      "nome": "CIOLLI GRAZIELLA",
+      "telefono": "+39 328 54 73 616",
+      "indirizzo": "VIA PRAGA 9",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "POINT",
+      "miscela_abituale": "BLACK",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-025",
+      "nome": "CIPRIANI GIULIANA",
+      "telefono": "+39 339 61 45 986",
+      "indirizzo": "VIA LA CROCELLINA 15",
+      "zona": "DIACCETO",
+      "formato_abituale": "DIVA",
+      "miscela_abituale": "SOPHIA",
+      "qty_abituale": 2,
+      "prezzo_abituale": 9.5,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "13/06/2026",
+      "ultima_consegna_3": "13/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-026",
+      "nome": "COSTANTI FILIPPO",
+      "telefono": "+39 338 34 96 155",
+      "indirizzo": "",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "NES",
+      "miscela_abituale": "BLACK",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "13/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-027",
+      "nome": "COSTANTI MAURIZIO",
+      "telefono": "+39 338 201 28 13",
+      "indirizzo": "VIA GIOACCHINO ROSSINI 18",
+      "zona": "SIECI",
+      "formato_abituale": "NES",
+      "miscela_abituale": "BLACK",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "15/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-028",
+      "nome": "D'ANTIMI SANDRO",
+      "telefono": "+39 348 733 15 43",
+      "indirizzo": "SAN FRANCESCO",
+      "zona": "PELAGO",
+      "formato_abituale": "MKD",
+      "miscela_abituale": "SOPHIA",
+      "qty_abituale": 4,
+      "prezzo_abituale": 9.5,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "22/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-029",
+      "nome": "DEI ARCHITETTO CLAUDIA",
+      "telefono": "+39 348 271 75 56",
+      "indirizzo": "PIAZZA CAIROLI 4 E (STUDIO)",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKD",
+      "miscela_abituale": "SOPHIA",
+      "qty_abituale": 4,
+      "prezzo_abituale": 9.5,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "15/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-030",
+      "nome": "DEI ORAZIO",
+      "telefono": "+39 339 71 90 603",
+      "indirizzo": "VIA FRATELLI CERVI 77",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "44",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 200,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "14/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-031",
+      "nome": "DEL SOLDATO LORENZO",
+      "telefono": "+39 339 46 10 464",
+      "indirizzo": "VIA QUONA 11",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "GRA",
+      "miscela_abituale": "",
+      "qty_abituale": 2,
+      "prezzo_abituale": 16.0,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-032",
+      "nome": "DI LELLA DANIELE",
+      "telefono": "+39 391 73 98 646",
+      "indirizzo": "VIA PARIGI 3",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "AROMA TOP",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "13/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-033",
+      "nome": "DI PRISCO ALESSANDRO",
+      "telefono": "+39 338 47 36 458",
+      "indirizzo": "VIA ZNOJMO 75",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "NES",
+      "miscela_abituale": "PALERMO",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "08/07/2026",
+      "ultima_consegna_3": "08/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-034",
+      "nome": "ELETTROFORNITURE 2000 S.R.L.",
+      "telefono": "",
+      "indirizzo": "VIA LISBONA 21",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "C44",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.27,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "30/06/2026",
+      "ultima_consegna_3": "16/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-035",
+      "nome": "DEGL'INNOCENTI SIMONA",
+      "telefono": "",
+      "indirizzo": "PIAZZA",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "CFY",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 80,
+      "prezzo_abituale": 0.325,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-036",
+      "nome": "FANTECHI & C. S.R.L.",
+      "telefono": "",
+      "indirizzo": "PIAZZA GIORGIO WASHINGTON, 25",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "POINT",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 300,
+      "prezzo_abituale": 0.29,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-037",
+      "nome": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "telefono": "",
+      "indirizzo": "VIA ERMENEGILDO SANTONI, 3",
+      "zona": "PELAGO",
+      "formato_abituale": "C44",
+      "miscela_abituale": "VENEZIA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "18/07/2026",
+      "ultima_consegna_2": "18/07/2026",
+      "ultima_consegna_3": "18/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-038",
+      "nome": "GALLI STEFANO",
+      "telefono": "+39",
+      "indirizzo": "VIA LONDRA 16",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "DG",
+      "miscela_abituale": "MILANO",
+      "qty_abituale": 50,
+      "prezzo_abituale": 0.3,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-039",
+      "nome": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "telefono": "+39 331 83 11 969",
+      "indirizzo": "VIA CECCHINI 50062",
+      "zona": "DICOMANO",
+      "formato_abituale": "C44",
+      "miscela_abituale": "BLACK",
+      "qty_abituale": 600,
+      "prezzo_abituale": 0.18,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "15/07/2026",
+      "ultima_consegna_2": "15/07/2026",
+      "ultima_consegna_3": "15/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-040",
+      "nome": "GERI DANILO",
+      "telefono": "+39 339 40 266 74",
+      "indirizzo": "VIA DI VOLOGNANO",
+      "zona": "VOLOGNANO",
+      "formato_abituale": "C44",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-041",
+      "nome": "GIUNTINI SOCIETA' COOPERATIVA SOCIALE ONLUS",
+      "telefono": "+39 333 93 77 497",
+      "indirizzo": "VIA DEL CAPITANO, 2",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "POINT",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "04/06/2026",
+      "ultima_consegna_3": "04/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-042",
+      "nome": "HOXHAJ LULEZIM",
+      "telefono": "328 58 92 752",
+      "indirizzo": "GHIBERTI 130",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-043",
+      "nome": "KALLARI ALTIN",
+      "telefono": "329 939 10 00",
+      "indirizzo": "BRESCIA VIA RE ALBOINO 11/ DOMICILIO VIA1 MAGGIO 72",
+      "zona": "RIGNANO SULL'ARNO",
+      "formato_abituale": "POINT ",
+      "miscela_abituale": "B.DOLCE",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "22/06/2026",
+      "ultima_consegna_3": "22/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-044",
+      "nome": "KRASNIQI SUAD",
+      "telefono": "+39 340 455 333",
+      "indirizzo": "",
+      "zona": "RIGNANO SULL'ARNO",
+      "formato_abituale": "MKD",
+      "miscela_abituale": "MARYLIN",
+      "qty_abituale": 4,
+      "prezzo_abituale": 9.5,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "15/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-045",
+      "nome": "LANDI DEIVI",
+      "telefono": "+39 366 24 67 010",
+      "indirizzo": "VIA ALESSANDRINI 15",
+      "zona": "PELAGO",
+      "formato_abituale": "POINT",
+      "miscela_abituale": "MILANO",
+      "qty_abituale": 300,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "13/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-046",
+      "nome": "LAPO CLIENTE INCISA",
+      "telefono": "+39 333 40 580 35",
+      "indirizzo": "",
+      "zona": "",
+      "formato_abituale": "CFY",
+      "miscela_abituale": "",
+      "qty_abituale": 160,
+      "prezzo_abituale": 0.32,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-047",
+      "nome": "LOLLI FRANCESCA",
+      "telefono": "+39 331 714 61 56",
+      "indirizzo": "VIA SANTORI 28",
+      "zona": "DIACCETO",
+      "formato_abituale": "C44",
+      "miscela_abituale": "VENEZIA",
+      "qty_abituale": 200,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "13/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-048",
+      "nome": "MARCHIONNI CARLA",
+      "telefono": "+39 334 97 240 95",
+      "indirizzo": "VIA LUIGI GORI 1",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "POINT",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 200,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "08/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-049",
+      "nome": "MARCHIONNI MARCELLO",
+      "telefono": "+39 339 40 20 462",
+      "indirizzo": "VIA IV NOVEMBRE 17 (SHOP)",
+      "zona": "SAN FRANCESCO",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "PIU' CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "13/07/2026",
+      "ultima_consegna_2": "15/07/2026",
+      "ultima_consegna_3": "15/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-050",
+      "nome": "MARCHIONNI MARCO",
+      "telefono": "+39 338 29 58 480",
+      "indirizzo": "VIA FRATELLI CERVI 79",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "Più CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-051",
+      "nome": "MATERASSI MARTA",
+      "telefono": "+39 334 344 68 95",
+      "indirizzo": "VIA VERDI 77",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "DIVA",
+      "miscela_abituale": "SOPHIA",
+      "qty_abituale": 5,
+      "prezzo_abituale": 9.5,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "09/06/2026",
+      "ultima_consegna_2": "18/07/2026",
+      "ultima_consegna_3": "18/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-052",
+      "nome": "MAZZUOLI PATRIZIA",
+      "telefono": "",
+      "indirizzo": "VIA CASENTINESE 43",
+      "zona": "DIACCETO",
+      "formato_abituale": "DG",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.3,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "13/06/2026",
+      "ultima_consegna_3": "11/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-053",
+      "nome": "MISURI MIRELLA",
+      "telefono": "+39 349 33 22 110",
+      "indirizzo": "VIA LE CASE 4",
+      "zona": "PELAGO",
+      "formato_abituale": "POINT",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 24.0,
+      "ultima_consegna_1": "15/06/2026",
+      "ultima_consegna_2": "02/07/2026",
+      "ultima_consegna_3": "02/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-054",
+      "nome": "MISURI FIGLIA",
+      "telefono": "",
+      "indirizzo": "VIA LE CASE 4",
+      "zona": "PELAGO",
+      "formato_abituale": "NES",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "15/06/2026",
+      "ultima_consegna_3": "02/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-055",
+      "nome": "MONCINI SIMONE",
+      "telefono": "+39 339 280 66 47",
+      "indirizzo": "VIALE DUCA DELLA VITTORIA, 129",
+      "zona": "RUFINA",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-056",
+      "nome": "MORANDI IACOPO",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "C44",
+      "miscela_abituale": "VENEZIA",
+      "qty_abituale": 200,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-057",
+      "nome": "Mp di Simone e Tommaso Pieraccioni S.A.S.",
+      "telefono": "+39 334 57 59 444",
+      "indirizzo": "Via Francesco Petrarca, 58",
+      "zona": "Pelago",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "",
+      "qty_abituale": 300,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-058",
+      "nome": "NADDI STEFANO",
+      "telefono": "+39 335 67 98 135",
+      "indirizzo": "",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "AMM",
+      "miscela_abituale": "ROMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-059",
+      "nome": "PARIVIR SIMONETTA",
+      "telefono": "+39 338 400 20 56",
+      "indirizzo": "VIA JURI GAGARIN 19 MONTEBONELLO",
+      "zona": "pontassieve",
+      "formato_abituale": "C44",
+      "miscela_abituale": "FIRENZE",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-060",
+      "nome": "PONTASSIEVE SERVIZI",
+      "telefono": "328 589 27 52",
+      "indirizzo": "VIA GHIBERTI 130",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "Più CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "13/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-061",
+      "nome": "PRISCO ALESSANDRO",
+      "telefono": "",
+      "indirizzo": "VIA ZNOJMO 75",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "NES",
+      "miscela_abituale": "MILANO",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-062",
+      "nome": "RETTORI MATTEO",
+      "telefono": "+39",
+      "indirizzo": "",
+      "zona": "MOLIN DEL PIANO",
+      "formato_abituale": "NES",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-063",
+      "nome": "RINAUDO VINCENZO",
+      "telefono": "+39 327 38 170 67",
+      "indirizzo": "",
+      "zona": "",
+      "formato_abituale": "C44",
+      "miscela_abituale": "PALERMO",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "20/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-064",
+      "nome": "RIZZONE MARCO",
+      "telefono": "+39 331 150 80 34",
+      "indirizzo": "VIA MOLIN DEL PIANO 17 / PONTASSIEVE",
+      "zona": "SIECI",
+      "formato_abituale": "DG",
+      "miscela_abituale": "PALERMO",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.3,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "15/07/2026",
+      "ultima_consegna_3": "15/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-065",
+      "nome": "DA ELIMINARE",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "",
+      "formato_abituale": "",
+      "miscela_abituale": "",
+      "qty_abituale": 0,
+      "prezzo_abituale": 0,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-066",
+      "nome": "ROMANELLI ALESSANDRO",
+      "telefono": "",
+      "indirizzo": "VIA PRAGA 9",
+      "zona": "",
+      "formato_abituale": "C44",
+      "miscela_abituale": "RED",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-067",
+      "nome": "SAMMATARO CRISTINA",
+      "telefono": "+39 334 24 61 953",
+      "indirizzo": "VIALE DIAZ 12",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-068",
+      "nome": "SANSONE SRL",
+      "telefono": "",
+      "indirizzo": "VIA DEL VICANO 4",
+      "zona": "PELAGO",
+      "formato_abituale": "C44",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-069",
+      "nome": "SCARDICCI FABIO",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "C44",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 1.0,
+      "ultima_consegna_1": "04/06/2026",
+      "ultima_consegna_2": "04/06/2026",
+      "ultima_consegna_3": "13/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-070",
+      "nome": "DA SOSTITUIRE",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "",
+      "formato_abituale": "",
+      "miscela_abituale": "",
+      "qty_abituale": 0,
+      "prezzo_abituale": 0,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-071",
+      "nome": "SOLDI ANTONELLA",
+      "telefono": "+39 338 70 87 139",
+      "indirizzo": "VIA MOLIN DEL PIANO 7/A",
+      "zona": "SIECI",
+      "formato_abituale": "C44",
+      "miscela_abituale": "",
+      "qty_abituale": 400,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "13/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-072",
+      "nome": "SPINELLI EUGENIO",
+      "telefono": "+39 331 36 57  665",
+      "indirizzo": "VIA DON FACIBENI 4",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "NES",
+      "miscela_abituale": "BLACK",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "06/07/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-073",
+      "nome": "STARNOTTI LAPO",
+      "telefono": "+39 333 40 58 035",
+      "indirizzo": "VIA FRANCESCO N 122",
+      "zona": "RIGNANO",
+      "formato_abituale": "CFY",
+      "miscela_abituale": "ETNA",
+      "qty_abituale": 160,
+      "prezzo_abituale": 0.325,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-074",
+      "nome": "STECCHI ALBERTO",
+      "telefono": "+39 333 66 28 819",
+      "indirizzo": "",
+      "zona": "SIECI",
+      "formato_abituale": "C44",
+      "miscela_abituale": "",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-075",
+      "nome": "TARDUGNO ANTONIO",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "PONTASSIEVE",
+      "formato_abituale": "MKT",
+      "miscela_abituale": "CREMA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.33,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-076",
+      "nome": "ULIVA MASSIMILIANO",
+      "telefono": "+39 338 960 97 38",
+      "indirizzo": "VIA C.SANT'ANDREA 21",
+      "zona": "PELAGO",
+      "formato_abituale": "NES",
+      "miscela_abituale": "VENEZIA",
+      "qty_abituale": 100,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-077",
+      "nome": "VENTURI MARIO",
+      "telefono": "+39 338 85 80 686",
+      "indirizzo": "VIA PARIGI 17",
+      "zona": "Pontassieve",
+      "formato_abituale": "MKD",
+      "miscela_abituale": "DECA",
+      "qty_abituale": 2,
+      "prezzo_abituale": 9.9,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "",
+      "note": ""
+    },
+    {
+      "id": "CLI-078",
+      "nome": "VIVOLI LORENA",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "DIACCETO",
+      "formato_abituale": "NES",
+      "miscela_abituale": "B.FORTE",
+      "qty_abituale": 200,
+      "prezzo_abituale": 0.24,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "",
+      "ultima_consegna_2": "",
+      "ultima_consegna_3": "30/06/2026",
+      "note": ""
+    },
+    {
+      "id": "CLI-079",
+      "nome": "AMHAD SANTO FELAFEL",
+      "telefono": "",
+      "indirizzo": "",
+      "zona": "DIACCETO",
+      "formato_abituale": "C44",
+      "miscela_abituale": "CAGLIARI",
+      "qty_abituale": 200,
+      "prezzo_abituale": 0.22,
+      "sospeso": 0.0,
+      "ultima_consegna_1": "03/06/2026",
+      "ultima_consegna_2": "06/07/2026",
+      "ultima_consegna_3": "06/07/2026",
+      "note": ""
+    }
+  ],
+  "storico": [
+    {
+      "id_consegna": "CON-001",
+      "data": "06/03/2026",
+      "id_cliente": "CLI-079",
+      "nome_cliente": "AMHAD SANTO FELAFEL",
+      "zona": "DIACCETO",
+      "formato": "C44",
+      "miscela": "FIRENZE",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-001"
+    },
+    {
+      "id_consegna": "CON-002",
+      "data": "06/04/2026",
+      "id_cliente": "CLI-069",
+      "nome_cliente": "SCARDICCI FABIO",
+      "zona": "PONTASSIEVE",
+      "formato": "C44",
+      "miscela": "ROMA",
+      "qty": 25,
+      "prezzo_unit": 0.22,
+      "importo": 5.5,
+      "incassato": 5.0,
+      "n_ordine": "ORD-004"
+    },
+    {
+      "id_consegna": "CON-003",
+      "data": "06/04/2026",
+      "id_cliente": "CLI-041",
+      "nome_cliente": "GIUNTINI SOCIETA' COOPERATIVA SOCIALE ONLUS",
+      "zona": "PONTASSIEVE",
+      "formato": "POINT",
+      "miscela": "PALERMO",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-003"
+    },
+    {
+      "id_consegna": "CON-004",
+      "data": "06/03/2026",
+      "id_cliente": "CLI-079",
+      "nome_cliente": "AMHAD SANTO FELAFEL",
+      "zona": "DIACCETO",
+      "formato": "C44",
+      "miscela": "FIRENZE",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-001"
+    },
+    {
+      "id_consegna": "CON-005",
+      "data": "06/04/2026",
+      "id_cliente": "CLI-041",
+      "nome_cliente": "GIUNTINI SOCIETA' COOPERATIVA SOCIALE ONLUS",
+      "zona": "PONTASSIEVE",
+      "formato": "POINT",
+      "miscela": "PALERMO",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-003"
+    },
+    {
+      "id_consegna": "CON-006",
+      "data": "04/06/2026",
+      "id_cliente": "CLI-069",
+      "nome_cliente": "SCARDICCI FABIO",
+      "zona": "PONTASSIEVE",
+      "formato": "C44",
+      "miscela": "ROMA",
+      "qty": 25,
+      "prezzo_unit": 0.22,
+      "importo": 5.5,
+      "incassato": 5.0,
+      "n_ordine": "ORD-004"
+    },
+    {
+      "id_consegna": "CON-007",
+      "data": "06/09/2026",
+      "id_cliente": "CLI-003",
+      "nome_cliente": "Autocarrozzeria Molin del Piano",
+      "zona": "MOLINO",
+      "formato": "C44",
+      "miscela": "FIRENZE",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 0.0,
+      "n_ordine": "ORD-005"
+    },
+    {
+      "id_consegna": "CON-008",
+      "data": "06/09/2026",
+      "id_cliente": "CLI-012",
+      "nome_cliente": "BINI ANTONELLA",
+      "zona": "PONTASSIEVE",
+      "formato": "MKT",
+      "miscela": "CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-006"
+    },
+    {
+      "id_consegna": "CON-009",
+      "data": "06/09/2026",
+      "id_cliente": "CLI-015",
+      "nome_cliente": "BURBERI PAOLO",
+      "zona": "PONTASSIEVE",
+      "formato": "NES",
+      "miscela": "PALERMO",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-007"
+    },
+    {
+      "id_consegna": "CON-010",
+      "data": "06/09/2026",
+      "id_cliente": "CLI-051",
+      "nome_cliente": "MATERASSI MARTA",
+      "zona": "PONTASSIEVE",
+      "formato": "DIVA",
+      "miscela": "SOPHIA",
+      "qty": 3,
+      "prezzo_unit": 9.5,
+      "importo": 28.5,
+      "incassato": 28.5,
+      "n_ordine": "ORD-008"
+    },
+    {
+      "id_consegna": "CON-011",
+      "data": "06/09/2026",
+      "id_cliente": "CLI-051",
+      "nome_cliente": "MATERASSI MARTA",
+      "zona": "PONTASSIEVE",
+      "formato": "DIVA",
+      "miscela": "GRACE",
+      "qty": 2,
+      "prezzo_unit": 9.9,
+      "importo": 19.8,
+      "incassato": 19.8,
+      "n_ordine": "ORD-009"
+    },
+    {
+      "id_consegna": "CON-012",
+      "data": "06/10/2026",
+      "id_cliente": "CLI-017",
+      "nome_cliente": "CASO ROBERTO",
+      "zona": "REGGELLO",
+      "formato": "C44",
+      "miscela": "BLACK",
+      "qty": 100,
+      "prezzo_unit": 0.18,
+      "importo": 18.0,
+      "incassato": 18.0,
+      "n_ordine": "ORD-013"
+    },
+    {
+      "id_consegna": "CON-013",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "ROMA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-014"
+    },
+    {
+      "id_consegna": "CON-014",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "GINSENG",
+      "qty": 68,
+      "prezzo_unit": 0.35,
+      "importo": 23.8,
+      "incassato": 23.8,
+      "n_ordine": "ORD-015"
+    },
+    {
+      "id_consegna": "CON-015",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-025",
+      "nome_cliente": "CIPRIANI GIULIANA",
+      "zona": "DIACCETO",
+      "formato": "DIVA",
+      "miscela": "SOPHIA",
+      "qty": 2,
+      "prezzo_unit": 9.5,
+      "importo": 19.0,
+      "incassato": 19.0,
+      "n_ordine": "ORD-010"
+    },
+    {
+      "id_consegna": "CON-016",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-025",
+      "nome_cliente": "CIPRIANI GIULIANA",
+      "zona": "DIACCETO",
+      "formato": "DIVA",
+      "miscela": "MARYLIN",
+      "qty": 2,
+      "prezzo_unit": 9.5,
+      "importo": 19.0,
+      "incassato": 19.0,
+      "n_ordine": "ORD-011"
+    },
+    {
+      "id_consegna": "CON-017",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-071",
+      "nome_cliente": "SOLDI ANTONELLA",
+      "zona": "SIECI",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 500,
+      "prezzo_unit": 0.22,
+      "importo": 110.0,
+      "incassato": 110.0,
+      "n_ordine": "ORD-012"
+    },
+    {
+      "id_consegna": "CON-018",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-069",
+      "nome_cliente": "SCARDICCI FABIO",
+      "zona": "PONTASSIEVE",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-002"
+    },
+    {
+      "id_consegna": "CON-019",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-026",
+      "nome_cliente": "COSTANTI FILIPPO",
+      "zona": "PONTASSIEVE",
+      "formato": "NES",
+      "miscela": "BLACK",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-016"
+    },
+    {
+      "id_consegna": "CON-020",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-052",
+      "nome_cliente": "MAZZUOLI PATRIZIA",
+      "zona": "DIACCETO",
+      "formato": "DG",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.3,
+      "importo": 30.0,
+      "incassato": 30.0,
+      "n_ordine": "ORD-018"
+    },
+    {
+      "id_consegna": "CON-021",
+      "data": "13/06/2026",
+      "id_cliente": "CLI-047",
+      "nome_cliente": "LOLLI FRANCESCA",
+      "zona": "DIACCETO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-019"
+    },
+    {
+      "id_consegna": "CON-022",
+      "data": "14/06/2026",
+      "id_cliente": "CLI-030",
+      "nome_cliente": "DEI ORAZIO",
+      "zona": "PONTASSIEVE",
+      "formato": "44",
+      "miscela": "ROMA",
+      "qty": 300,
+      "prezzo_unit": 0.22,
+      "importo": 66.0,
+      "incassato": 66.0,
+      "n_ordine": "ORD-020"
+    },
+    {
+      "id_consegna": "CON-023",
+      "data": "15/06/2026",
+      "id_cliente": "CLI-049",
+      "nome_cliente": "MARCHIONNI MARCELLO",
+      "zona": "SAN FRANCESCO",
+      "formato": "MKT",
+      "miscela": "PIU' CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-017"
+    },
+    {
+      "id_consegna": "CON-024",
+      "data": "15/06/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "BLACK",
+      "qty": 300,
+      "prezzo_unit": 0.18,
+      "importo": 54.0,
+      "incassato": 54.0,
+      "n_ordine": "ORD-021"
+    },
+    {
+      "id_consegna": "CON-025",
+      "data": "15/06/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "PALERMO",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-022"
+    },
+    {
+      "id_consegna": "CON-026",
+      "data": "15/06/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-023"
+    },
+    {
+      "id_consegna": "CON-027",
+      "data": "15/06/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-024"
+    },
+    {
+      "id_consegna": "CON-028",
+      "data": "15/06/2026",
+      "id_cliente": "CLI-044",
+      "nome_cliente": "KRASNIQI SUAD",
+      "zona": "RIGNANO SULL'ARNO",
+      "formato": "MKD",
+      "miscela": "MARYLIN",
+      "qty": 4,
+      "prezzo_unit": 9.5,
+      "importo": 38.0,
+      "incassato": 38.0,
+      "n_ordine": "ORD-025"
+    },
+    {
+      "id_consegna": "CON-029",
+      "data": "15/06/2026",
+      "id_cliente": "CLI-053",
+      "nome_cliente": "MISURI MIRELLA",
+      "zona": "PELAGO",
+      "formato": "POINT",
+      "miscela": "ROMA",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 0.0,
+      "n_ordine": "ORD-026"
+    },
+    {
+      "id_consegna": "CON-030",
+      "data": "15/06/2026",
+      "id_cliente": "CLI-054",
+      "nome_cliente": "MISURI FIGLIA",
+      "zona": "PELAGO",
+      "formato": "NES",
+      "miscela": "ROMA",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-027"
+    },
+    {
+      "id_consegna": "CON-031",
+      "data": "22/06/2026",
+      "id_cliente": "CLI-009",
+      "nome_cliente": "BERTI ANGELA",
+      "zona": "SIECI",
+      "formato": "NES",
+      "miscela": "BAR FORTE",
+      "qty": 200,
+      "prezzo_unit": 0.24,
+      "importo": 48.0,
+      "incassato": 48.0,
+      "n_ordine": "ORD-028"
+    },
+    {
+      "id_consegna": "CON-032",
+      "data": "22/06/2026",
+      "id_cliente": "CLI-043",
+      "nome_cliente": "KALLARI ALTIN",
+      "zona": "RIGNANO SULL'ARNO",
+      "formato": "POINT ",
+      "miscela": "BAR DOLCE",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-030"
+    },
+    {
+      "id_consegna": "CON-033",
+      "data": "22/06/2026",
+      "id_cliente": "CLI-043",
+      "nome_cliente": "KALLARI ALTIN",
+      "zona": "RIGNANO SULL'ARNO",
+      "formato": "NES",
+      "miscela": "BAR DOLCE",
+      "qty": 25,
+      "prezzo_unit": 0.24,
+      "importo": 6.0,
+      "incassato": 6.0,
+      "n_ordine": "ORD-031"
+    },
+    {
+      "id_consegna": "CON-034",
+      "data": "22/06/2026",
+      "id_cliente": "CLI-028",
+      "nome_cliente": "D'ANTIMI SANDRO",
+      "zona": "PELAGO",
+      "formato": "MKD",
+      "miscela": "SOPHIA",
+      "qty": 4,
+      "prezzo_unit": 9.5,
+      "importo": 38.0,
+      "incassato": 38.0,
+      "n_ordine": "ORD-032"
+    },
+    {
+      "id_consegna": "CON-035",
+      "data": "22/06/2026",
+      "id_cliente": "CLI-049",
+      "nome_cliente": "MARCHIONNI MARCELLO",
+      "zona": "SAN FRANCESCO",
+      "formato": "MKT",
+      "miscela": "PIU' CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-033"
+    },
+    {
+      "id_consegna": "CON-036",
+      "data": "22/06/2026",
+      "id_cliente": "CLI-017",
+      "nome_cliente": "CASO ROBERTO",
+      "zona": "REGGELLO",
+      "formato": "C44",
+      "miscela": "BLACK",
+      "qty": 100,
+      "prezzo_unit": 0.18,
+      "importo": 18.0,
+      "incassato": 18.0,
+      "n_ordine": "ORD-037"
+    },
+    {
+      "id_consegna": "CON-037",
+      "data": "23/06/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-035"
+    },
+    {
+      "id_consegna": "CON-038",
+      "data": "23/06/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-036"
+    },
+    {
+      "id_consegna": "CON-039",
+      "data": "30/06/2026",
+      "id_cliente": "CLI-012",
+      "nome_cliente": "BINI ANTONELLA",
+      "zona": "PONTASSIEVE",
+      "formato": "MKT",
+      "miscela": "CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-041"
+    },
+    {
+      "id_consegna": "CON-040",
+      "data": "30/06/2026",
+      "id_cliente": "CLI-034",
+      "nome_cliente": "ELETTROFORNITURE 2000 S.R.L.",
+      "zona": "PONTASSIEVE",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.27,
+      "importo": 27.0,
+      "incassato": 27.0,
+      "n_ordine": "ORD-038"
+    },
+    {
+      "id_consegna": "CON-041",
+      "data": "30/06/2026",
+      "id_cliente": "CLI-078",
+      "nome_cliente": "VIVOLI LORENA",
+      "zona": "DIACCETO",
+      "formato": "NES",
+      "miscela": "B.FORTE",
+      "qty": 200,
+      "prezzo_unit": 0.24,
+      "importo": 48.0,
+      "incassato": 48.0,
+      "n_ordine": "ORD-039"
+    },
+    {
+      "id_consegna": "CON-042",
+      "data": "30/06/2026",
+      "id_cliente": "CLI-017",
+      "nome_cliente": "CASO ROBERTO",
+      "zona": "REGGELLO",
+      "formato": "C44",
+      "miscela": "PALERMO",
+      "qty": 100,
+      "prezzo_unit": 0.18,
+      "importo": 18.0,
+      "incassato": 18.0,
+      "n_ordine": "ORD-040"
+    },
+    {
+      "id_consegna": "CON-043",
+      "data": "07/02/2026",
+      "id_cliente": "CLI-053",
+      "nome_cliente": "MISURI MIRELLA",
+      "zona": "PELAGO",
+      "formato": "POINT",
+      "miscela": "ROMA",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-042"
+    },
+    {
+      "id_consegna": "CON-044",
+      "data": "07/02/2026",
+      "id_cliente": "CLI-053",
+      "nome_cliente": "MISURI MIRELLA",
+      "zona": "PELAGO",
+      "formato": "POINT",
+      "miscela": "SAN MARINO",
+      "qty": 100,
+      "prezzo_unit": 0.26,
+      "importo": 26.0,
+      "incassato": 26.0,
+      "n_ordine": "ORD-043"
+    },
+    {
+      "id_consegna": "CON-045",
+      "data": "07/02/2026",
+      "id_cliente": "CLI-054",
+      "nome_cliente": "MISURI FIGLIA",
+      "zona": "PELAGO",
+      "formato": "NES",
+      "miscela": "ROMA",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-044"
+    },
+    {
+      "id_consegna": "CON-046",
+      "data": "07/02/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-045"
+    },
+    {
+      "id_consegna": "CON-047",
+      "data": "07/02/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-046"
+    },
+    {
+      "id_consegna": "CON-048",
+      "data": "07/02/2026",
+      "id_cliente": "CLI-001",
+      "nome_cliente": "ALLAINI MONICA",
+      "zona": "RUFINA",
+      "formato": "C44",
+      "miscela": "PALERMO",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-047"
+    },
+    {
+      "id_consegna": "CON-049",
+      "data": "07/02/2026",
+      "id_cliente": "CLI-001",
+      "nome_cliente": "ALLAINI MONICA",
+      "zona": "RUFINA",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-048"
+    },
+    {
+      "id_consegna": "CON-050",
+      "data": "07/04/2026",
+      "id_cliente": "CLI-007",
+      "nome_cliente": "BETTARELLI-SAMMATARO",
+      "zona": "PONTASSIEVE",
+      "formato": "ESSE",
+      "miscela": "0",
+      "qty": 100,
+      "prezzo_unit": 0.32,
+      "importo": 32.0,
+      "incassato": 31.0,
+      "n_ordine": "ORD-029"
+    },
+    {
+      "id_consegna": "CON-051",
+      "data": "07/04/2026",
+      "id_cliente": "CLI-007",
+      "nome_cliente": "BETTARELLI-SAMMATARO",
+      "zona": "PONTASSIEVE",
+      "formato": "ESSE",
+      "miscela": "BLACK",
+      "qty": 100,
+      "prezzo_unit": 0.31,
+      "importo": 31.0,
+      "incassato": 31.0,
+      "n_ordine": "ORD-049"
+    },
+    {
+      "id_consegna": "CON-052",
+      "data": "07/06/2026",
+      "id_cliente": "CLI-017",
+      "nome_cliente": "CASO ROBERTO",
+      "zona": "REGGELLO",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-051"
+    },
+    {
+      "id_consegna": "CON-053",
+      "data": "07/06/2026",
+      "id_cliente": "CLI-072",
+      "nome_cliente": "SPINELLI EUGENIO",
+      "zona": "PONTASSIEVE",
+      "formato": "NES",
+      "miscela": "BLACK",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-052"
+    },
+    {
+      "id_consegna": "CON-054",
+      "data": "07/06/2026",
+      "id_cliente": "CLI-079",
+      "nome_cliente": "AMHAD SANTO FELAFEL",
+      "zona": "DIACCETO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-053"
+    },
+    {
+      "id_consegna": "CON-055",
+      "data": "07/06/2026",
+      "id_cliente": "CLI-079",
+      "nome_cliente": "AMHAD SANTO FELAFEL",
+      "zona": "DIACCETO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-054"
+    },
+    {
+      "id_consegna": "CON-056",
+      "data": "07/08/2026",
+      "id_cliente": "CLI-033",
+      "nome_cliente": "DI PRISCO ALESSANDRO",
+      "zona": "PONTASSIEVE",
+      "formato": "NES",
+      "miscela": "VENEZIA",
+      "qty": 90,
+      "prezzo_unit": 0.24,
+      "importo": 21.6,
+      "incassato": 21.6,
+      "n_ordine": "ORD-055"
+    },
+    {
+      "id_consegna": "CON-057",
+      "data": "07/08/2026",
+      "id_cliente": "CLI-033",
+      "nome_cliente": "DI PRISCO ALESSANDRO",
+      "zona": "PONTASSIEVE",
+      "formato": "NES",
+      "miscela": "MILANO",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-056"
+    },
+    {
+      "id_consegna": "CON-058",
+      "data": "07/08/2026",
+      "id_cliente": "CLI-004",
+      "nome_cliente": "BABBINI SARA",
+      "zona": "PELAGO",
+      "formato": "GR",
+      "miscela": "VENEZIA",
+      "qty": 2,
+      "prezzo_unit": 18.0,
+      "importo": 36.0,
+      "incassato": 36.0,
+      "n_ordine": "ORD-057"
+    },
+    {
+      "id_consegna": "CON-059",
+      "data": "07/08/2026",
+      "id_cliente": "CLI-048",
+      "nome_cliente": "MARCHIONNI CARLA",
+      "zona": "PONTASSIEVE",
+      "formato": "POINT",
+      "miscela": "ROMA",
+      "qty": 200,
+      "prezzo_unit": 0.24,
+      "importo": 48.0,
+      "incassato": 48.0,
+      "n_ordine": "ORD-058"
+    },
+    {
+      "id_consegna": "CON-060",
+      "data": "07/10/2026",
+      "id_cliente": "CLI-015",
+      "nome_cliente": "BURBERI PAOLO",
+      "zona": "PONTASSIEVE",
+      "formato": "NES",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-059"
+    },
+    {
+      "id_consegna": "CON-061",
+      "data": "07/11/2026",
+      "id_cliente": "CLI-052",
+      "nome_cliente": "MAZZUOLI PATRIZIA",
+      "zona": "DIACCETO",
+      "formato": "DG",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.3,
+      "importo": 30.0,
+      "incassato": 30.0,
+      "n_ordine": "ORD-060"
+    },
+    {
+      "id_consegna": "CON-062",
+      "data": "13/07/2026",
+      "id_cliente": "CLI-045",
+      "nome_cliente": "LANDI DEIVI",
+      "zona": "PELAGO",
+      "formato": "POINT",
+      "miscela": "MILANO",
+      "qty": 400,
+      "prezzo_unit": 0.24,
+      "importo": 96.0,
+      "incassato": 96.0,
+      "n_ordine": "ORD-050"
+    },
+    {
+      "id_consegna": "CON-063",
+      "data": "13/07/2026",
+      "id_cliente": "CLI-049",
+      "nome_cliente": "MARCHIONNI MARCELLO",
+      "zona": "SAN FRANCESCO",
+      "formato": "MKT",
+      "miscela": "PIU' CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-034"
+    },
+    {
+      "id_consegna": "CON-064",
+      "data": "13/07/2026",
+      "id_cliente": "CLI-060",
+      "nome_cliente": "PONTASSIEVE SERVIZI",
+      "zona": "PONTASSIEVE",
+      "formato": "MKT",
+      "miscela": "Più CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-061"
+    },
+    {
+      "id_consegna": "CON-065",
+      "data": "13/07/2026",
+      "id_cliente": "CLI-032",
+      "nome_cliente": "DI LELLA DANIELE",
+      "zona": "PONTASSIEVE",
+      "formato": "MKT",
+      "miscela": "AROMA TOP",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-062"
+    },
+    {
+      "id_consegna": "CON-066",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "BLACK",
+      "qty": 200,
+      "prezzo_unit": 0.18,
+      "importo": 36.0,
+      "incassato": 36.0,
+      "n_ordine": "ORD-063"
+    },
+    {
+      "id_consegna": "CON-067",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-064"
+    },
+    {
+      "id_consegna": "CON-068",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-065"
+    },
+    {
+      "id_consegna": "CON-069",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-065"
+    },
+    {
+      "id_consegna": "CON-070",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-049",
+      "nome_cliente": "MARCHIONNI MARCELLO",
+      "zona": "SAN FRANCESCO",
+      "formato": "MKT",
+      "miscela": "PIU' CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-071"
+    },
+    {
+      "id_consegna": "CON-071",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-049",
+      "nome_cliente": "MARCHIONNI MARCELLO",
+      "zona": "SAN FRANCESCO",
+      "formato": "MKT",
+      "miscela": "PIU' CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-071"
+    },
+    {
+      "id_consegna": "CON-072",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-027",
+      "nome_cliente": "COSTANTI MAURIZIO",
+      "zona": "SIECI",
+      "formato": "NES",
+      "miscela": "BLACK",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-070"
+    },
+    {
+      "id_consegna": "CON-073",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-064",
+      "nome_cliente": "RIZZONE MARCO",
+      "zona": "SIECI",
+      "formato": "DG",
+      "miscela": "PALERMO",
+      "qty": 50,
+      "prezzo_unit": 0.3,
+      "importo": 15.0,
+      "incassato": 15.0,
+      "n_ordine": "ORD-067"
+    },
+    {
+      "id_consegna": "CON-074",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-064",
+      "nome_cliente": "RIZZONE MARCO",
+      "zona": "SIECI",
+      "formato": "DG",
+      "miscela": "ROMA",
+      "qty": 50,
+      "prezzo_unit": 0.3,
+      "importo": 15.0,
+      "incassato": 15.0,
+      "n_ordine": "ORD-068"
+    },
+    {
+      "id_consegna": "CON-075",
+      "data": "15/07/2026",
+      "id_cliente": "CLI-029",
+      "nome_cliente": "DEI ARCHITETTO CLAUDIA",
+      "zona": "PONTASSIEVE",
+      "formato": "MKD",
+      "miscela": "SOPHIA",
+      "qty": 4,
+      "prezzo_unit": 9.5,
+      "importo": 38.0,
+      "incassato": 38.0,
+      "n_ordine": "ORD-066"
+    },
+    {
+      "id_consegna": "CON-076",
+      "data": "16/07/2026",
+      "id_cliente": "CLI-034",
+      "nome_cliente": "ELETTROFORNITURE 2000 S.R.L.",
+      "zona": "PONTASSIEVE",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.27,
+      "importo": 27.0,
+      "incassato": 27.0,
+      "n_ordine": "ORD-077"
+    },
+    {
+      "id_consegna": "CON-077",
+      "data": "18/07/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-072"
+    },
+    {
+      "id_consegna": "CON-078",
+      "data": "18/07/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-073"
+    },
+    {
+      "id_consegna": "CON-079",
+      "data": "18/07/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "GINSENG",
+      "qty": 50,
+      "prezzo_unit": 0.35,
+      "importo": 17.5,
+      "incassato": 17.5,
+      "n_ordine": "ORD-074"
+    },
+    {
+      "id_consegna": "CON-080",
+      "data": "18/07/2026",
+      "id_cliente": "CLI-051",
+      "nome_cliente": "MATERASSI MARTA",
+      "zona": "PONTASSIEVE",
+      "formato": "DIVA",
+      "miscela": "SOPHIA",
+      "qty": 3,
+      "prezzo_unit": 9.5,
+      "importo": 28.5,
+      "incassato": 28.5,
+      "n_ordine": "ORD-075"
+    },
+    {
+      "id_consegna": "CON-081",
+      "data": "18/07/2026",
+      "id_cliente": "CLI-051",
+      "nome_cliente": "MATERASSI MARTA",
+      "zona": "PONTASSIEVE",
+      "formato": "DIVA",
+      "miscela": "GRACE",
+      "qty": 2,
+      "prezzo_unit": 9.9,
+      "importo": 19.8,
+      "incassato": 19.8,
+      "n_ordine": "ORD-076"
+    },
+    {
+      "id_consegna": "CON-082",
+      "data": "20/07/2026",
+      "id_cliente": "CLI-063",
+      "nome_cliente": "RINAUDO VINCENZO",
+      "zona": "0",
+      "formato": "C44",
+      "miscela": "PALERMO",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-079"
+    }
+  ],
+  "magazzino": [
+    {
+      "codice": "44 21 CAFFE SHOP NERA",
+      "formato": "C44",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "carico": 1200,
+      "scarico": 700,
+      "rettifica": -100,
+      "giacenza": 400,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "44 22 CAFFE SHOP ROSSA",
+      "formato": "C44",
+      "marchio": "CAFFE SHOP",
+      "miscela": "RED",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "44 31 CIALDORO PALERMO",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 600,
+      "scarico": 400,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 400
+    },
+    {
+      "codice": "44 33 CIALDORO ROMA",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 750,
+      "scarico": 150,
+      "rettifica": -300,
+      "giacenza": 300,
+      "scorta_minima": 400
+    },
+    {
+      "codice": "44 34 CIALDORO FIRENZE",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "FIRENZE",
+      "carico": 700,
+      "scarico": 500,
+      "rettifica": 100,
+      "giacenza": 300,
+      "scorta_minima": 300
+    },
+    {
+      "codice": "44 35 CIALDORO MILANO",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "44 36 CIALDORO CAGLIARI",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "CAGLIARI",
+      "carico": 800,
+      "scarico": 600,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "44 37 CIALDORO VENEZIA",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 1300,
+      "scarico": 1000,
+      "rettifica": 0,
+      "giacenza": 300,
+      "scorta_minima": 700
+    },
+    {
+      "codice": "44 38 CIALDORO SAN MARINO",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "carico": 100,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 100,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "44 41 MOKONE GRAN RISERVA",
+      "formato": "C44",
+      "marchio": "MOKONE",
+      "miscela": "GRAN RISERVA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "44 42 MOKONE ETNA",
+      "formato": "C44",
+      "marchio": "MOKONE",
+      "miscela": "ETNA",
+      "carico": 1100,
+      "scarico": 1100,
+      "rettifica": 200,
+      "giacenza": 200,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "44 SANDEMETRIO AGRUMI",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "AGRUMI",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "44 SANDEMETRIO CAFFE' AL GINSENG",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "GINSENG",
+      "carico": 100,
+      "scarico": 118,
+      "rettifica": 18,
+      "giacenza": 0,
+      "scorta_minima": 36
+    },
+    {
+      "codice": "44 SANDEMETRIO ORZO",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "ORZO",
+      "carico": 54,
+      "scarico": 0,
+      "rettifica": -18,
+      "giacenza": 36,
+      "scorta_minima": 18
+    },
+    {
+      "codice": "NES 21 CAFFE SHOP BLACK",
+      "formato": "NES",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "carico": 600,
+      "scarico": 600,
+      "rettifica": 200,
+      "giacenza": 200,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "NES 31 CIALDORO PALERMO",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 200,
+      "scarico": 100,
+      "rettifica": 0,
+      "giacenza": 100,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "NES 33 CIALDORO ROMA",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 400,
+      "scarico": 200,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "NES 35 CIALDORO MILANO",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 100,
+      "scarico": 100,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "NES 37 CIALDORO VENEZIA",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 100,
+      "scarico": 90,
+      "rettifica": 0,
+      "giacenza": 10,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "NES 38 CIALDORO SAN MARINO",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 100,
+      "giacenza": 100,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "NES 41 MOKONE BAR DOLCE",
+      "formato": "NES",
+      "marchio": "MOKONE",
+      "miscela": "BAR DOLCE",
+      "carico": 30,
+      "scarico": 25,
+      "rettifica": 0,
+      "giacenza": 5,
+      "scorta_minima": 30
+    },
+    {
+      "codice": "NES 42 MOKONE BAR FORTE",
+      "formato": "NES",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "carico": 0,
+      "scarico": 200,
+      "rettifica": 300,
+      "giacenza": 100,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "NES BORBONE BLU",
+      "formato": "NES",
+      "marchio": "BORBONE",
+      "miscela": "BLU",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "NES DOLCE VITA ORZO 10 PZ",
+      "formato": "NES",
+      "marchio": "DOLCEVITA",
+      "miscela": "ORZO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "NES DOLCE VITA NOCCIOLINO 10 PZ",
+      "formato": "NES",
+      "marchio": "DOLCEVITA",
+      "miscela": "NOCCIOLINO",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "AMM 03 BORBONE BLU",
+      "formato": "AMM",
+      "marchio": "BORBONE",
+      "miscela": "BLU",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "AMM 31 CIALDORO PALERMO",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "AMM 33 CIALDORO ROMA",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "AMM 35 CIALDORO MILANO",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "AMM 37 CIALDORO VENEZIA",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "AMM 38 CIALDORO SAN MARINO",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "AMM 42 MOKONE BAR FORTE",
+      "formato": "AMM",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "carico": 100,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 100,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT 01 BORBONE BLU",
+      "formato": "POINT",
+      "marchio": "BORBONE",
+      "miscela": "NERO",
+      "carico": 100,
+      "scarico": 0,
+      "rettifica": 100,
+      "giacenza": 200,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 21 CAFFE SHOP BLACK",
+      "formato": "POINT",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "carico": 80,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 80,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 31 CIALDORO PALERMO",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 200,
+      "scarico": 200,
+      "rettifica": 100,
+      "giacenza": 100,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 33 CIALDORO ROMA",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 100,
+      "scarico": 400,
+      "rettifica": 300,
+      "giacenza": 0,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "POINT 35 CIALDORO MILANO",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 400,
+      "scarico": 400,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 300
+    },
+    {
+      "codice": "POINT 37 CIALDORO VENEZIA",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT 38 CIALDORO SAN MARINO",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "carico": 200,
+      "scarico": 100,
+      "rettifica": 0,
+      "giacenza": 100,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 41 MOKONE BAR DOLCE",
+      "formato": "POINT",
+      "marchio": "MOKONE",
+      "miscela": "BAR DOLCE",
+      "carico": 300,
+      "scarico": 100,
+      "rettifica": 0,
+      "giacenza": 200,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 42 MOKONE BAR FORTE",
+      "formato": "POINT",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT AROMALIGHT GINSENG",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT AROMALIGHT NOCCIOLINO",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "NOCCIOLINO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT AROMALIGHT ORZO",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "ORZO",
+      "carico": 30,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 30,
+      "scorta_minima": 30
+    },
+    {
+      "codice": "POINT AROMALIGHT TE LIMONE",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "LIMONE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG 21 CAFFE SHOP BLACK",
+      "formato": "DG",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG 22 CAFFE SHOP RED",
+      "formato": "DG",
+      "marchio": "CAFFE SHOP",
+      "miscela": "RED",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG 30 CIALDORO ETNA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "ETNA",
+      "carico": 200,
+      "scarico": 200,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "DG 31 CIALDORO PALERMO",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 50,
+      "scarico": 50,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 50
+    },
+    {
+      "codice": "DG 33 CIALDORO ROMA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 150,
+      "scarico": 50,
+      "rettifica": 0,
+      "giacenza": 100,
+      "scorta_minima": 50
+    },
+    {
+      "codice": "DG 35 CIALDORO MILANO",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 100,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 100,
+      "scorta_minima": 50
+    },
+    {
+      "codice": "DG 37 CIALDORO VENEZIA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 50,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 50,
+      "scorta_minima": 50
+    },
+    {
+      "codice": "DG 38 CIALDORO SAN MARINO",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "carico": 50,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 50,
+      "scorta_minima": 3
+    },
+    {
+      "codice": "DG CIALDORO GINSENG 12PZ",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG DOLCEVITA GIANDUIA 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "GIANDUIA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG DOLCEVITA GINSENG 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG DOLCEVITA MAXI CIOCK 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "MAXI CIOCC",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG DOLCEVITA NOCCIOLONE 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "NOCCIOLNE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 30 CIALDORO ETNA",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "ETNA",
+      "carico": 320,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 320,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 32 CIALDORO NAPOLI",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "NAPOLI",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 35 CIALDORO MILANO",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 38 CIALDORO SAN MARINO",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 42 MOKONE BAR FORTE",
+      "formato": "CFY",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 320
+    },
+    {
+      "codice": "MKD MOKADOR 01 MARYLIN 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "MARYLIN",
+      "carico": 16,
+      "scarico": 4,
+      "rettifica": -5,
+      "giacenza": 7,
+      "scorta_minima": 16
+    },
+    {
+      "codice": "MKD MOKADOR 02 SOPHIA 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "SOPHIA",
+      "carico": 12,
+      "scarico": 8,
+      "rettifica": -1,
+      "giacenza": 3,
+      "scorta_minima": 16
+    },
+    {
+      "codice": "MKD MOKADOR 03 BRIGITTE 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "BRIGITTE",
+      "carico": 4,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 4,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKD MOKADOR 04 GRACE DEC 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "GRACE",
+      "carico": 16,
+      "scarico": 0,
+      "rettifica": -5,
+      "giacenza": 11,
+      "scorta_minima": 12
+    },
+    {
+      "codice": "MKD MOKADOR 05 ORZO 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "ORZO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKD MOKADOR 06 TE LIMONE 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "LIMONE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKD MOKADOR 07 GINSENG 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKT MOKADOR 01 PIU' CREMA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "PIU CREMA",
+      "carico": 100,
+      "scarico": 600,
+      "rettifica": 100,
+      "giacenza": -400,
+      "scorta_minima": 300
+    },
+    {
+      "codice": "MKT MOKADOR 02 CREMA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "CREMA",
+      "carico": 400,
+      "scarico": 200,
+      "rettifica": 100,
+      "giacenza": 300,
+      "scorta_minima": 400
+    },
+    {
+      "codice": "MKT MOKADOR 03 AROMA TOP",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "AROMA TOP",
+      "carico": 0,
+      "scarico": 100,
+      "rettifica": 100,
+      "giacenza": 0,
+      "scorta_minima": 400
+    },
+    {
+      "codice": "MKT MOKADOR 04 DECA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "DECA",
+      "carico": 80,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 80,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKT MOKADOR 05 ORZO",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "ORZO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKT MOKADOR 06 THE' LIMONE",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "LIMONE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKT MOKADOR 08 GINSENG",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "GRA 03 CIALDORO GRANI \"ROMA\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 3,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 3,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "GRA 05 CIALDORO GRANI \"MILANO\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 1,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 1,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "GRA 07 CIALDORO GRANI \"VENEZIA\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 2,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 2,
+      "scorta_minima": 2
+    },
+    {
+      "codice": "GRA 08 CIALDORO GRANI \"DECAFFEINATO\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "DECA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "ACC BICCHIERI CARTA CIALDORO 50 pz",
+      "formato": "ACC",
+      "marchio": "ACCESSORI",
+      "miscela": "BICCHIERI 80CC",
+      "carico": 5,
+      "scarico": 0,
+      "rettifica": 0,
+      "giacenza": 5,
+      "scorta_minima": 5
+    },
+    {
+      "codice": "ESSSECAFFE SEGAFREDO CAPSULE",
+      "formato": "ESSSE",
+      "marchio": "CIALDORO",
+      "miscela": "BLACK",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 100,
+      "giacenza": 100,
+      "scorta_minima": 100
+    }
+  ],
+  "cassa": [
+    {
+      "data": "03/06/2026",
+      "descrizione": "Incasso - AMHAD SANTO FELAFEL",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-001",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 88.0,
+      "metodo": "Contanti",
+      "note": "C44 FIRENZE x200"
+    },
+    {
+      "data": "03/06/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 10.0,
+      "saldo": 78.0,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "04/06/2026",
+      "descrizione": "Incasso - SCARDICCI FABIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-004",
+      "entrata": 5.0,
+      "uscita": 0,
+      "saldo": 83.0,
+      "metodo": "Contanti",
+      "note": "C44 ROMA x25"
+    },
+    {
+      "data": "04/06/2026",
+      "descrizione": "Incasso - GIUNTINI SOCIETA' COOPERATIVA SOCIALE ONLUS",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-003",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 107.0,
+      "metodo": "Contanti",
+      "note": "POINT PALERMO x100"
+    },
+    {
+      "data": "04/06/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 32.7,
+      "saldo": 74.3,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "03/06/2026",
+      "descrizione": "RISTOBAR",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 7.0,
+      "saldo": 67.3,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "03/06/2026",
+      "descrizione": "Incasso - AMHAD SANTO FELAFEL",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-001",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 111.3,
+      "metodo": "Contanti",
+      "note": "C44 FIRENZE x200"
+    },
+    {
+      "data": "04/06/2026",
+      "descrizione": "Incasso - GIUNTINI SOCIETA' COOPERATIVA SOCIALE ONLUS",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-003",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 135.3,
+      "metodo": "Contanti",
+      "note": "POINT PALERMO x100"
+    },
+    {
+      "data": "04/06/2026",
+      "descrizione": "Incasso - SCARDICCI FABIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-004",
+      "entrata": 5.0,
+      "uscita": 0,
+      "saldo": 140.3,
+      "metodo": "Contanti",
+      "note": "C44 ROMA x25"
+    },
+    {
+      "data": "09/06/2026",
+      "descrizione": "Incasso - BINI ANTONELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-006",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 173.3,
+      "metodo": "Contanti",
+      "note": "MKT CREMA x100"
+    },
+    {
+      "data": "09/06/2026",
+      "descrizione": "Incasso - BURBERI PAOLO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-007",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 197.3,
+      "metodo": "Contanti",
+      "note": "NES PALERMO x100"
+    },
+    {
+      "data": "09/06/2026",
+      "descrizione": "Incasso - MATERASSI MARTA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-008",
+      "entrata": 28.5,
+      "uscita": 0,
+      "saldo": 225.8,
+      "metodo": "Contanti",
+      "note": "DIVA SOPHIA x3"
+    },
+    {
+      "data": "09/06/2026",
+      "descrizione": "Incasso - MATERASSI MARTA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-009",
+      "entrata": 19.8,
+      "uscita": 0,
+      "saldo": 245.6,
+      "metodo": "Contanti",
+      "note": "DIVA GRACE x2"
+    },
+    {
+      "data": "10/06/2026",
+      "descrizione": "Incasso - CASO ROBERTO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-013",
+      "entrata": 18.0,
+      "uscita": 0,
+      "saldo": 263.6,
+      "metodo": "Contanti",
+      "note": "C44 BLACK x100"
+    },
+    {
+      "data": "10/06/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 10.5,
+      "saldo": 253.1,
+      "metodo": "",
+      "note": "UOVA"
+    },
+    {
+      "data": "10/06/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 70.0,
+      "saldo": 183.1,
+      "metodo": "",
+      "note": "MACELLAIO+VERDURA"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-014",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 205.1,
+      "metodo": "Contanti",
+      "note": "C44 ROMA x100"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-015",
+      "entrata": 23.8,
+      "uscita": 0,
+      "saldo": 228.9,
+      "metodo": "Contanti",
+      "note": "C44 GINSENG x68"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - CIPRIANI GIULIANA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-010",
+      "entrata": 19.0,
+      "uscita": 0,
+      "saldo": 247.9,
+      "metodo": "Contanti",
+      "note": "DIVA SOPHIA x2"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - CIPRIANI GIULIANA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-011",
+      "entrata": 19.0,
+      "uscita": 0,
+      "saldo": 266.9,
+      "metodo": "Contanti",
+      "note": "DIVA MARYLIN x2"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - SOLDI ANTONELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-012",
+      "entrata": 110.0,
+      "uscita": 0,
+      "saldo": 376.9,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x500"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - SCARDICCI FABIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-002",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 398.9,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x100"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - COSTANTI FILIPPO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-016",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 420.9,
+      "metodo": "Contanti",
+      "note": "NES BLACK x100"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - MAZZUOLI PATRIZIA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-018",
+      "entrata": 30.0,
+      "uscita": 0,
+      "saldo": 450.9,
+      "metodo": "Contanti",
+      "note": "DG ETNA x100"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "Incasso - LOLLI FRANCESCA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-019",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 494.9,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x200"
+    },
+    {
+      "data": "13/06/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 15.0,
+      "saldo": 479.9,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "14/06/2026",
+      "descrizione": "Incasso - DEI ORAZIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-020",
+      "entrata": 66.0,
+      "uscita": 0,
+      "saldo": 545.9,
+      "metodo": "Contanti",
+      "note": "44 ROMA x300"
+    },
+    {
+      "data": "15/06/2026",
+      "descrizione": "Incasso - MARCHIONNI MARCELLO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-017",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 578.9,
+      "metodo": "Contanti",
+      "note": "MKT PIU' CREMA x100"
+    },
+    {
+      "data": "15/06/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-021",
+      "entrata": 54.0,
+      "uscita": 0,
+      "saldo": 632.9,
+      "metodo": "Contanti",
+      "note": "C44 BLACK x300"
+    },
+    {
+      "data": "15/06/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-022",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 654.9,
+      "metodo": "Contanti",
+      "note": "C44 PALERMO x100"
+    },
+    {
+      "data": "15/06/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-023",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 676.9,
+      "metodo": "Contanti",
+      "note": "C44 CAGLIARI x100"
+    },
+    {
+      "data": "15/06/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-024",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 698.9,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x100"
+    },
+    {
+      "data": "15/06/2026",
+      "descrizione": "Incasso - KRASNIQI SUAD",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-025",
+      "entrata": 38.0,
+      "uscita": 0,
+      "saldo": 736.9,
+      "metodo": "Contanti",
+      "note": "MKD MARYLIN x4"
+    },
+    {
+      "data": "15/06/2026",
+      "descrizione": "Incasso - MISURI FIGLIA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-027",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 760.9,
+      "metodo": "Contanti",
+      "note": "NES ROMA x100"
+    },
+    {
+      "data": "22/06/2026",
+      "descrizione": "Incasso - BERTI ANGELA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-028",
+      "entrata": 48.0,
+      "uscita": 0,
+      "saldo": 808.9,
+      "metodo": "Contanti",
+      "note": "NES BAR FORTE x200"
+    },
+    {
+      "data": "22/06/2026",
+      "descrizione": "Incasso - KALLARI ALTIN",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-030",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 832.9,
+      "metodo": "Contanti",
+      "note": "POINT  BAR DOLCE x100"
+    },
+    {
+      "data": "22/06/2026",
+      "descrizione": "Incasso - KALLARI ALTIN",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-031",
+      "entrata": 6.0,
+      "uscita": 0,
+      "saldo": 838.9,
+      "metodo": "Contanti",
+      "note": "NES BAR DOLCE x25"
+    },
+    {
+      "data": "22/06/2026",
+      "descrizione": "Incasso - D'ANTIMI SANDRO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-032",
+      "entrata": 38.0,
+      "uscita": 0,
+      "saldo": 876.9,
+      "metodo": "Contanti",
+      "note": "MKD SOPHIA x4"
+    },
+    {
+      "data": "22/06/2026",
+      "descrizione": "Incasso - MARCHIONNI MARCELLO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-033",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 909.9,
+      "metodo": "Contanti",
+      "note": "MKT PIU' CREMA x100"
+    },
+    {
+      "data": "22/06/2026",
+      "descrizione": "Incasso - CASO ROBERTO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-037",
+      "entrata": 18.0,
+      "uscita": 0,
+      "saldo": 927.9,
+      "metodo": "Contanti",
+      "note": "C44 BLACK x100"
+    },
+    {
+      "data": "22/06/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 6.0,
+      "saldo": 921.9,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "23/06/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-035",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 943.9,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x100"
+    },
+    {
+      "data": "23/06/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-036",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 965.9,
+      "metodo": "Contanti",
+      "note": "C44 CAGLIARI x100"
+    },
+    {
+      "data": "30/06/2026",
+      "descrizione": "Incasso - BINI ANTONELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-041",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 998.9,
+      "metodo": "Contanti",
+      "note": "MKT CREMA x100"
+    },
+    {
+      "data": "30/06/2026",
+      "descrizione": "Incasso - ELETTROFORNITURE 2000 S.R.L.",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-038",
+      "entrata": 27.0,
+      "uscita": 0,
+      "saldo": 1025.9,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x100"
+    },
+    {
+      "data": "30/06/2026",
+      "descrizione": "Incasso - VIVOLI LORENA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-039",
+      "entrata": 48.0,
+      "uscita": 0,
+      "saldo": 1073.9,
+      "metodo": "Contanti",
+      "note": "NES B.FORTE x200"
+    },
+    {
+      "data": "30/06/2026",
+      "descrizione": "Incasso - CASO ROBERTO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-040",
+      "entrata": 18.0,
+      "uscita": 0,
+      "saldo": 1091.9,
+      "metodo": "Contanti",
+      "note": "C44 PALERMO x100"
+    },
+    {
+      "data": "02/07/2026",
+      "descrizione": "Incasso - MISURI MIRELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-042",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 1115.9,
+      "metodo": "Contanti",
+      "note": "POINT ROMA x100"
+    },
+    {
+      "data": "02/07/2026",
+      "descrizione": "Incasso - MISURI MIRELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-043",
+      "entrata": 26.0,
+      "uscita": 0,
+      "saldo": 1141.9,
+      "metodo": "Contanti",
+      "note": "POINT SAN MARINO x100"
+    },
+    {
+      "data": "02/07/2026",
+      "descrizione": "Incasso - MISURI FIGLIA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-044",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 1165.9,
+      "metodo": "Contanti",
+      "note": "NES ROMA x100"
+    },
+    {
+      "data": "02/07/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-045",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1187.9,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x100"
+    },
+    {
+      "data": "02/07/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-046",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1209.9,
+      "metodo": "Contanti",
+      "note": "C44 CAGLIARI x100"
+    },
+    {
+      "data": "02/07/2026",
+      "descrizione": "Incasso - ALLAINI MONICA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-047",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1231.9,
+      "metodo": "Contanti",
+      "note": "C44 PALERMO x100"
+    },
+    {
+      "data": "02/07/2026",
+      "descrizione": "Incasso - ALLAINI MONICA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-048",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1253.9,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x100"
+    },
+    {
+      "data": "02/07/2026",
+      "descrizione": "CARBURANTE",
+      "tipo": "Carburante",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 20.0,
+      "saldo": 1233.9,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "03/07/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 14.0,
+      "saldo": 1219.9,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "03/07/2026",
+      "descrizione": "VENTILATORE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 50.0,
+      "saldo": 1169.9,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "04/07/2026",
+      "descrizione": "Incasso - BETTARELLI-SAMMATARO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-029",
+      "entrata": 31.0,
+      "uscita": 0,
+      "saldo": 1200.9,
+      "metodo": "Contanti",
+      "note": "ESSE 0 x100"
+    },
+    {
+      "data": "04/07/2026",
+      "descrizione": "Incasso - BETTARELLI-SAMMATARO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-049",
+      "entrata": 31.0,
+      "uscita": 0,
+      "saldo": 1231.9,
+      "metodo": "Contanti",
+      "note": "ESSE BLACK x100"
+    },
+    {
+      "data": "06/07/2026",
+      "descrizione": "Incasso - CASO ROBERTO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-051",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1253.9,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x100"
+    },
+    {
+      "data": "06/07/2026",
+      "descrizione": "Incasso - SPINELLI EUGENIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-052",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1275.9,
+      "metodo": "Contanti",
+      "note": "NES BLACK x100"
+    },
+    {
+      "data": "06/07/2026",
+      "descrizione": "SPESA CARBURANTE",
+      "tipo": "Carburante",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 20.0,
+      "saldo": 1255.9,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "06/07/2026",
+      "descrizione": "Incasso - AMHAD SANTO FELAFEL",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-053",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1277.9,
+      "metodo": "Contanti",
+      "note": "C44 CAGLIARI x100"
+    },
+    {
+      "data": "06/07/2026",
+      "descrizione": "Incasso - AMHAD SANTO FELAFEL",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-054",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1299.9,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x100"
+    },
+    {
+      "data": "08/07/2026",
+      "descrizione": "Incasso - DI PRISCO ALESSANDRO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-055",
+      "entrata": 21.6,
+      "uscita": 0,
+      "saldo": 1321.5,
+      "metodo": "Contanti",
+      "note": "NES VENEZIA x90"
+    },
+    {
+      "data": "08/07/2026",
+      "descrizione": "Incasso - DI PRISCO ALESSANDRO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-056",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 1345.5,
+      "metodo": "Contanti",
+      "note": "NES MILANO x100"
+    },
+    {
+      "data": "08/07/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 20.0,
+      "saldo": 1325.5,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "07/07/2026",
+      "descrizione": "PARRUCCHIERE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 20.0,
+      "saldo": 1305.5,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "08/07/2026",
+      "descrizione": "Incasso - BABBINI SARA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-057",
+      "entrata": 36.0,
+      "uscita": 0,
+      "saldo": 1341.5,
+      "metodo": "Contanti",
+      "note": "GR VENEZIA x2"
+    },
+    {
+      "data": "08/07/2026",
+      "descrizione": "Incasso - MARCHIONNI CARLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-058",
+      "entrata": 48.0,
+      "uscita": 0,
+      "saldo": 1389.5,
+      "metodo": "Contanti",
+      "note": "POINT ROMA x200"
+    },
+    {
+      "data": "10/07/2026",
+      "descrizione": "FT GIUGNO+CAMBIALE 200€",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 1125.0,
+      "saldo": 264.5,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "09/07/2026",
+      "descrizione": "SPESA TRASFERTA FAENZA",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 40.0,
+      "saldo": 224.5,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "10/07/2026",
+      "descrizione": "Incasso - BURBERI PAOLO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-059",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 248.5,
+      "metodo": "Contanti",
+      "note": "NES ETNA x100"
+    },
+    {
+      "data": "11/07/2026",
+      "descrizione": "Incasso - MAZZUOLI PATRIZIA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-060",
+      "entrata": 30.0,
+      "uscita": 0,
+      "saldo": 278.5,
+      "metodo": "Contanti",
+      "note": "DG ETNA x100"
+    },
+    {
+      "data": "10/07/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 37.4,
+      "saldo": 241.1,
+      "metodo": "",
+      "note": "CARNE E VERDURE"
+    },
+    {
+      "data": "11/07/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 5.15,
+      "saldo": 235.95,
+      "metodo": "",
+      "note": "ACQUA E SAPONE"
+    },
+    {
+      "data": "11/07/2026",
+      "descrizione": "SPESA ALIMENTARE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 21.1,
+      "saldo": 214.85,
+      "metodo": "",
+      "note": "USCITA INNOVA"
+    },
+    {
+      "data": "13/07/2026",
+      "descrizione": "Incasso - LANDI DEIVI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-050",
+      "entrata": 96.0,
+      "uscita": 0,
+      "saldo": 310.85,
+      "metodo": "Contanti",
+      "note": "POINT MILANO x400"
+    },
+    {
+      "data": "13/07/2026",
+      "descrizione": "Incasso - MARCHIONNI MARCELLO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-034",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 343.85,
+      "metodo": "Contanti",
+      "note": "MKT PIU' CREMA x100"
+    },
+    {
+      "data": "13/07/2026",
+      "descrizione": "Incasso - PONTASSIEVE SERVIZI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-061",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 376.85,
+      "metodo": "Contanti",
+      "note": "MKT Più CREMA x100"
+    },
+    {
+      "data": "13/07/2026",
+      "descrizione": "Incasso - DI LELLA DANIELE",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-062",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 409.85,
+      "metodo": "Contanti",
+      "note": "MKT AROMA TOP x100"
+    },
+    {
+      "data": "13/07/2026",
+      "descrizione": "CONGUAGLIO",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 273.0,
+      "saldo": 136.85,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-063",
+      "entrata": 36.0,
+      "uscita": 0,
+      "saldo": 172.85,
+      "metodo": "Contanti",
+      "note": "C44 BLACK x200"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-064",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 194.85,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x100"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-065",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 216.85,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x100"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-065",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 238.85,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x100"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - MARCHIONNI MARCELLO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-071",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 271.85,
+      "metodo": "Contanti",
+      "note": "MKT PIU' CREMA x100"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - MARCHIONNI MARCELLO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-071",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 304.85,
+      "metodo": "Contanti",
+      "note": "MKT PIU' CREMA x100"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - COSTANTI MAURIZIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-070",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 326.85,
+      "metodo": "Contanti",
+      "note": "NES BLACK x100"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - RIZZONE MARCO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-067",
+      "entrata": 15.0,
+      "uscita": 0,
+      "saldo": 341.85,
+      "metodo": "Contanti",
+      "note": "DG PALERMO x50"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - RIZZONE MARCO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-068",
+      "entrata": 15.0,
+      "uscita": 0,
+      "saldo": 356.85,
+      "metodo": "Contanti",
+      "note": "DG ROMA x50"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "Incasso - DEI ARCHITETTO CLAUDIA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-066",
+      "entrata": 38.0,
+      "uscita": 0,
+      "saldo": 394.85,
+      "metodo": "Contanti",
+      "note": "MKD SOPHIA x4"
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "EFRA BRASILE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 75.0,
+      "saldo": 319.85,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "15/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 27.0,
+      "saldo": 292.85,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "16/07/2026",
+      "descrizione": "CARBURANTE",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 20.0,
+      "saldo": 272.85,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "16/07/2026",
+      "descrizione": "Incasso - ELETTROFORNITURE 2000 S.R.L.",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-077",
+      "entrata": 27.0,
+      "uscita": 0,
+      "saldo": 299.85,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x100"
+    },
+    {
+      "data": "16/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 25.0,
+      "saldo": 274.85,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "18/07/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-072",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 318.85,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x200"
+    },
+    {
+      "data": "18/07/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-073",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 362.85,
+      "metodo": "Contanti",
+      "note": "C44 CAGLIARI x200"
+    },
+    {
+      "data": "18/07/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-074",
+      "entrata": 17.5,
+      "uscita": 0,
+      "saldo": 380.35,
+      "metodo": "Contanti",
+      "note": "C44 GINSENG x50"
+    },
+    {
+      "data": "18/07/2026",
+      "descrizione": "Incasso - MATERASSI MARTA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-075",
+      "entrata": 28.5,
+      "uscita": 0,
+      "saldo": 408.85,
+      "metodo": "Contanti",
+      "note": "DIVA SOPHIA x3"
+    },
+    {
+      "data": "18/07/2026",
+      "descrizione": "Incasso - MATERASSI MARTA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-076",
+      "entrata": 19.8,
+      "uscita": 0,
+      "saldo": 428.65,
+      "metodo": "Contanti",
+      "note": "DIVA GRACE x2"
+    },
+    {
+      "data": "18/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 10.0,
+      "saldo": 418.65,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "18/07/2026",
+      "descrizione": "RISTO-BAR",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 15.5,
+      "saldo": 403.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "18/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 37.7,
+      "saldo": 365.45,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "20/07/2026",
+      "descrizione": "Incasso - RINAUDO VINCENZO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-079",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 387.45,
+      "metodo": "Contanti",
+      "note": "C44 PALERMO x100"
+    }
+  ],
+  "saldo_iniziale": 44.0
+};
+</script>
+<script>
+'use strict';
+// ── DB ──────────────────────────────────────────────────────────────
+const DBK='sc_v3';let DB=null;
+
+function initDB(){
+  const s=localStorage.getItem(DBK);
+  if(s){try{DB=JSON.parse(s);}catch(e){DB=null;}}
+  if(!DB){
+    DB={
+      prodotti:INITIAL_DATA.prodotti,
+      clienti:INITIAL_DATA.clienti.map(c=>({...c})),
+      ordini:[],
+      storico:INITIAL_DATA.storico.map(s=>({...s})),
+      cassa:INITIAL_DATA.cassa.map(c=>({...c})),
+      magazzino:INITIAL_DATA.magazzino.map(m=>({...m,giacenza:m.carico-m.scarico+m.rettifica})),
+      saldo_iniziale:INITIAL_DATA.saldo_iniziale||0,
+      cnt:{ordine:INITIAL_DATA.storico.length+1,consegna:INITIAL_DATA.storico.length+1}
+    };
+    saveDB();
+  }
+  DB.magazzino.forEach(m=>{m.giacenza=m.carico-m.scarico+m.rettifica;});
+}
+function saveDB(){localStorage.setItem(DBK,JSON.stringify(DB));updateBdg();}
+
+// ── NAV ─────────────────────────────────────────────────────────────
+let page='home',sq='';
+function go(p){
+  page=p;sq='';
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  const nb=document.getElementById('nb-'+p);if(nb)nb.classList.add('active');
+  const titles={home:'Dashboard',ordini:'Ordini',clienti:'Clienti',cassa:'Cassa',magazzino:'Magazzino',storico:'Storico'};
+  document.getElementById('hdr-sub').textContent=titles[p]||p;
+  const pages={home:pgHome,ordini:pgOrdini,clienti:pgClienti,cassa:pgCassa,magazzino:pgMagazzino,storico:pgStorico};
+  const el=document.getElementById('cnt');el.innerHTML='';
+  if(pages[p])pages[p](el);
+}
+function updateBdg(){
+  const oa=DB.ordini.filter(o=>o.stato==='DA FARE').length;
+  const bo=document.getElementById('bdg-o');
+  if(bo){bo.style.display=oa>0?'block':'none';bo.textContent=oa;}
+  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0).length;
+  const bm=document.getElementById('bdg-m');
+  if(bm){bm.style.display=dr>0?'block':'none';bm.textContent=dr;}
+}
+
+// ── HOME ────────────────────────────────────────────────────────────
+function pgHome(el){
+  const oa=DB.ordini.filter(o=>o.stato==='DA FARE');
+  const sc=saldoCassa();
+  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
+  const cc=DB.clienti.filter(c=>c.sospeso>0);
+  const ts=cc.reduce((s,c)=>s+c.sospeso,0);
+  const og=oggi();
+  const co=DB.storico.filter(s=>s.data===og);
+  const io=co.reduce((s,c)=>s+(c.incassato||0),0);
+  let h=`<div class="kg">
+    <div class="kpi br" onclick="go('cassa')" style="grid-column:1/-1">
+      <span class="lbl">💰 Saldo Cassa</span>
+      <span class="val">€${f(sc)}</span>
+      <span class="sub">Aggiornato ora</span>
+    </div>
+    <div class="kpi go" onclick="go('ordini')">
+      <span class="lbl">📋 Da consegnare</span>
+      <span class="val">${oa.length}</span>
+      <span class="sub">ordini aperti</span>
+    </div>
+    <div class="kpi gn">
+      <span class="lbl">🚚 Oggi</span>
+      <span class="val">${co.length}</span>
+      <span class="sub">€${f(io)} incassato</span>
+    </div>
+    <div class="kpi ${dr.length>0?'rd':'gn'}" onclick="go('magazzino')">
+      <span class="lbl">📦 Riordinare</span>
+      <span class="val">${dr.length}</span>
+      <span class="sub">prodotti sotto scorta</span>
+    </div>
+    <div class="kpi ${ts>0?'rd':'gn'}" onclick="go('clienti')">
+      <span class="lbl">⚠️ Sospesi</span>
+      <span class="val">${cc.length}</span>
+      <span class="sub">€${f(ts)} totale</span>
+    </div>
+  </div>`;
+  h+=`<button class="btn btn-p" onclick="nuovoOrdine()">➕ Nuovo Ordine</button>`;
+  if(oa.length>0){
+    h+=`<div class="st">📋 Ordini da consegnare</div><div class="card">`;
+    oa.slice(0,6).forEach(o=>{
+      h+=`<div class="li" onclick="apriOrdine('${o.id}')">
+        <div class="av" style="background:var(--go2)">📦</div>
+        <div class="nf"><div class="nm">${o.nome_cliente}</div>
+          <div class="sb">${o.prodotti.map(p=>p.qty+'× '+p.miscela).join(', ')}</div></div>
+        <div class="rt"><div class="am" style="color:var(--br)">€${f(o.totale)}</div>
+          <div class="sb">${o.zona||''}</div></div>
+      </div>`;
+    });
+    if(oa.length>6)h+=`<div class="li" onclick="go('ordini')" style="justify-content:center;color:var(--br);font-weight:700">Tutti (${oa.length}) →</div>`;
+    h+=`</div>`;
+  }
+  if(co.length>0){
+    h+=`<div class="st">✅ Consegnato oggi</div><div class="card">`;
+    co.forEach(c=>{
+      h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
+        <div class="nf"><div class="nm">${c.nome_cliente}</div>
+          <div class="sb">${c.formato} ${c.miscela} ×${c.qty}</div></div>
+        <div class="rt"><div class="am" style="color:var(--gn)">€${f(c.incassato)}</div></div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  el.innerHTML=h;
+}
+
+// ── ORDINI ──────────────────────────────────────────────────────────
+function pgOrdini(el){
+  const ap=DB.ordini.filter(o=>o.stato==='DA FARE');
+  const ch=DB.ordini.filter(o=>o.stato==='CONSEGNATA').slice(-10).reverse();
+  let h=`<button class="btn btn-p" onclick="nuovoOrdine()">➕ Nuovo Ordine</button>`;
+  if(ap.length>0){
+    h+=`<div class="st">📋 Da consegnare (${ap.length})</div><div class="card">`;
+    ap.forEach(o=>{
+      const cl=DB.clienti.find(c=>c.id===o.id_cliente);
+      h+=`<div class="li" onclick="apriOrdine('${o.id}')">
+        <div class="av" style="background:var(--go2)">📦</div>
+        <div class="nf"><div class="nm">${o.nome_cliente}</div>
+          <div class="sb">${o.data_ordine} · ${cl?cl.zona:''}</div>
+          <div class="sb">${o.prodotti.map(p=>p.qty+'× '+p.formato+' '+p.miscela).join(', ')}</div></div>
+        <div class="rt"><div class="am" style="color:var(--br)">€${f(o.totale)}</div>
+          <span class="tag to">DA FARE</span></div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  if(ch.length>0){
+    h+=`<div class="st">✅ Recenti</div><div class="card">`;
+    ch.forEach(o=>{
+      h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
+        <div class="nf"><div class="nm">${o.nome_cliente}</div>
+          <div class="sb">${o.data_consegna||o.data_ordine}</div></div>
+        <div class="rt"><div class="am" style="color:var(--gn)">€${f(o.incassato||0)}</div>
+          <span class="tag tg">CONSEGNATA</span></div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  if(ap.length===0&&ch.length===0)h+=`<div class="em"><div class="ic">📋</div><p>Nessun ordine</p></div>`;
+  el.innerHTML=h;
+}
+
+// ── NUOVO ORDINE ─────────────────────────────────────────────────────
+function nuovoOrdine(){
+  let srch='',cl=null,prods=[];
+  function render(){
+    const cf=DB.clienti.filter(c=>!srch||c.nome.toLowerCase().includes(srch.toLowerCase())||(c.zona||'').toLowerCase().includes(srch.toLowerCase())).slice(0,15);
+    let h='<div class="mh"></div><h3>➕ Nuovo Ordine</h3>';
+    if(!cl){
+      h+=`<div class="fg"><label>Cerca Cliente</label>
+        <input class="fc" id="sc" placeholder="Nome o zona..." value="${srch}"
+          oninput="window._ucs(this.value)" autocomplete="off"></div>`;
+      cf.forEach(c=>{
+        const sp=c.sospeso>0?`<span style="color:var(--rd);font-size:11px"> · Debito €${f(c.sospeso)}</span>`:'';
+        h+=`<div class="li" onclick="window._sc('${c.id}')">
+          <div class="av" style="background:var(--cr2)">👤</div>
+          <div class="nf"><div class="nm">${c.nome}${sp}</div>
+            <div class="sb">${c.zona||''} · ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div></div>
+          <div class="rt" style="color:var(--br);font-size:20px">›</div>
+        </div>`;
+      });
+      if(!cf.length)h+=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
+    } else {
+      h+=`<div class="al as">👤 <strong>${cl.nome}</strong> · ${cl.zona||''}
+        <button onclick="window._dc()" style="float:right;background:none;border:none;font-size:18px;cursor:pointer">✕</button></div>`;
+      if(cl.sospeso>0)h+=`<div class="al aw">⚠️ Debito: <strong>€${f(cl.sospeso)}</strong></div>`;
+      h+=`<div class="st">Prodotti</div>`;
+      prods.forEach((p,i)=>{
+        h+=`<div class="pc">
+          <div style="flex:1">
+            <div class="pn">${p.formato} ${p.marchio} ${p.miscela}</div>
+            <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+              <input type="number" value="${p.qty}" min="1" style="width:70px;padding:5px 8px;border:2px solid var(--gy2);border-radius:8px;font-size:14px;font-weight:700"
+                onchange="window._ap(${i},'qty',this.value)">
+              <span style="color:#888;font-size:12px">× €${p.prezzo}</span>
+              <strong style="color:var(--br)">€${f(p.qty*p.prezzo)}</strong>
+            </div>
+          </div>
+          <button onclick="window._rp(${i})" style="color:var(--rd);font-size:20px;background:none;border:none;cursor:pointer;padding:0 4px">🗑</button>
+        </div>`;
+      });
+      h+=`<button class="btn btn-s" onclick="window._add()">➕ Aggiungi prodotto</button>`;
+      if(prods.length>0){
+        const tot=prods.reduce((s,p)=>s+p.qty*p.prezzo,0);
+        h+=`<div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
+          <span style="font-size:13px;color:#666">Totale: </span>
+          <span style="font-size:22px;font-weight:800;color:var(--br)">€${f(tot)}</span>
+        </div>
+        <button class="btn btn-p" onclick="window._co()">✅ Conferma Ordine</button>`;
+      }
+    }
+    document.getElementById('mc').innerHTML=h;
+    if(!cl){const i=document.getElementById('sc');if(i)setTimeout(()=>i.focus(),50);}
+  }
+  window._ucs=v=>{srch=v;render();};
+  window._sc=id=>{cl=DB.clienti.find(c=>c.id===id);
+    if(cl&&cl.formato_abituale){
+      const p=DB.prodotti.find(p=>p.formato===cl.formato_abituale&&p.miscela===cl.miscela_abituale);
+      prods=[{codice:p?p.codice:'',formato:cl.formato_abituale,marchio:p?p.marchio:'',
+        miscela:cl.miscela_abituale,qty:cl.qty_abituale||1,prezzo:cl.prezzo_abituale||(p?p.prezzo_vendita:0)}];
+    }render();};
+  window._dc=()=>{cl=null;prods=[];render();};
+  window._ap=(i,k,v)=>{prods[i][k]=k==='qty'?Math.max(1,parseInt(v)||1):v;render();};
+  window._rp=i=>{prods.splice(i,1);render();};
+  window._add=()=>{
+    let ps='';
+    function rpa(){
+      const pf=DB.prodotti.filter(p=>!ps||p.codice.toLowerCase().includes(ps.toLowerCase())||
+        p.miscela.toLowerCase().includes(ps.toLowerCase())||p.formato.toLowerCase().includes(ps.toLowerCase())||
+        p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,25);
+      let h=`<div class="mh"></div><h3>Scegli Prodotto</h3>
+        <input class="fc" placeholder="Cerca..." value="${ps}" oninput="window._ups(this.value)" style="margin-bottom:10px" autofocus>`;
+      pf.forEach(p=>{
+        h+=`<div class="li" onclick="window._agp('${p.codice}')">
+          <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
+            <div class="sb">€${p.prezzo_vendita}/pz</div></div>
+          <div class="rt" style="color:var(--br);font-size:20px">+</div>
+        </div>`;
+      });
+      document.getElementById('mc').innerHTML=h;
+      setTimeout(()=>{const i=document.querySelector('.mc input');if(i)i.focus();},50);
+    }
+    window._ups=v=>{ps=v;rpa();};
+    window._agp=cod=>{const p=DB.prodotti.find(x=>x.codice===cod);
+      if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,
+        miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});render();};
+    rpa();
+  };
+  window._co=()=>{
+    if(!cl||!prods.length)return;
+    const tot=prods.reduce((s,p)=>s+p.qty*p.prezzo,0);
+    const id='ORD-'+String(DB.cnt.ordine).padStart(3,'0');DB.cnt.ordine++;
+    DB.ordini.push({id,id_cliente:cl.id,nome_cliente:cl.nome,zona:cl.zona||'',
+      prodotti:prods.map(p=>({...p})),totale:Math.round(tot*100)/100,
+      stato:'DA FARE',data_ordine:oggi(),data_consegna:null,incassato:0,da_pagare:0});
+    saveDB();closeMO();toast(`Ordine ${id} creato per ${cl.nome}`);go('ordini');
+  };
+  openMO();render();
+}
+
+function apriOrdine(id){
+  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
+  const cl=DB.clienti.find(c=>c.id===o.id_cliente);
+  let h=`<div class="mh"></div><h3>${o.id}</h3>
+  <div class="al ${o.stato==='DA FARE'?'aw':'as'}">👤 <strong>${o.nome_cliente}</strong> · ${o.zona}</div>
+  <div class="st">Prodotti</div>`;
+  o.prodotti.forEach(p=>{
+    h+=`<div class="pc"><div style="flex:1">
+      <div class="pn">${p.formato} ${p.marchio} ${p.miscela}</div>
+      <div class="pp">${p.qty} × €${p.prezzo} = <strong>€${f(p.qty*p.prezzo)}</strong></div>
+    </div></div>`;
+  });
+  h+=`<div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
+    Totale: <span style="font-size:22px;font-weight:800;color:var(--br)">€${f(o.totale)}</span>
+  </div>`;
+  if(o.stato==='DA FARE'){
+    h+=`<button class="btn btn-ok" onclick="registraConsegna('${id}')">🚚 Registra Consegna</button>
+    <button class="btn btn-x" onclick="annullaOrdine('${id}')">❌ Annulla</button>`;
+  } else {
+    h+=`<div class="al as">✅ Consegnato ${o.data_consegna} · Incassato €${f(o.incassato)}</div>`;
+  }
+  h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+function registraConsegna(id){
+  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
+  let h=`<div class="mh"></div><h3>🚚 Consegna</h3>
+  <div class="al as">👤 <strong>${o.nome_cliente}</strong></div>
+  <div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:14px">
+    ${o.prodotti.map(p=>`<div style="display:flex;justify-content:space-between;padding:3px 0">
+      <span>${p.qty}× ${p.formato} ${p.miscela}</span><strong>€${f(p.qty*p.prezzo)}</strong></div>`).join('')}
+    <div class="dv"></div>
+    <div style="display:flex;justify-content:space-between">
+      <span style="font-weight:700">TOTALE</span>
+      <strong style="color:var(--br);font-size:18px">€${f(o.totale)}</strong>
+    </div>
+  </div>
+  <div class="fg"><label>Importo incassato (€)</label>
+    <input class="fc" type="number" id="inc" value="${o.totale}" step="0.01" min="0"
+      style="font-size:24px;font-weight:700;text-align:center"></div>
+  <div class="fg"><label>Metodo pagamento</label>
+    <select class="fc" id="met">
+      <option>Contanti</option><option>Bonifico</option><option>POS</option><option>Da Saldare</option>
+    </select></div>
+  <button class="btn btn-ok" onclick="confConsegna('${id}')">✅ Conferma</button>
+  <button class="btn btn-s" onclick="apriOrdine('${id}')">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;
+}
+
+window.confConsegna=function(id){
+  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
+  const inc=parseFloat(document.getElementById('inc').value)||0;
+  const met=document.getElementById('met').value;
+  const dp=Math.max(0,Math.round((o.totale-inc)*100)/100);
+  const og=oggi();
+  o.stato='CONSEGNATA';o.data_consegna=og;o.incassato=inc;o.da_pagare=dp;
+  // Magazzino
+  o.prodotti.forEach(p=>{
+    const m=DB.magazzino.find(m=>m.formato.toUpperCase()===p.formato.toUpperCase()&&m.miscela.toUpperCase()===p.miscela.toUpperCase());
+    if(m){m.scarico+=p.qty;m.giacenza=m.carico-m.scarico+m.rettifica;}
+  });
+  // Storico
+  o.prodotti.forEach(p=>{
+    const nc='CON-'+String(DB.cnt.consegna).padStart(3,'0');DB.cnt.consegna++;
+    DB.storico.push({id_consegna:nc,data:og,id_cliente:o.id_cliente,nome_cliente:o.nome_cliente,
+      zona:o.zona,formato:p.formato,miscela:p.miscela,qty:p.qty,prezzo_unit:p.prezzo,
+      importo:p.qty*p.prezzo,incassato:inc,n_ordine:o.id});
+  });
+  // Cliente
+  const cl=DB.clienti.find(c=>c.id===o.id_cliente);
+  if(cl){
+    if(dp>0)cl.sospeso=Math.round(((cl.sospeso||0)+dp)*100)/100;
+    cl.ultima_consegna_1=cl.ultima_consegna_2||'';
+    cl.ultima_consegna_2=cl.ultima_consegna_3||'';
+    cl.ultima_consegna_3=og;
+  }
+  // Cassa
+  if(inc>0){
+    const sp=saldoCassa();
+    DB.cassa.push({data:og,descrizione:'Incasso - '+o.nome_cliente,tipo:'Incasso Consegna',
+      riferimento:o.id,entrata:inc,uscita:0,saldo:Math.round((sp+inc)*100)/100,metodo:met,
+      note:o.prodotti.map(p=>p.formato+' '+p.miscela+' ×'+p.qty).join(', ')});
+  }
+  saveDB();closeMO();
+  toast(`✅ Consegnato! €${f(inc)} incassato${dp>0?' · Da pagare €'+f(dp):''}`);
+  go('ordini');
+};
+
+window.annullaOrdine=function(id){
+  if(!confirm('Annullare questo ordine?'))return;
+  const o=DB.ordini.find(x=>x.id===id);if(o)o.stato='ANNULLATA';
+  saveDB();closeMO();toast('Ordine annullato');go('ordini');
+};
+
+// ── CLIENTI ─────────────────────────────────────────────────────────
+function pgClienti(el){
+  const q=sq.toLowerCase();
+  const cf=DB.clienti.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.zona||'').toLowerCase().includes(q));
+  let h=`<div class="sb"><span style="color:#aaa;font-size:16px">🔍</span>
+    <input placeholder="Cerca cliente o zona..." value="${sq}"
+      oninput="sq=this.value;pgClienti(document.getElementById('cnt'))" autocomplete="off"></div>
+  <div style="font-size:12px;color:#888;margin-bottom:6px">${cf.length} clienti</div><div class="card">`;
+  if(!cf.length)h+=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
+  cf.forEach(c=>{
+    h+=`<div class="li" onclick="apriCliente('${c.id}')">
+      <div class="av" style="background:${c.sospeso>0?'var(--rd2)':'var(--bl2)'}">
+        ${c.sospeso>0?'⚠️':'👤'}</div>
+      <div class="nf"><div class="nm">${c.nome}</div>
+        <div class="sb">${c.zona||''} · ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
+        ${c.ultima_consegna_3?`<div class="sb">Ultima: ${c.ultima_consegna_3}</div>`:''}
+      </div>
+      <div class="rt">
+        ${c.sospeso>0?`<div class="am" style="color:var(--rd)">€${f(c.sospeso)}</div><div class="sb">sospeso</div>`:''}
+        <span style="color:var(--br);font-size:18px">›</span>
+      </div>
+    </div>`;
+  });
+  h+=`</div>`;el.innerHTML=h;
+}
+
+function apriCliente(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const co=DB.storico.filter(s=>s.id_cliente===id).slice(-5).reverse();
+  let h=`<div class="mh"></div><h3>${c.nome}</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+    <div style="background:var(--cr2);border-radius:10px;padding:10px">
+      <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase">Zona</div>
+      <div style="font-weight:700;margin-top:2px">${c.zona||'—'}</div>
+    </div>
+    <div style="background:var(--cr2);border-radius:10px;padding:10px">
+      <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase">Telefono</div>
+      <div style="font-weight:700;margin-top:2px;font-size:13px">${c.telefono||'—'}</div>
+    </div>
+  </div>
+  <div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px">
+    <div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:6px">Prodotto Abituale</div>
+    <div style="font-weight:700;font-size:15px">${c.formato_abituale} ${c.miscela_abituale}</div>
+    <div style="color:#666;font-size:13px">${c.qty_abituale} pz × €${c.prezzo_abituale} = <strong>€${f(c.qty_abituale*c.prezzo_abituale)}</strong></div>
+  </div>`;
+  if(c.sospeso>0){
+    h+=`<div class="al ae">⚠️ Debito: <strong>€${f(c.sospeso)}</strong>
+      <button onclick="apriSaldo('${id}')" style="float:right;background:var(--rd);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">Salda</button>
+    </div>`;
+  }
+  if(c.ultima_consegna_1||c.ultima_consegna_2||c.ultima_consegna_3){
+    h+=`<div class="st">📅 Ultime consegne</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+      ${c.ultima_consegna_1?`<span class="tag ty">${c.ultima_consegna_1}</span>`:''}
+      ${c.ultima_consegna_2?`<span class="tag ty">${c.ultima_consegna_2}</span>`:''}
+      ${c.ultima_consegna_3?`<span class="tag tg">${c.ultima_consegna_3}</span>`:''}
+    </div>`;
+  }
+  if(co.length>0){
+    h+=`<div class="st">Storico recente</div><div class="card">`;
+    co.forEach(s=>{
+      h+=`<div class="li"><div class="nf">
+        <div class="nm" style="font-size:13px">${s.formato} ${s.miscela} ×${s.qty}</div>
+        <div class="sb">${s.data}</div></div>
+        <div class="rt"><div class="am" style="color:var(--gn)">€${f(s.incassato)}</div></div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<button class="btn btn-p" onclick="nuovoOrdineCliente('${id}')">➕ Nuovo Ordine</button>
+  <button class="btn btn-s" onclick="modificaProdAbit('${id}')">✏️ Modifica Prodotto Abituale</button>
+  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+function nuovoOrdineCliente(id){
+  closeMO();
+  setTimeout(()=>{nuovoOrdine();setTimeout(()=>window._sc&&window._sc(id),100);},300);
+}
+
+function apriSaldo(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  let h=`<div class="mh"></div><h3>💳 Registra Saldo</h3>
+  <div class="al aw">👤 <strong>${c.nome}</strong><br>Debito: <strong>€${f(c.sospeso)}</strong></div>
+  <div class="fg"><label>Importo pagato (€)</label>
+    <input class="fc" type="number" id="si" value="${c.sospeso}" step="0.01" min="0"
+      style="font-size:24px;font-weight:700;text-align:center"></div>
+  <button class="btn btn-ok" onclick="confSaldo('${id}')">✅ Conferma</button>
+  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+window.confSaldo=function(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const pag=parseFloat(document.getElementById('si').value)||0;
+  const ns=Math.max(0,Math.round((c.sospeso-pag)*100)/100);
+  c.sospeso=ns;
+  const sp=saldoCassa();
+  DB.cassa.push({data:oggi(),descrizione:'Saldo debito - '+c.nome,tipo:'Saldo Debito',
+    riferimento:c.id,entrata:pag,uscita:0,saldo:Math.round((sp+pag)*100)/100,metodo:'Contanti',note:''});
+  saveDB();closeMO();toast(`Saldo €${f(pag)} · Residuo €${f(ns)}`);go('clienti');
+};
+
+function modificaProdAbit(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  let ps='';
+  function rend(){
+    const pf=DB.prodotti.filter(p=>!ps||p.miscela.toLowerCase().includes(ps.toLowerCase())||
+      p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
+    let h=`<div class="mh"></div><h3>✏️ Prodotto Abituale</h3>
+    <div class="al as">${c.nome} · Attuale: ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
+    <input class="fc" placeholder="Cerca prodotto..." value="${ps}" oninput="window._mpas(this.value)" style="margin-bottom:8px">
+    <div class="card">`;
+    pf.forEach(p=>{
+      h+=`<div class="li" onclick="window._mpsel('${c.id}','${p.codice}')">
+        <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
+          <div class="sb">€${p.prezzo_vendita}/pz</div></div>
+        <div class="rt" style="color:var(--br);font-size:20px">›</div>
+      </div>`;
+    });
+    h+=`</div><button class="btn btn-s" onclick="apriCliente('${id}')">← Indietro</button>`;
+    document.getElementById('mc').innerHTML=h;
+  }
+  window._mpas=v=>{ps=v;rend();};
+  window._mpsel=function(cid,cod){
+    const cl=DB.clienti.find(x=>x.id===cid);const pr=DB.prodotti.find(p=>p.codice===cod);
+    if(!cl||!pr)return;
+    document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Conferma</h3>
+    <div class="al as">${pr.formato} ${pr.marchio} ${pr.miscela}</div>
+    <div class="fg"><label>Quantità abituale</label>
+      <input class="fc" type="number" id="mq" value="${cl.qty_abituale||100}" style="font-size:22px;text-align:center"></div>
+    <div class="fg"><label>Prezzo (€)</label>
+      <input class="fc" type="number" id="mp" value="${pr.prezzo_vendita}" step="0.001" style="font-size:22px;text-align:center"></div>
+    <button class="btn btn-ok" onclick="window._mpsave('${cid}','${cod}')">✅ Salva</button>
+    <button class="btn btn-s" onclick="modificaProdAbit('${cid}')">← Indietro</button>`;
+  };
+  window._mpsave=function(cid,cod){
+    const cl=DB.clienti.find(x=>x.id===cid);const pr=DB.prodotti.find(p=>p.codice===cod);
+    if(!cl||!pr)return;
+    cl.formato_abituale=pr.formato;cl.miscela_abituale=pr.miscela;
+    cl.qty_abituale=parseInt(document.getElementById('mq').value)||1;
+    cl.prezzo_abituale=parseFloat(document.getElementById('mp').value)||pr.prezzo_vendita;
+    saveDB();closeMO();toast('Prodotto abituale aggiornato!');go('clienti');
+  };
+  rend();
+}
+
+// ── CASSA ───────────────────────────────────────────────────────────
+function saldoCassa(){
+  const te=DB.cassa.reduce((s,r)=>s+(r.entrata||0),0);
+  const tu=DB.cassa.reduce((s,r)=>s+(r.uscita||0),0);
+  return Math.round((DB.saldo_iniziale+te-tu)*100)/100;
+}
+
+function pgCassa(el){
+  const sc=saldoCassa();
+  const te=DB.cassa.reduce((s,r)=>s+(r.entrata||0),0);
+  const tu=DB.cassa.reduce((s,r)=>s+(r.uscita||0),0);
+  const og=oggi();
+  const eo=DB.cassa.filter(r=>r.data===og).reduce((s,r)=>s+(r.entrata||0),0);
+  const uo=DB.cassa.filter(r=>r.data===og).reduce((s,r)=>s+(r.uscita||0),0);
+  const ul=DB.cassa.slice(-30).reverse();
+  let h=`<div class="kg">
+    <div class="kpi br" style="grid-column:1/-1">
+      <span class="lbl">💰 Saldo Attuale</span>
+      <span class="val">€${f(sc)}</span>
+      <span class="sub">Saldo iniziale: €${f(DB.saldo_iniziale)}</span>
+    </div>
+    <div class="kpi gn">
+      <span class="lbl">↑ Entrate tot.</span>
+      <span class="val">€${f(te)}</span>
+      <span class="sub">+€${f(eo)} oggi</span>
+    </div>
+    <div class="kpi rd">
+      <span class="lbl">↓ Uscite tot.</span>
+      <span class="val">€${f(tu)}</span>
+      <span class="sub">-€${f(uo)} oggi</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button class="btn btn-ok btn-sm" style="flex:1" onclick="moEntrata()">↑ Entrata</button>
+    <button class="btn btn-x btn-sm" style="flex:1" onclick="moUscita()">↓ Spesa</button>
+    <button class="btn btn-g btn-sm" style="flex:1" onclick="moContaCassa()">🧮 Conta</button>
+  </div>
+  <div class="st">Ultime operazioni</div><div class="card">`;
+  if(!ul.length)h+=`<div class="em" style="padding:20px"><p>Nessuna operazione</p></div>`;
+  ul.forEach(r=>{
+    const ie=r.entrata>0;
+    h+=`<div class="li">
+      <div class="av" style="background:${ie?'var(--gn2)':'var(--rd2)'};font-size:16px">${ie?'↑':'↓'}</div>
+      <div class="nf"><div class="nm" style="font-size:13px">${r.descrizione}</div>
+        <div class="sb">${r.data} · ${r.tipo}</div></div>
+      <div class="rt">
+        <div class="am" style="color:${ie?'var(--gn)':'var(--rd)'}">${ie?'+':'-'}€${f(ie?r.entrata:r.uscita)}</div>
+        <div class="sb">Saldo €${f(r.saldo)}</div>
+      </div>
+    </div>`;
+  });
+  h+=`</div>`;el.innerHTML=h;
+}
+
+function moEntrata(){
+  let h=`<div class="mh"></div><h3>↑ Registra Entrata</h3>
+  <div class="fg"><label>Descrizione</label>
+    <input class="fc" id="ed" placeholder="es. Incasso..." autofocus></div>
+  <div class="fg"><label>Importo (€)</label>
+    <input class="fc" type="number" id="ei" step="0.01" min="0" style="font-size:24px;text-align:center"></div>
+  <div class="fg"><label>Tipo</label>
+    <select class="fc" id="et"><option>Incasso Consegna</option><option>Saldo Debito</option><option>Altra Entrata</option></select></div>
+  <div class="fg"><label>Metodo</label>
+    <select class="fc" id="em"><option>Contanti</option><option>Bonifico</option><option>POS</option></select></div>
+  <button class="btn btn-ok" onclick="salvaCassa('e')">✅ Salva</button>
+  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+function moUscita(){
+  let h=`<div class="mh"></div><h3>↓ Registra Spesa</h3>
+  <div class="fg"><label>Descrizione</label>
+    <input class="fc" id="ud" placeholder="es. Carburante..." autofocus></div>
+  <div class="fg"><label>Importo (€)</label>
+    <input class="fc" type="number" id="ui" step="0.01" min="0" style="font-size:24px;text-align:center"></div>
+  <div class="fg"><label>Tipo</label>
+    <select class="fc" id="ut"><option>Acquisto Merce</option><option>Carburante</option><option>Telefono/Internet</option><option>Altra Uscita</option></select></div>
+  <div class="fg"><label>Note</label><input class="fc" id="un" placeholder="Facoltativo..."></div>
+  <button class="btn btn-x" onclick="salvaCassa('u')">✅ Salva Spesa</button>
+  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+window.salvaCassa=function(tipo){
+  const ie=tipo==='e';
+  const desc=(document.getElementById(ie?'ed':'ud').value||'').trim();
+  const imp=parseFloat(document.getElementById(ie?'ei':'ui').value)||0;
+  const tip=document.getElementById(ie?'et':'ut').value;
+  if(!desc||imp<=0){toast('Inserisci descrizione e importo');return;}
+  const sp=saldoCassa();
+  DB.cassa.push({data:oggi(),descrizione:desc,tipo:tip,riferimento:'',
+    entrata:ie?imp:0,uscita:ie?0:imp,
+    saldo:Math.round((sp+(ie?imp:-imp))*100)/100,
+    metodo:ie?document.getElementById('em').value:'Contanti',
+    note:ie?'':(document.getElementById('un').value||'')});
+  saveDB();closeMO();toast(`${ie?'Entrata':'Spesa'} €${f(imp)} registrata`);go('cassa');
+};
+
+function moContaCassa(){
+  const tgl=[{l:'💵 500€',v:500},{l:'💵 200€',v:200},{l:'💵 100€',v:100},
+    {l:'💵 50€',v:50},{l:'💵 20€',v:20},{l:'💵 10€',v:10},{l:'💵 5€',v:5},
+    {l:'🪙 2€',v:2},{l:'🪙 1€',v:1},{l:'🪙 0,50€',v:.5},{l:'🪙 0,20€',v:.2},{l:'🪙 0,10€',v:.1}];
+  let h=`<div class="mh"></div><h3>🧮 Conta Cassa</h3>
+  <div style="font-size:12px;color:#888;margin-bottom:12px">Nr. pezzi per ogni taglio</div>`;
+  tgl.forEach((t,i)=>{
+    h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="flex:1;font-weight:600">${t.l}</span>
+      <input type="number" min="0" value="0" id="tg${i}" class="fc"
+        style="width:80px;text-align:center;padding:8px" oninput="aggCC()">
+      <span style="width:70px;text-align:right;font-size:13px;color:#666" id="tt${i}">€0</span>
+    </div>`;
+  });
+  h+=`<div class="dv"></div>
+  <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;margin-bottom:14px">
+    <span>Totale contato:</span><span id="cctot" style="color:var(--br)">€0,00</span>
+  </div>
+  <div id="ccres" style="display:none"></div>
+  <button class="btn btn-g" onclick="calcCC()">🧮 Calcola Differenza</button>
+  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;
+  window._tgl=tgl;
+  window.aggCC=function(){
+    let tot=0;
+    tgl.forEach((t,i)=>{const pz=parseInt(document.getElementById('tg'+i).value)||0;const v=pz*t.v;tot+=v;document.getElementById('tt'+i).textContent='€'+f(v);});
+    document.getElementById('cctot').textContent='€'+f(tot);
+  };
+  window.calcCC=function(){
+    let tot=0;tgl.forEach((t,i)=>tot+=(parseInt(document.getElementById('tg'+i).value)||0)*t.v);
+    const te=saldoCassa();const df=tot-te;
+    const res=document.getElementById('ccres');res.style.display='block';
+    res.innerHTML=`<div class="al ${Math.abs(df)<.01?'as':df>0?'aw':'ae'}">
+      <div>Cassa reale: <strong>€${f(tot)}</strong></div>
+      <div>Cassa teorica: <strong>€${f(te)}</strong></div>
+      <div style="margin-top:6px;font-size:16px;font-weight:800">
+        ${Math.abs(df)<.01?'✅ Cassa in ordine!':df>0?'⬆️ Eccedenza: +€'+f(df):'⬇️ Ammanco: -€'+f(Math.abs(df))}
+      </div></div>`;
+  };
+  openMO();
+}
+
+// ── MAGAZZINO ───────────────────────────────────────────────────────
+function pgMagazzino(el){
+  const q=sq.toLowerCase();
+  const mf=DB.magazzino.filter(m=>!q||m.codice.toLowerCase().includes(q)||m.miscela.toLowerCase().includes(q)||m.formato.toLowerCase().includes(q)||m.marchio.toLowerCase().includes(q));
+  const dr=mf.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
+  let h=`<div class="sb"><span style="color:#aaa">🔍</span>
+    <input placeholder="Cerca prodotto..." value="${sq}"
+      oninput="sq=this.value;pgMagazzino(document.getElementById('cnt'))" autocomplete="off"></div>`;
+  if(dr.length>0&&!sq)h+=`<div class="al ae">⚠️ ${dr.length} prodotti sotto scorta minima</div>`;
+  h+=`<div class="card">`;
+  mf.forEach(m=>{
+    const al=m.giacenza<=m.scorta_minima&&m.scorta_minima>0;
+    const pct=m.scorta_minima>0?Math.min(100,(m.giacenza/m.scorta_minima)*100):100;
+    const cod=m.codice.replace(/'/g,"\\'");
+    h+=`<div class="li" onclick="apriMag('${cod}')">
+      <div class="av" style="background:${al?'var(--rd2)':'var(--gn2)'}">${al?'⚠️':'📦'}</div>
+      <div class="nf"><div class="nm" style="font-size:13px">${m.formato} ${m.marchio} ${m.miscela}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <div class="pb"><div class="pbf" style="width:${pct}%;background:${al?'var(--rd)':'var(--gn)'}"></div></div>
+          <span style="font-size:11px;color:#888">min ${m.scorta_minima}</span>
+        </div></div>
+      <div class="rt">
+        <div class="am" style="color:${al?'var(--rd)':'var(--gn)'}">${m.giacenza}</div>
+        <div class="sb">pezzi</div>
+      </div>
+    </div>`;
+  });
+  h+=`</div>`;el.innerHTML=h;
+}
+
+function apriMag(cod){
+  const m=DB.magazzino.find(x=>x.codice===cod);if(!m)return;
+  const al=m.giacenza<=m.scorta_minima&&m.scorta_minima>0;
+  let h=`<div class="mh"></div><h3>${m.formato} ${m.marchio}</h3>
+  <div style="font-size:15px;color:#666;margin-bottom:14px">${m.miscela}</div>
+  <div class="kg" style="margin-bottom:14px">
+    <div class="kpi ${al?'rd':'gn'}"><span class="lbl">Giacenza</span><span class="val">${m.giacenza}</span><span class="sub">pezzi</span></div>
+    <div class="kpi"><span class="lbl">Scorta Min.</span><span class="val">${m.scorta_minima}</span></div>
+    <div class="kpi"><span class="lbl">Carico tot.</span><span class="val">${m.carico}</span></div>
+    <div class="kpi"><span class="lbl">Scarico tot.</span><span class="val">${m.scarico}</span></div>
+  </div>
+  <div class="fg"><label>Aggiungi arrivo merce (pezzi)</label>
+    <input class="fc" type="number" id="ap" min="0" placeholder="es. 500" style="font-size:22px;text-align:center"></div>
+  <button class="btn btn-p" onclick="salvArr('${cod}')">📦 Registra Arrivo</button>
+  <div class="fg" style="margin-top:12px"><label>Rettifica giacenza (+ aggiunge, - toglie)</label>
+    <input class="fc" type="number" id="rp" value="${m.rettifica}" style="font-size:18px;text-align:center"></div>
+  <button class="btn btn-s" onclick="salvRett('${cod}')">✏️ Salva Rettifica</button>
+  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+window.salvArr=function(cod){
+  const pz=parseInt(document.getElementById('ap').value)||0;
+  if(pz<=0){toast('Inserisci il numero di pezzi');return;}
+  const m=DB.magazzino.find(x=>x.codice===cod);
+  if(m){m.carico+=pz;m.giacenza=m.carico-m.scarico+m.rettifica;saveDB();closeMO();toast(`Arrivo ${pz} pezzi registrato`);go('magazzino');}
+};
+window.salvRett=function(cod){
+  const r=parseInt(document.getElementById('rp').value)||0;
+  const m=DB.magazzino.find(x=>x.codice===cod);
+  if(m){m.rettifica=r;m.giacenza=m.carico-m.scarico+m.rettifica;saveDB();closeMO();toast('Rettifica salvata');go('magazzino');}
+};
+
+// ── STORICO ─────────────────────────────────────────────────────────
+function pgStorico(el){
+  const ul=DB.storico.slice(-60).reverse();
+  let h=`<div class="st">Ultime ${ul.length} consegne</div><div class="card">`;
+  ul.forEach(s=>{
+    h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
+      <div class="nf"><div class="nm" style="font-size:13px">${s.nome_cliente}</div>
+        <div class="sb">${s.data} · ${s.formato} ${s.miscela} ×${s.qty}</div></div>
+      <div class="rt"><div class="am" style="color:var(--gn);font-size:14px">€${f(s.incassato)}</div></div>
+    </div>`;
+  });
+  h+=`</div>`;el.innerHTML=h;
+}
+
+// ── MENU ────────────────────────────────────────────────────────────
+function apriMenu(){
+  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
+  const tot=dr.reduce((s,m)=>{
+    const p=DB.prodotti.find(x=>x.formato===m.formato&&x.miscela===m.miscela);
+    return s+(m.scorta_minima-m.giacenza)*(p?p.prezzo_acquisto:0);
+  },0);
+  let h=`<div class="mh"></div><h3>⚙️ Strumenti</h3>
+  <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
+  <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
+  <button class="btn btn-p" onclick="closeMO();go('storico')">📜 Storico Consegne</button>
+  <div class="dv"></div>
+  <button class="btn btn-s" onclick="esportaBackup()">💾 Scarica Backup JSON</button>
+  <button class="btn btn-s" onclick="importaBackup()">📂 Importa Backup</button>
+  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+function moOrdineFornitore(){
+  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0).map(m=>{
+    const p=DB.prodotti.find(x=>x.formato===m.formato&&x.miscela===m.miscela);
+    const qty=m.scorta_minima-m.giacenza;
+    return{...m,qty_ord:qty,prezzo_acq:p?p.prezzo_acquisto:0,totale:qty*(p?p.prezzo_acquisto:0)};
+  });
+  const totOrd=dr.reduce((s,p)=>s+p.totale,0);
+  let h=`<div class="mh"></div><h3>🏭 Ordine Fornitore</h3>
+  <div style="font-size:12px;color:#888;margin-bottom:10px">${oggi()}</div>`;
+  if(!dr.length){h+=`<div class="al as">✅ Nessun prodotto da riordinare</div>`;}
+  else{
+    h+=`<div class="card" style="margin-bottom:12px">`;
+    dr.forEach(p=>{
+      h+=`<div class="li"><div class="nf">
+        <div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
+        <div class="sb">Giacenza: ${p.giacenza} · Min: ${p.scorta_minima}</div></div>
+        <div class="rt"><div class="am" style="color:var(--br)">${p.qty_ord} pz</div>
+          <div class="sb">€${f(p.totale)}</div></div>
+      </div>`;
+    });
+    h+=`</div>
+    <div style="background:var(--go2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
+      Totale: <span style="font-size:22px;font-weight:800;color:var(--br)">€${f(totOrd)}</span>
+    </div>
+    <button class="btn btn-p" onclick="esportaOrdine()">📤 Esporta CSV</button>`;
+    window._dr=dr;
+  }
+  h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+  window.esportaOrdine=function(){
+    let csv='Codice,Formato,Marchio,Miscela,Qty da Ordinare\n';
+    window._dr.forEach(p=>{csv+=`"${p.codice}","${p.formato}","${p.marchio}","${p.miscela}",${p.qty_ord}\n`;});
+    scaricaFile(csv,'text/csv',`ORDINE_CAFFE_${oggi().replace(/\//g,'-')}.csv`);
+    toast('Ordine esportato!');
+  };
+}
+
+function moStatistiche(){
+  const pm={};
+  DB.storico.forEach(s=>{
+    if(!s.data)return;
+    const pt=s.data.split('/');if(pt.length<3)return;
+    const k=`${pt[1]}/${pt[2]}`;
+    if(!pm[k])pm[k]={c:0,i:0,p:0};
+    pm[k].c++;pm[k].i+=(s.incassato||0);pm[k].p+=(s.qty||0);
+  });
+  const mesi=Object.keys(pm).sort().reverse().slice(0,6);
+  const pp={};
+  DB.storico.forEach(s=>{const k=`${s.formato} ${s.miscela}`;if(!pp[k])pp[k]=0;pp[k]+=(s.qty||0);});
+  const top=Object.entries(pp).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  let h=`<div class="mh"></div><h3>📊 Statistiche</h3>`;
+  if(!mesi.length){h+=`<div class="em"><p>Nessun dato</p></div>`;}
+  else{
+    h+=`<div class="card">`;
+    mesi.forEach(m=>{
+      const d=pm[m];const[mm,yy]=m.split('/');
+      const nm=new Date(parseInt(yy),parseInt(mm)-1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});
+      h+=`<div class="li"><div class="av" style="background:var(--bl2);color:var(--bl)">📅</div>
+        <div class="nf"><div class="nm">${nm.charAt(0).toUpperCase()+nm.slice(1)}</div>
+          <div class="sb">${d.c} consegne · ${d.p} pz</div></div>
+        <div class="rt"><div class="am" style="color:var(--gn)">€${f(d.i)}</div></div>
+      </div>`;
+    });
+    h+=`</div><div class="st">🏆 Top 5 Prodotti</div><div class="card">`;
+    top.forEach(([nm,qty],i)=>{
+      h+=`<div class="li"><div class="av" style="background:var(--go2);color:var(--br);font-weight:800">${i+1}</div>
+        <div class="nf"><div class="nm" style="font-size:13px">${nm}</div></div>
+        <div class="rt"><div class="am" style="color:var(--br)">${qty} pz</div></div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+// ── BACKUP ──────────────────────────────────────────────────────────
+function esportaBackup(){
+  scaricaFile(JSON.stringify(DB,null,2),'application/json',`shopcaffe_${oggi().replace(/\//g,'-')}.json`);
+  toast('Backup scaricato!');
+}
+function importaBackup(){
+  const i=document.createElement('input');i.type='file';i.accept='.json';
+  i.onchange=e=>{
+    const file=e.target.files[0];if(!file)return;
+    const r=new FileReader();r.onload=ev=>{
+      try{const d=JSON.parse(ev.target.result);
+        if(d.clienti&&d.prodotti){if(confirm('Importare il backup? I dati attuali verranno sostituiti.')){
+          localStorage.setItem(DBK,ev.target.result);location.reload();}}
+        else toast('File non valido');
+      }catch(e){toast('Errore lettura file');}
+    };r.readAsText(file);
+  };i.click();
+}
+function scaricaFile(content,type,name){
+  const b=new Blob([content],{type});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
+}
+
+// ── MODAL ───────────────────────────────────────────────────────────
+function openMO(){document.getElementById('mo').classList.add('open');}
+function closeMO(e){if(e&&e.target!==document.getElementById('mo'))return;document.getElementById('mo').classList.remove('open');}
+
+// ── TOAST ───────────────────────────────────────────────────────────
+function toast(msg){
+  const c=document.getElementById('tst');const el=document.createElement('div');
+  el.className='tm';el.textContent=msg;c.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},3200);
+}
+
+// ── HELPERS ─────────────────────────────────────────────────────────
+function f(n){return parseFloat(n||0).toFixed(2).replace('.',',');}
+function oggi(){return new Date().toLocaleDateString('it-IT');}
+
+// ── INIT ────────────────────────────────────────────────────────────
+initDB();go('home');
+</script>
+</body>
+</html>
