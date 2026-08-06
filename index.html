@@ -5423,9 +5423,9 @@ function go(p){
   page=p;sq='';
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   const nb=document.getElementById('nb-'+p);if(nb)nb.classList.add('active');
-  const titles={home:'Dashboard',ordini:'Ordini',clienti:'Clienti',cassa:'Cassa',magazzino:'Magazzino',storico:'Storico'};
+  const titles={home:'Dashboard',ordini:'Ordini',clienti:'Clienti',cassa:'Cassa',magazzino:'Magazzino',storico:'Storico',listino:'Listino Prodotti'};
   document.getElementById('hdr-sub').textContent=titles[p]||p;
-  const pages={home:pgHome,ordini:pgOrdini,clienti:pgClienti,cassa:pgCassa,magazzino:pgMagazzino,storico:pgStorico};
+  const pages={home:pgHome,ordini:pgOrdini,clienti:pgClienti,cassa:pgCassa,magazzino:pgMagazzino,storico:pgStorico,listino:pgListino};
   const el=document.getElementById('cnt');el.innerHTML='';
   if(pages[p])pages[p](el);
 }
@@ -5611,7 +5611,7 @@ function nuovoOrdine(){
       let h=`<div class="mh"></div><h3>Scegli Prodotto</h3>
         <input class="fc" placeholder="Cerca..." value="${ps}" oninput="window._ups(this.value)" style="margin-bottom:10px" autofocus>`;
       pf.forEach(p=>{
-        h+=`<div class="li" onclick="window._agp('${p.codice}')">
+        h+=`<div class="li" onclick="window._agp(${DB.prodotti.indexOf(p)})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
             <div class="sb">€${p.prezzo_vendita}/pz</div></div>
           <div class="rt" style="color:var(--br);font-size:20px">+</div>
@@ -5621,7 +5621,7 @@ function nuovoOrdine(){
       setTimeout(()=>{const i=document.querySelector('.mc input');if(i)i.focus();},50);
     }
     window._ups=v=>{ps=v;rpa();};
-    window._agp=cod=>{const p=DB.prodotti.find(x=>x.codice===cod);
+    window._agp=idx=>{const p=DB.prodotti[idx];
       if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,
         miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});render();};
     rpa();
@@ -5847,7 +5847,7 @@ function modificaProdAbit(id){
     <input class="fc" placeholder="Cerca prodotto..." value="${ps}" oninput="window._mpas(this.value)" style="margin-bottom:8px">
     <div class="card">`;
     pf.forEach(p=>{
-      h+=`<div class="li" onclick="window._mpsel('${c.id}','${p.codice}')">
+      h+=`<div class="li" onclick="window._mpsel('${c.id}',${DB.prodotti.indexOf(p)})">
         <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
           <div class="sb">€${p.prezzo_vendita}/pz</div></div>
         <div class="rt" style="color:var(--br);font-size:20px">›</div>
@@ -5866,7 +5866,7 @@ function modificaProdAbit(id){
       <input class="fc" type="number" id="mq" value="${cl.qty_abituale||100}" style="font-size:22px;text-align:center"></div>
     <div class="fg"><label>Prezzo (€)</label>
       <input class="fc" type="number" id="mp" value="${pr.prezzo_vendita}" step="0.001" style="font-size:22px;text-align:center"></div>
-    <button class="btn btn-ok" onclick="window._mpsave('${cid}','${cod}')">✅ Salva</button>
+    <button class="btn btn-ok" onclick="window._mpsave('${cid}',${idx})">✅ Salva</button>
     <button class="btn btn-s" onclick="modificaProdAbit('${cid}')">← Indietro</button>`;
   };
   window._mpsave=function(cid,cod){
@@ -6108,6 +6108,7 @@ function apriMenu(){
   <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
   <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
   <button class="btn btn-p" onclick="closeMO();go('storico')">📜 Storico Consegne</button>
+  <button class="btn btn-p" onclick="closeMO();go('listino')">📄 Gestione Listino</button>
   <div class="dv"></div>
   <button class="btn btn-s" onclick="esportaBackup()">💾 Scarica Backup JSON</button>
   <button class="btn btn-s" onclick="importaBackup()">📂 Importa Backup</button>
