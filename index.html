@@ -1,146 +1,4 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#3E1F00">
-<title>☕ Shop Caffè</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --br:#3E1F00;--br2:#6B3A1F;--br3:#C8956C;
-  --cr:#FFF8F0;--cr2:#F5E6D3;
-  --go:#D4A017;--go2:#F5D170;
-  --gn:#1A5C2A;--gn2:#E8F5E9;
-  --rd:#8B0000;--rd2:#FFEBEE;
-  --bl:#1F3864;--bl2:#DDEEFF;
-  --wh:#FFFFFF;--gy:#F0F0F0;--gy2:#CCCCCC;
-  --r:14px;--sh:0 2px 12px rgba(0,0,0,0.12);
-  --st:env(safe-area-inset-top,0px);
-  --sb:env(safe-area-inset-bottom,0px);
-}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--cr);color:#222}
-#app{display:flex;flex-direction:column;height:100%;height:100dvh}
-/* HEADER */
-#hdr{background:var(--br);color:#fff;padding:calc(var(--st)+10px) 16px 10px;flex-shrink:0;display:flex;align-items:center;gap:10px;min-height:56px}
-#hdr h1{font-size:18px;font-weight:700;flex:1}
-#hdr .sub{font-size:11px;opacity:.7;display:block}
-.hbtn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
-/* CONTENT */
-#cnt{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 8px}
-/* NAV */
-#nav{display:flex;background:var(--br);padding:0 0 calc(var(--sb)) 0;flex-shrink:0}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px;background:none;border:none;color:rgba(255,255,255,.6);font-size:9px;font-weight:600;cursor:pointer;gap:2px;min-height:56px;text-transform:uppercase;letter-spacing:.3px;position:relative}
-.nb .ic{font-size:20px;line-height:1}
-.nb.active{color:#fff;background:rgba(255,255,255,.12)}
-.nb .bdg{position:absolute;top:6px;right:calc(50% - 14px);background:var(--go);color:var(--br);border-radius:10px;padding:1px 5px;font-size:9px;font-weight:700;min-width:16px;text-align:center}
-/* CARDS */
-.card{background:#fff;border-radius:var(--r);box-shadow:var(--sh);margin-bottom:10px;overflow:hidden}
-.card-h{padding:12px 14px;background:var(--cr2);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--gy)}
-.card-h h2{font-size:14px;font-weight:700;color:var(--br);flex:1}
-/* KPI */
-.kg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.kpi{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:14px 12px;display:flex;flex-direction:column;gap:4px}
-.kpi .lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
-.kpi .val{font-size:24px;font-weight:800;line-height:1}
-.kpi .sub{font-size:11px;color:#666}
-.kpi.br{background:var(--br);color:#fff}.kpi.br .lbl,.kpi.br .sub{color:rgba(255,255,255,.7)}.kpi.br .val{color:#fff}
-.kpi.go{background:var(--go2)}.kpi.go .val{color:var(--br)}
-.kpi.gn{background:var(--gn2)}.kpi.gn .val{color:var(--gn)}
-.kpi.rd{background:var(--rd2)}.kpi.rd .val{color:var(--rd)}
-/* LIST */
-.li{display:flex;align-items:center;padding:12px 14px;gap:10px;border-bottom:1px solid var(--gy);cursor:pointer;transition:background .1s;-webkit-user-select:none}
-.li:last-child{border-bottom:none}
-.li:active{background:var(--cr)}
-.li .av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.li .nf{flex:1;min-width:0}
-.li .nf .nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.li .nf .sb{font-size:12px;color:#888;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.li .rt{text-align:right;flex-shrink:0}
-.li .rt .am{font-size:15px;font-weight:700}
-.li .rt .sb{font-size:11px;color:#888}
-/* BUTTONS */
-.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:13px 20px;border-radius:10px;font-size:15px;font-weight:700;border:none;cursor:pointer;width:100%;margin-bottom:8px;transition:opacity .15s,transform .1s}
-.btn:active{opacity:.8;transform:scale(.98)}
-.btn-p{background:var(--br);color:#fff}
-.btn-s{background:var(--cr2);color:var(--br)}
-.btn-ok{background:var(--gn);color:#fff}
-.btn-x{background:var(--rd);color:#fff}
-.btn-g{background:var(--go);color:var(--br)}
-.btn-sm{padding:8px 14px;font-size:13px;width:auto;margin-bottom:0;border-radius:8px}
-/* FORMS */
-.fg{margin-bottom:14px}
-.fg label{display:block;font-size:12px;font-weight:700;color:var(--br2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
-.fc{width:100%;padding:12px 14px;border:2px solid var(--gy2);border-radius:10px;font-size:15px;background:#fff;-webkit-appearance:none;appearance:none;outline:none;transition:border-color .15s}
-.fc:focus{border-color:var(--go)}
-select.fc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
-/* TAGS */
-.tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
-.tg{background:var(--gn2);color:var(--gn)}
-.tr{background:var(--rd2);color:var(--rd)}
-.to{background:var(--go2);color:var(--br)}
-.tb{background:var(--bl2);color:var(--bl)}
-.ty{background:var(--gy);color:#555}
-/* MODAL */
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
-.mo.open{opacity:1;pointer-events:all}
-.mc{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:20px 16px calc(20px + var(--sb));transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
-.mo.open .mc{transform:translateY(0)}
-.mh{width:36px;height:4px;background:var(--gy2);border-radius:2px;margin:0 auto 16px}
-.mc h3{font-size:18px;font-weight:800;color:var(--br);margin-bottom:16px}
-/* SEARCH */
-.sb{display:flex;align-items:center;background:#fff;border-radius:12px;box-shadow:var(--sh);padding:10px 14px;gap:8px;margin-bottom:10px}
-.sb input{flex:1;border:none;outline:none;font-size:15px;background:transparent}
-/* SECTION TITLE */
-.st{font-size:11px;font-weight:800;color:var(--br2);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 8px;padding:0 2px}
-/* EMPTY */
-.em{text-align:center;padding:40px 20px;color:#aaa}
-.em .ic{font-size:40px;margin-bottom:8px}
-/* ALERT */
-.al{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.aw{background:var(--go2);color:var(--br)}
-.ae{background:var(--rd2);color:var(--rd)}
-.as{background:var(--gn2);color:var(--gn)}
-/* TOAST */
-#tst{position:fixed;bottom:calc(80px + var(--sb));left:16px;right:16px;z-index:200;pointer-events:none}
-.tm{background:var(--br);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:600;margin-top:8px;opacity:0;transform:translateY(10px);transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.tm.show{opacity:1;transform:translateY(0)}
-/* PCHIP */
-.pc{background:var(--cr2);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.pc .pn{flex:1;font-size:13px;font-weight:600;color:var(--br)}
-.pc .pp{font-size:13px;color:#555}
-/* PROGRESS */
-.pb{flex:1;height:4px;background:var(--gy);border-radius:2px;overflow:hidden}
-.pbf{height:100%;border-radius:2px}
-/* DIVIDER */
-.dv{height:1px;background:var(--gy);margin:10px 0}
-</style>
-</head>
-<body>
-<div id="app">
-  <div id="hdr">
-    <div style="flex:1">
-      <h1>☕ Shop Caffè</h1>
-      <span class="sub" id="hdr-sub">Dashboard</span>
-    </div>
-    <button class="hbtn" onclick="apriMenu()">⚙️</button>
-  </div>
-  <div id="cnt"></div>
-  <nav id="nav">
-    <button class="nb active" onclick="go('home')" id="nb-home"><span class="ic">🏠</span>Home</button>
-    <button class="nb" onclick="go('ordini')" id="nb-ordini"><span class="ic">📋</span>Ordini<span class="bdg" id="bdg-o" style="display:none"></span></button>
-    <button class="nb" onclick="go('clienti')" id="nb-clienti"><span class="ic">👤</span>Clienti</button>
-    <button class="nb" onclick="go('cassa')" id="nb-cassa"><span class="ic">💰</span>Cassa</button>
-    <button class="nb" onclick="go('magazzino')" id="nb-magazzino"><span class="ic">📦</span>Magazzino<span class="bdg" id="bdg-m" style="display:none"></span></button>
-  </nav>
-</div>
-<div id="mo" class="mo" onclick="closeMO(event)"><div class="mc" id="mc"></div></div>
-<div id="tst"></div>
-
-<script>
-const INITIAL_DATA = {
+{
   "prodotti": [
     {
       "codice": "44 21 CAFFE SHOP NERA",
@@ -215,10 +73,10 @@ const INITIAL_DATA = {
       "prezzo_acquisto": 0.1406
     },
     {
-      "codice": "44 38 CIALDORO SAN MARINO",
+      "codice": "44 38 CIALDORO DECA",
       "formato": "C44",
       "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
+      "miscela": "DECA",
       "prezzo_vendita": 0.24,
       "pz_cartone": 100,
       "prezzo_acquisto": 0.1599
@@ -284,7 +142,7 @@ const INITIAL_DATA = {
       "miscela": "PALERMO",
       "prezzo_vendita": 0.24,
       "pz_cartone": 100,
-      "prezzo_acquisto": 0.1728
+      "prezzo_acquisto": 0.172752
     },
     {
       "codice": "NES 33 CIALDORO ROMA",
@@ -293,7 +151,7 @@ const INITIAL_DATA = {
       "miscela": "ROMA",
       "prezzo_vendita": 0.24,
       "pz_cartone": 100,
-      "prezzo_acquisto": 0.1728
+      "prezzo_acquisto": 0.172752
     },
     {
       "codice": "NES 35 CIALDORO MILANO",
@@ -302,7 +160,7 @@ const INITIAL_DATA = {
       "miscela": "MILANO",
       "prezzo_vendita": 0.24,
       "pz_cartone": 100,
-      "prezzo_acquisto": 0.1728
+      "prezzo_acquisto": 0.172752
     },
     {
       "codice": "NES 37 CIALDORO VENEZIA",
@@ -314,10 +172,10 @@ const INITIAL_DATA = {
       "prezzo_acquisto": 0.168
     },
     {
-      "codice": "NES 38 CIALDORO SAN MARINO",
+      "codice": "NES 38 CIALDORO DECA",
       "formato": "NES",
       "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
+      "miscela": "DECA",
       "prezzo_vendita": 0.24,
       "pz_cartone": 100,
       "prezzo_acquisto": 0.183
@@ -413,10 +271,10 @@ const INITIAL_DATA = {
       "prezzo_acquisto": 0.168
     },
     {
-      "codice": "AMM 38 CIALDORO SAN MARINO",
+      "codice": "AMM 38 CIALDORO DECA",
       "formato": "AMM",
       "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
+      "miscela": "DECA",
       "prezzo_vendita": 0.24,
       "pz_cartone": 100,
       "prezzo_acquisto": 0.168
@@ -485,11 +343,11 @@ const INITIAL_DATA = {
       "prezzo_acquisto": 0.1727
     },
     {
-      "codice": "POINT 38 CIALDORO SAN MARINO",
+      "codice": "POINT 38 CIALDORO DECA",
       "formato": "POINT",
       "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
-      "prezzo_vendita": 0.24,
+      "miscela": "DECA",
+      "prezzo_vendita": 0.26,
       "pz_cartone": 100,
       "prezzo_acquisto": 0.183
     },
@@ -611,10 +469,10 @@ const INITIAL_DATA = {
       "prezzo_acquisto": 0.2168
     },
     {
-      "codice": "DG 38 CIALDORO SAN MARINO",
+      "codice": "DG 38 CIALDORO DECA",
       "formato": "DG",
       "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
+      "miscela": "DECA",
       "prezzo_vendita": 0.32,
       "pz_cartone": 50,
       "prezzo_acquisto": 0.2168
@@ -902,9 +760,9 @@ const INITIAL_DATA = {
       "qty_abituale": 100,
       "prezzo_abituale": 0.22,
       "sospeso": 0.0,
-      "ultima_consegna_1": "",
+      "ultima_consegna_1": "02/07/2026",
       "ultima_consegna_2": "02/07/2026",
-      "ultima_consegna_3": "02/07/2026",
+      "ultima_consegna_3": "22/07/2026",
       "note": ""
     },
     {
@@ -1016,7 +874,7 @@ const INITIAL_DATA = {
       "sospeso": 0.0,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "",
-      "ultima_consegna_3": "",
+      "ultima_consegna_3": "22/07/2026",
       "note": ""
     },
     {
@@ -1048,7 +906,7 @@ const INITIAL_DATA = {
       "sospeso": 0.0,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "",
-      "ultima_consegna_3": "",
+      "ultima_consegna_3": "31/07/2026",
       "note": ""
     },
     {
@@ -1063,8 +921,8 @@ const INITIAL_DATA = {
       "prezzo_abituale": 0.33,
       "sospeso": 0.0,
       "ultima_consegna_1": "",
-      "ultima_consegna_2": "",
-      "ultima_consegna_3": "",
+      "ultima_consegna_2": "29/07/2026",
+      "ultima_consegna_3": "29/07/2026",
       "note": ""
     },
     {
@@ -1078,9 +936,9 @@ const INITIAL_DATA = {
       "qty_abituale": 100,
       "prezzo_abituale": 0.33,
       "sospeso": 0.0,
-      "ultima_consegna_1": "",
-      "ultima_consegna_2": "09/06/2026",
-      "ultima_consegna_3": "30/06/2026",
+      "ultima_consegna_1": "09/06/2026",
+      "ultima_consegna_2": "30/06/2026",
+      "ultima_consegna_3": "22/07/2026",
       "note": ""
     },
     {
@@ -1158,9 +1016,9 @@ const INITIAL_DATA = {
       "qty_abituale": 100,
       "prezzo_abituale": 0.22,
       "sospeso": 0.0,
-      "ultima_consegna_1": "22/06/2026",
-      "ultima_consegna_2": "30/06/2026",
-      "ultima_consegna_3": "06/07/2026",
+      "ultima_consegna_1": "30/06/2026",
+      "ultima_consegna_2": "06/07/2026",
+      "ultima_consegna_3": "31/07/2026",
       "note": ""
     },
     {
@@ -1205,10 +1063,10 @@ const INITIAL_DATA = {
       "miscela_abituale": "4",
       "qty_abituale": 4,
       "prezzo_abituale": 9.9,
-      "sospeso": 0.0,
+      "sospeso": 0.6,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "",
-      "ultima_consegna_3": "",
+      "ultima_consegna_3": "26/07/2026",
       "note": ""
     },
     {
@@ -1236,11 +1094,11 @@ const INITIAL_DATA = {
       "formato_abituale": "C44",
       "miscela_abituale": "",
       "qty_abituale": 100,
-      "prezzo_abituale": 0.22,
+      "prezzo_abituale": 0.27,
       "sospeso": 0.0,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "",
-      "ultima_consegna_3": "",
+      "ultima_consegna_3": "28/07/2026",
       "note": ""
     },
     {
@@ -1286,9 +1144,9 @@ const INITIAL_DATA = {
       "qty_abituale": 2,
       "prezzo_abituale": 9.5,
       "sospeso": 0.0,
-      "ultima_consegna_1": "",
-      "ultima_consegna_2": "13/06/2026",
-      "ultima_consegna_3": "13/06/2026",
+      "ultima_consegna_1": "13/06/2026",
+      "ultima_consegna_2": "28/07/2026",
+      "ultima_consegna_3": "28/07/2026",
       "note": ""
     },
     {
@@ -1319,8 +1177,8 @@ const INITIAL_DATA = {
       "prezzo_abituale": 0.22,
       "sospeso": 0.0,
       "ultima_consegna_1": "",
-      "ultima_consegna_2": "",
-      "ultima_consegna_3": "15/07/2026",
+      "ultima_consegna_2": "15/07/2026",
+      "ultima_consegna_3": "01/08/2026",
       "note": ""
     },
     {
@@ -1335,8 +1193,8 @@ const INITIAL_DATA = {
       "prezzo_abituale": 9.5,
       "sospeso": 0.0,
       "ultima_consegna_1": "",
-      "ultima_consegna_2": "",
-      "ultima_consegna_3": "22/06/2026",
+      "ultima_consegna_2": "22/06/2026",
+      "ultima_consegna_3": "01/08/2026",
       "note": ""
     },
     {
@@ -1366,9 +1224,9 @@ const INITIAL_DATA = {
       "qty_abituale": 200,
       "prezzo_abituale": 0.22,
       "sospeso": 0.0,
-      "ultima_consegna_1": "",
-      "ultima_consegna_2": "",
-      "ultima_consegna_3": "14/06/2026",
+      "ultima_consegna_1": "14/06/2026",
+      "ultima_consegna_2": "10/08/2026",
+      "ultima_consegna_3": "10/08/2026",
       "note": ""
     },
     {
@@ -1478,9 +1336,9 @@ const INITIAL_DATA = {
       "qty_abituale": 100,
       "prezzo_abituale": 0.22,
       "sospeso": 0.0,
-      "ultima_consegna_1": "18/07/2026",
-      "ultima_consegna_2": "18/07/2026",
-      "ultima_consegna_3": "18/07/2026",
+      "ultima_consegna_1": "06/08/2026",
+      "ultima_consegna_2": "06/08/2026",
+      "ultima_consegna_3": "06/08/2026",
       "note": ""
     },
     {
@@ -1510,9 +1368,9 @@ const INITIAL_DATA = {
       "qty_abituale": 600,
       "prezzo_abituale": 0.18,
       "sospeso": 0.0,
-      "ultima_consegna_1": "15/07/2026",
-      "ultima_consegna_2": "15/07/2026",
-      "ultima_consegna_3": "15/07/2026",
+      "ultima_consegna_1": "06/08/2026",
+      "ultima_consegna_2": "06/08/2026",
+      "ultima_consegna_3": "06/08/2026",
       "note": ""
     },
     {
@@ -1569,7 +1427,7 @@ const INITIAL_DATA = {
       "telefono": "329 939 10 00",
       "indirizzo": "BRESCIA VIA RE ALBOINO 11/ DOMICILIO VIA1 MAGGIO 72",
       "zona": "RIGNANO SULL'ARNO",
-      "formato_abituale": "POINT ",
+      "formato_abituale": "POINT",
       "miscela_abituale": "B.DOLCE",
       "qty_abituale": 100,
       "prezzo_abituale": 0.24,
@@ -1639,8 +1497,8 @@ const INITIAL_DATA = {
       "prezzo_abituale": 0.22,
       "sospeso": 0.0,
       "ultima_consegna_1": "",
-      "ultima_consegna_2": "",
-      "ultima_consegna_3": "13/06/2026",
+      "ultima_consegna_2": "13/06/2026",
+      "ultima_consegna_3": "26/07/2026",
       "note": ""
     },
     {
@@ -1670,9 +1528,9 @@ const INITIAL_DATA = {
       "qty_abituale": 100,
       "prezzo_abituale": 0.33,
       "sospeso": 0.0,
-      "ultima_consegna_1": "13/07/2026",
+      "ultima_consegna_1": "15/07/2026",
       "ultima_consegna_2": "15/07/2026",
-      "ultima_consegna_3": "15/07/2026",
+      "ultima_consegna_3": "06/08/2026",
       "note": ""
     },
     {
@@ -1718,9 +1576,9 @@ const INITIAL_DATA = {
       "qty_abituale": 100,
       "prezzo_abituale": 0.3,
       "sospeso": 0.0,
-      "ultima_consegna_1": "",
-      "ultima_consegna_2": "13/06/2026",
-      "ultima_consegna_3": "11/07/2026",
+      "ultima_consegna_1": "13/06/2026",
+      "ultima_consegna_2": "11/07/2026",
+      "ultima_consegna_3": "28/07/2026",
       "note": ""
     },
     {
@@ -1733,10 +1591,10 @@ const INITIAL_DATA = {
       "miscela_abituale": "ROMA",
       "qty_abituale": 100,
       "prezzo_abituale": 0.24,
-      "sospeso": 24.0,
-      "ultima_consegna_1": "15/06/2026",
-      "ultima_consegna_2": "02/07/2026",
-      "ultima_consegna_3": "02/07/2026",
+      "sospeso": 26.0,
+      "ultima_consegna_1": "01/08/2026",
+      "ultima_consegna_2": "10/08/2026",
+      "ultima_consegna_3": "10/08/2026",
       "note": ""
     },
     {
@@ -1750,9 +1608,9 @@ const INITIAL_DATA = {
       "qty_abituale": 100,
       "prezzo_abituale": 0.24,
       "sospeso": 0.0,
-      "ultima_consegna_1": "",
-      "ultima_consegna_2": "15/06/2026",
-      "ultima_consegna_3": "02/07/2026",
+      "ultima_consegna_1": "15/06/2026",
+      "ultima_consegna_2": "02/07/2026",
+      "ultima_consegna_3": "01/08/2026",
       "note": ""
     },
     {
@@ -1800,7 +1658,7 @@ const INITIAL_DATA = {
       "sospeso": 0.0,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "",
-      "ultima_consegna_3": "",
+      "ultima_consegna_3": "30/07/2026",
       "note": ""
     },
     {
@@ -1909,10 +1767,10 @@ const INITIAL_DATA = {
       "miscela_abituale": "PALERMO",
       "qty_abituale": 100,
       "prezzo_abituale": 0.3,
-      "sospeso": 0.0,
-      "ultima_consegna_1": "",
+      "sospeso": 21.0,
+      "ultima_consegna_1": "15/07/2026",
       "ultima_consegna_2": "15/07/2026",
-      "ultima_consegna_3": "15/07/2026",
+      "ultima_consegna_3": "24/07/2026",
       "note": ""
     },
     {
@@ -2088,7 +1946,7 @@ const INITIAL_DATA = {
       "sospeso": 0.0,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "",
-      "ultima_consegna_3": "",
+      "ultima_consegna_3": "01/08/2026",
       "note": ""
     },
     {
@@ -2135,8 +1993,8 @@ const INITIAL_DATA = {
       "prezzo_abituale": 0.24,
       "sospeso": 0.0,
       "ultima_consegna_1": "",
-      "ultima_consegna_2": "",
-      "ultima_consegna_3": "30/06/2026",
+      "ultima_consegna_2": "30/06/2026",
+      "ultima_consegna_3": "26/07/2026",
       "note": ""
     },
     {
@@ -2149,10 +2007,10 @@ const INITIAL_DATA = {
       "miscela_abituale": "CAGLIARI",
       "qty_abituale": 200,
       "prezzo_abituale": 0.22,
-      "sospeso": 0.0,
-      "ultima_consegna_1": "03/06/2026",
-      "ultima_consegna_2": "06/07/2026",
-      "ultima_consegna_3": "06/07/2026",
+      "sospeso": 44.0,
+      "ultima_consegna_1": "06/07/2026",
+      "ultima_consegna_2": "26/07/2026",
+      "ultima_consegna_3": "28/07/2026",
       "note": ""
     }
   ],
@@ -2597,7 +2455,7 @@ const INITIAL_DATA = {
       "id_cliente": "CLI-043",
       "nome_cliente": "KALLARI ALTIN",
       "zona": "RIGNANO SULL'ARNO",
-      "formato": "POINT ",
+      "formato": "POINT",
       "miscela": "BAR DOLCE",
       "qty": 100,
       "prezzo_unit": 0.24,
@@ -3304,921 +3162,524 @@ const INITIAL_DATA = {
       "importo": 22.0,
       "incassato": 22.0,
       "n_ordine": "ORD-079"
-    }
-  ],
-  "magazzino": [
+    },
     {
-      "codice": "44 21 CAFFE SHOP NERA",
+      "id_consegna": "CON-083",
+      "data": "22/07/2026",
+      "id_cliente": "CLI-001",
+      "nome_cliente": "ALLAINI MONICA",
+      "zona": "RUFINA",
       "formato": "C44",
-      "marchio": "CAFFE SHOP",
-      "miscela": "BLACK",
-      "carico": 1200,
-      "scarico": 700,
-      "rettifica": -100,
-      "giacenza": 400,
-      "scorta_minima": 500
-    },
-    {
-      "codice": "44 22 CAFFE SHOP ROSSA",
-      "formato": "C44",
-      "marchio": "CAFFE SHOP",
-      "miscela": "RED",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "44 31 CIALDORO PALERMO",
-      "formato": "C44",
-      "marchio": "CIALDORO",
-      "miscela": "PALERMO",
-      "carico": 600,
-      "scarico": 400,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 400
-    },
-    {
-      "codice": "44 33 CIALDORO ROMA",
-      "formato": "C44",
-      "marchio": "CIALDORO",
-      "miscela": "ROMA",
-      "carico": 750,
-      "scarico": 150,
-      "rettifica": -300,
-      "giacenza": 300,
-      "scorta_minima": 400
-    },
-    {
-      "codice": "44 34 CIALDORO FIRENZE",
-      "formato": "C44",
-      "marchio": "CIALDORO",
-      "miscela": "FIRENZE",
-      "carico": 700,
-      "scarico": 500,
-      "rettifica": 100,
-      "giacenza": 300,
-      "scorta_minima": 300
-    },
-    {
-      "codice": "44 35 CIALDORO MILANO",
-      "formato": "C44",
-      "marchio": "CIALDORO",
-      "miscela": "MILANO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "44 36 CIALDORO CAGLIARI",
-      "formato": "C44",
-      "marchio": "CIALDORO",
-      "miscela": "CAGLIARI",
-      "carico": 800,
-      "scarico": 600,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 500
-    },
-    {
-      "codice": "44 37 CIALDORO VENEZIA",
-      "formato": "C44",
-      "marchio": "CIALDORO",
-      "miscela": "VENEZIA",
-      "carico": 1300,
-      "scarico": 1000,
-      "rettifica": 0,
-      "giacenza": 300,
-      "scorta_minima": 700
-    },
-    {
-      "codice": "44 38 CIALDORO SAN MARINO",
-      "formato": "C44",
-      "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
-      "carico": 100,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 100,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "44 41 MOKONE GRAN RISERVA",
-      "formato": "C44",
-      "marchio": "MOKONE",
-      "miscela": "GRAN RISERVA",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "44 42 MOKONE ETNA",
-      "formato": "C44",
-      "marchio": "MOKONE",
-      "miscela": "ETNA",
-      "carico": 1100,
-      "scarico": 1100,
-      "rettifica": 200,
-      "giacenza": 200,
-      "scorta_minima": 500
-    },
-    {
-      "codice": "44 SANDEMETRIO AGRUMI",
-      "formato": "C44",
-      "marchio": "SANDEMETRIO",
-      "miscela": "AGRUMI",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "44 SANDEMETRIO CAFFE' AL GINSENG",
-      "formato": "C44",
-      "marchio": "SANDEMETRIO",
-      "miscela": "GINSENG",
-      "carico": 100,
-      "scarico": 118,
-      "rettifica": 18,
-      "giacenza": 0,
-      "scorta_minima": 36
-    },
-    {
-      "codice": "44 SANDEMETRIO ORZO",
-      "formato": "C44",
-      "marchio": "SANDEMETRIO",
-      "miscela": "ORZO",
-      "carico": 54,
-      "scarico": 0,
-      "rettifica": -18,
-      "giacenza": 36,
-      "scorta_minima": 18
-    },
-    {
-      "codice": "NES 21 CAFFE SHOP BLACK",
-      "formato": "NES",
-      "marchio": "CAFFE SHOP",
-      "miscela": "BLACK",
-      "carico": 600,
-      "scarico": 600,
-      "rettifica": 200,
-      "giacenza": 200,
-      "scorta_minima": 500
-    },
-    {
-      "codice": "NES 31 CIALDORO PALERMO",
-      "formato": "NES",
-      "marchio": "CIALDORO",
-      "miscela": "PALERMO",
-      "carico": 200,
-      "scarico": 100,
-      "rettifica": 0,
-      "giacenza": 100,
-      "scorta_minima": 200
-    },
-    {
-      "codice": "NES 33 CIALDORO ROMA",
-      "formato": "NES",
-      "marchio": "CIALDORO",
-      "miscela": "ROMA",
-      "carico": 400,
-      "scarico": 200,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 200
-    },
-    {
-      "codice": "NES 35 CIALDORO MILANO",
-      "formato": "NES",
-      "marchio": "CIALDORO",
-      "miscela": "MILANO",
-      "carico": 100,
-      "scarico": 100,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "NES 37 CIALDORO VENEZIA",
-      "formato": "NES",
-      "marchio": "CIALDORO",
-      "miscela": "VENEZIA",
-      "carico": 100,
-      "scarico": 90,
-      "rettifica": 0,
-      "giacenza": 10,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "NES 38 CIALDORO SAN MARINO",
-      "formato": "NES",
-      "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 100,
-      "giacenza": 100,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "NES 41 MOKONE BAR DOLCE",
-      "formato": "NES",
-      "marchio": "MOKONE",
-      "miscela": "BAR DOLCE",
-      "carico": 30,
-      "scarico": 25,
-      "rettifica": 0,
-      "giacenza": 5,
-      "scorta_minima": 30
-    },
-    {
-      "codice": "NES 42 MOKONE BAR FORTE",
-      "formato": "NES",
-      "marchio": "MOKONE",
-      "miscela": "BAR FORTE",
-      "carico": 0,
-      "scarico": 200,
-      "rettifica": 300,
-      "giacenza": 100,
-      "scorta_minima": 500
-    },
-    {
-      "codice": "NES BORBONE BLU",
-      "formato": "NES",
-      "marchio": "BORBONE",
-      "miscela": "BLU",
-      "carico": 200,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "NES DOLCE VITA ORZO 10 PZ",
-      "formato": "NES",
-      "marchio": "DOLCEVITA",
-      "miscela": "ORZO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "NES DOLCE VITA NOCCIOLINO 10 PZ",
-      "formato": "NES",
-      "marchio": "DOLCEVITA",
-      "miscela": "NOCCIOLINO",
-      "carico": 200,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "AMM 03 BORBONE BLU",
-      "formato": "AMM",
-      "marchio": "BORBONE",
-      "miscela": "BLU",
-      "carico": 200,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 200
-    },
-    {
-      "codice": "AMM 31 CIALDORO PALERMO",
-      "formato": "AMM",
-      "marchio": "CIALDORO",
-      "miscela": "PALERMO",
-      "carico": 200,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 200
-    },
-    {
-      "codice": "AMM 33 CIALDORO ROMA",
-      "formato": "AMM",
-      "marchio": "CIALDORO",
-      "miscela": "ROMA",
-      "carico": 200,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 200
-    },
-    {
-      "codice": "AMM 35 CIALDORO MILANO",
-      "formato": "AMM",
-      "marchio": "CIALDORO",
-      "miscela": "MILANO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "AMM 37 CIALDORO VENEZIA",
-      "formato": "AMM",
-      "marchio": "CIALDORO",
-      "miscela": "VENEZIA",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "AMM 38 CIALDORO SAN MARINO",
-      "formato": "AMM",
-      "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "AMM 42 MOKONE BAR FORTE",
-      "formato": "AMM",
-      "marchio": "MOKONE",
-      "miscela": "BAR FORTE",
-      "carico": 100,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 100,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "POINT 01 BORBONE BLU",
-      "formato": "POINT",
-      "marchio": "BORBONE",
-      "miscela": "NERO",
-      "carico": 100,
-      "scarico": 0,
-      "rettifica": 100,
-      "giacenza": 200,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "POINT 21 CAFFE SHOP BLACK",
-      "formato": "POINT",
-      "marchio": "CAFFE SHOP",
-      "miscela": "BLACK",
-      "carico": 80,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 80,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "POINT 31 CIALDORO PALERMO",
-      "formato": "POINT",
-      "marchio": "CIALDORO",
-      "miscela": "PALERMO",
-      "carico": 200,
-      "scarico": 200,
-      "rettifica": 100,
-      "giacenza": 100,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "POINT 33 CIALDORO ROMA",
-      "formato": "POINT",
-      "marchio": "CIALDORO",
-      "miscela": "ROMA",
-      "carico": 100,
-      "scarico": 400,
-      "rettifica": 300,
-      "giacenza": 0,
-      "scorta_minima": 500
-    },
-    {
-      "codice": "POINT 35 CIALDORO MILANO",
-      "formato": "POINT",
-      "marchio": "CIALDORO",
-      "miscela": "MILANO",
-      "carico": 400,
-      "scarico": 400,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 300
-    },
-    {
-      "codice": "POINT 37 CIALDORO VENEZIA",
-      "formato": "POINT",
-      "marchio": "CIALDORO",
-      "miscela": "VENEZIA",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "POINT 38 CIALDORO SAN MARINO",
-      "formato": "POINT",
-      "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
-      "carico": 200,
-      "scarico": 100,
-      "rettifica": 0,
-      "giacenza": 100,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "POINT 41 MOKONE BAR DOLCE",
-      "formato": "POINT",
-      "marchio": "MOKONE",
-      "miscela": "BAR DOLCE",
-      "carico": 300,
-      "scarico": 100,
-      "rettifica": 0,
-      "giacenza": 200,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "POINT 42 MOKONE BAR FORTE",
-      "formato": "POINT",
-      "marchio": "MOKONE",
-      "miscela": "BAR FORTE",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "POINT AROMALIGHT GINSENG",
-      "formato": "POINT",
-      "marchio": "AROMALIGHT",
-      "miscela": "GINSENG",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "POINT AROMALIGHT NOCCIOLINO",
-      "formato": "POINT",
-      "marchio": "AROMALIGHT",
-      "miscela": "NOCCIOLINO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "POINT AROMALIGHT ORZO",
-      "formato": "POINT",
-      "marchio": "AROMALIGHT",
-      "miscela": "ORZO",
-      "carico": 30,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 30,
-      "scorta_minima": 30
-    },
-    {
-      "codice": "POINT AROMALIGHT TE LIMONE",
-      "formato": "POINT",
-      "marchio": "AROMALIGHT",
-      "miscela": "LIMONE",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "DG 21 CAFFE SHOP BLACK",
-      "formato": "DG",
-      "marchio": "CAFFE SHOP",
-      "miscela": "BLACK",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "DG 22 CAFFE SHOP RED",
-      "formato": "DG",
-      "marchio": "CAFFE SHOP",
-      "miscela": "RED",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "DG 30 CIALDORO ETNA",
-      "formato": "DG",
-      "marchio": "CIALDORO",
-      "miscela": "ETNA",
-      "carico": 200,
-      "scarico": 200,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 100
-    },
-    {
-      "codice": "DG 31 CIALDORO PALERMO",
-      "formato": "DG",
-      "marchio": "CIALDORO",
-      "miscela": "PALERMO",
-      "carico": 50,
-      "scarico": 50,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 50
-    },
-    {
-      "codice": "DG 33 CIALDORO ROMA",
-      "formato": "DG",
-      "marchio": "CIALDORO",
-      "miscela": "ROMA",
-      "carico": 150,
-      "scarico": 50,
-      "rettifica": 0,
-      "giacenza": 100,
-      "scorta_minima": 50
-    },
-    {
-      "codice": "DG 35 CIALDORO MILANO",
-      "formato": "DG",
-      "marchio": "CIALDORO",
-      "miscela": "MILANO",
-      "carico": 100,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 100,
-      "scorta_minima": 50
-    },
-    {
-      "codice": "DG 37 CIALDORO VENEZIA",
-      "formato": "DG",
-      "marchio": "CIALDORO",
-      "miscela": "VENEZIA",
-      "carico": 50,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 50,
-      "scorta_minima": 50
-    },
-    {
-      "codice": "DG 38 CIALDORO SAN MARINO",
-      "formato": "DG",
-      "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
-      "carico": 50,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 50,
-      "scorta_minima": 3
-    },
-    {
-      "codice": "DG CIALDORO GINSENG 12PZ",
-      "formato": "DG",
-      "marchio": "CIALDORO",
-      "miscela": "GINSENG",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "DG DOLCEVITA GIANDUIA 12 PZ",
-      "formato": "DG",
-      "marchio": "DOLCEVITA",
-      "miscela": "GIANDUIA",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "DG DOLCEVITA GINSENG 12 PZ",
-      "formato": "DG",
-      "marchio": "DOLCEVITA",
-      "miscela": "GINSENG",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "DG DOLCEVITA MAXI CIOCK 12 PZ",
-      "formato": "DG",
-      "marchio": "DOLCEVITA",
-      "miscela": "MAXI CIOCC",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "DG DOLCEVITA NOCCIOLONE 12 PZ",
-      "formato": "DG",
-      "marchio": "DOLCEVITA",
-      "miscela": "NOCCIOLNE",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "CFY 30 CIALDORO ETNA",
-      "formato": "CFY",
-      "marchio": "CIALDORO",
-      "miscela": "ETNA",
-      "carico": 320,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 320,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "CFY 32 CIALDORO NAPOLI",
-      "formato": "CFY",
-      "marchio": "CIALDORO",
-      "miscela": "NAPOLI",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "CFY 35 CIALDORO MILANO",
-      "formato": "CFY",
-      "marchio": "CIALDORO",
-      "miscela": "MILANO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "CFY 38 CIALDORO SAN MARINO",
-      "formato": "CFY",
-      "marchio": "CIALDORO",
-      "miscela": "SAN MARINO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "CFY 42 MOKONE BAR FORTE",
-      "formato": "CFY",
-      "marchio": "MOKONE",
-      "miscela": "BAR FORTE",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 320
-    },
-    {
-      "codice": "MKD MOKADOR 01 MARYLIN 1X25",
-      "formato": "MKD",
-      "marchio": "MOKADOR",
-      "miscela": "MARYLIN",
-      "carico": 16,
-      "scarico": 4,
-      "rettifica": -5,
-      "giacenza": 7,
-      "scorta_minima": 16
-    },
-    {
-      "codice": "MKD MOKADOR 02 SOPHIA 1X25",
-      "formato": "MKD",
-      "marchio": "MOKADOR",
-      "miscela": "SOPHIA",
-      "carico": 12,
-      "scarico": 8,
-      "rettifica": -1,
-      "giacenza": 3,
-      "scorta_minima": 16
-    },
-    {
-      "codice": "MKD MOKADOR 03 BRIGITTE 1X25",
-      "formato": "MKD",
-      "marchio": "MOKADOR",
-      "miscela": "BRIGITTE",
-      "carico": 4,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 4,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "MKD MOKADOR 04 GRACE DEC 1X25",
-      "formato": "MKD",
-      "marchio": "MOKADOR",
-      "miscela": "GRACE",
-      "carico": 16,
-      "scarico": 0,
-      "rettifica": -5,
-      "giacenza": 11,
-      "scorta_minima": 12
-    },
-    {
-      "codice": "MKD MOKADOR 05 ORZO 1X25",
-      "formato": "MKD",
-      "marchio": "MOKADOR",
-      "miscela": "ORZO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "MKD MOKADOR 06 TE LIMONE 1X25",
-      "formato": "MKD",
-      "marchio": "MOKADOR",
-      "miscela": "LIMONE",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "MKD MOKADOR 07 GINSENG 1X25",
-      "formato": "MKD",
-      "marchio": "MOKADOR",
-      "miscela": "GINSENG",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "MKT MOKADOR 01 PIU' CREMA",
+      "miscela": "roma",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-078"
+    },
+    {
+      "id_consegna": "CON-084",
+      "data": "22/07/2026",
+      "id_cliente": "CLI-008",
+      "nome_cliente": "BATISTONI MARCO",
+      "zona": "PONTASSIEVE",
       "formato": "MKT",
-      "marchio": "MOKADOR",
       "miscela": "PIU CREMA",
-      "carico": 100,
-      "scarico": 600,
-      "rettifica": 100,
-      "giacenza": -400,
-      "scorta_minima": 300
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-081"
     },
     {
-      "codice": "MKT MOKADOR 02 CREMA",
+      "id_consegna": "CON-085",
+      "data": "22/07/2026",
+      "id_cliente": "CLI-012",
+      "nome_cliente": "BINI ANTONELLA",
+      "zona": "PONTASSIEVE",
       "formato": "MKT",
-      "marchio": "MOKADOR",
       "miscela": "CREMA",
-      "carico": 400,
-      "scarico": 200,
-      "rettifica": 100,
-      "giacenza": 300,
-      "scorta_minima": 400
+      "qty": 200,
+      "prezzo_unit": 0.33,
+      "importo": 66.0,
+      "incassato": 66.0,
+      "n_ordine": "ORD-082"
     },
     {
-      "codice": "MKT MOKADOR 03 AROMA TOP",
-      "formato": "MKT",
-      "marchio": "MOKADOR",
-      "miscela": "AROMA TOP",
-      "carico": 0,
-      "scarico": 100,
-      "rettifica": 100,
-      "giacenza": 0,
-      "scorta_minima": 400
+      "id_consegna": "CON-086",
+      "data": "24/07/2026",
+      "id_cliente": "CLI-064",
+      "nome_cliente": "RIZZONE MARCO",
+      "zona": "SIECI",
+      "formato": "DG",
+      "miscela": "NOCCIOLONE",
+      "qty": 60,
+      "prezzo_unit": 0.35,
+      "importo": 21.0,
+      "incassato": 0.0,
+      "n_ordine": "ORD-069"
     },
     {
-      "codice": "MKT MOKADOR 04 DECA",
-      "formato": "MKT",
-      "marchio": "MOKADOR",
-      "miscela": "DECA",
-      "carico": 80,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 80,
-      "scorta_minima": 0
+      "id_consegna": "CON-087",
+      "data": "26/07/2026",
+      "id_cliente": "CLI-020",
+      "nome_cliente": "CHECCHI ALESSANDRA",
+      "zona": "Pelago",
+      "formato": "MKD",
+      "miscela": "4",
+      "qty": 4,
+      "prezzo_unit": 9.9,
+      "importo": 39.6,
+      "incassato": 39.0,
+      "n_ordine": "ORD-086"
     },
     {
-      "codice": "MKT MOKADOR 05 ORZO",
-      "formato": "MKT",
-      "marchio": "MOKADOR",
-      "miscela": "ORZO",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
+      "id_consegna": "CON-088",
+      "data": "26/07/2026",
+      "id_cliente": "CLI-079",
+      "nome_cliente": "AMHAD SANTO FELAFEL",
+      "zona": "DIACCETO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 0.0,
+      "n_ordine": "ORD-085"
     },
     {
-      "codice": "MKT MOKADOR 06 THE' LIMONE",
-      "formato": "MKT",
-      "marchio": "MOKADOR",
-      "miscela": "LIMONE",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
+      "id_consegna": "CON-089",
+      "data": "26/07/2026",
+      "id_cliente": "CLI-078",
+      "nome_cliente": "VIVOLI LORENA",
+      "zona": "DIACCETO",
+      "formato": "NES",
+      "miscela": "B.FORTE",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-083"
     },
     {
-      "codice": "MKT MOKADOR 08 GINSENG",
-      "formato": "MKT",
-      "marchio": "MOKADOR",
-      "miscela": "GINSENG",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "GRA 03 CIALDORO GRANI \"ROMA\" 1.000 gr",
-      "formato": "GRA",
-      "marchio": "CIALDORO",
-      "miscela": "ROMA",
-      "carico": 3,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 3,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "GRA 05 CIALDORO GRANI \"MILANO\" 1.000 gr",
-      "formato": "GRA",
-      "marchio": "CIALDORO",
-      "miscela": "MILANO",
-      "carico": 1,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 1,
-      "scorta_minima": 0
-    },
-    {
-      "codice": "GRA 07 CIALDORO GRANI \"VENEZIA\" 1.000 gr",
-      "formato": "GRA",
-      "marchio": "CIALDORO",
+      "id_consegna": "CON-090",
+      "data": "26/07/2026",
+      "id_cliente": "CLI-047",
+      "nome_cliente": "LOLLI FRANCESCA",
+      "zona": "DIACCETO",
+      "formato": "C44",
       "miscela": "VENEZIA",
-      "carico": 2,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 2,
-      "scorta_minima": 2
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-080"
     },
     {
-      "codice": "GRA 08 CIALDORO GRANI \"DECAFFEINATO\" 1.000 gr",
-      "formato": "GRA",
-      "marchio": "CIALDORO",
+      "id_consegna": "CON-091",
+      "data": "28/07/2026",
+      "id_cliente": "CLI-022",
+      "nome_cliente": "CI SERVICE SNC",
+      "zona": "PONTASSIEVE",
+      "formato": "C44",
+      "miscela": "0",
+      "qty": 100,
+      "prezzo_unit": 0.28,
+      "importo": 28.0,
+      "incassato": 28.0,
+      "n_ordine": "ORD-084"
+    },
+    {
+      "id_consegna": "CON-092",
+      "data": "28/07/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "FIRENZE",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-087"
+    },
+    {
+      "id_consegna": "CON-093",
+      "data": "28/07/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "ROMA",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-088"
+    },
+    {
+      "id_consegna": "CON-094",
+      "data": "28/07/2026",
+      "id_cliente": "CLI-052",
+      "nome_cliente": "MAZZUOLI PATRIZIA",
+      "zona": "DIACCETO",
+      "formato": "DG",
       "miscela": "DECA",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 0,
-      "scorta_minima": 0
+      "qty": 50,
+      "prezzo_unit": 0.32,
+      "importo": 16.0,
+      "incassato": 16.0,
+      "n_ordine": "ORD-089"
     },
     {
-      "codice": "ACC BICCHIERI CARTA CIALDORO 50 pz",
-      "formato": "ACC",
-      "marchio": "ACCESSORI",
-      "miscela": "BICCHIERI 80CC",
-      "carico": 5,
-      "scarico": 0,
-      "rettifica": 0,
-      "giacenza": 5,
-      "scorta_minima": 5
+      "id_consegna": "CON-095",
+      "data": "28/07/2026",
+      "id_cliente": "CLI-025",
+      "nome_cliente": "CIPRIANI GIULIANA",
+      "zona": "DIACCETO",
+      "formato": "DIVA",
+      "miscela": "SOPHIA",
+      "qty": 2,
+      "prezzo_unit": 9.5,
+      "importo": 19.0,
+      "incassato": 19.0,
+      "n_ordine": "ORD-090"
     },
     {
-      "codice": "ESSSECAFFE SEGAFREDO CAPSULE",
-      "formato": "ESSSE",
-      "marchio": "CIALDORO",
+      "id_consegna": "CON-096",
+      "data": "28/07/2026",
+      "id_cliente": "CLI-025",
+      "nome_cliente": "CIPRIANI GIULIANA",
+      "zona": "DIACCETO",
+      "formato": "DIVA",
+      "miscela": "MARYLIN",
+      "qty": 2,
+      "prezzo_unit": 9.5,
+      "importo": 19.0,
+      "incassato": 19.0,
+      "n_ordine": "ORD-091"
+    },
+    {
+      "id_consegna": "CON-097",
+      "data": "28/07/2026",
+      "id_cliente": "CLI-079",
+      "nome_cliente": "AMHAD SANTO FELAFEL",
+      "zona": "DIACCETO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-085"
+    },
+    {
+      "id_consegna": "CON-098",
+      "data": "29/07/2026",
+      "id_cliente": "CLI-011",
+      "nome_cliente": "BETTINI",
+      "zona": "0",
+      "formato": "MKT",
+      "miscela": "CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-092"
+    },
+    {
+      "id_consegna": "CON-099",
+      "data": "29/07/2026",
+      "id_cliente": "CLI-011",
+      "nome_cliente": "BETTINI",
+      "zona": "0",
+      "formato": "MKT",
+      "miscela": "AROMA TOP",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-093"
+    },
+    {
+      "id_consegna": "CON-100",
+      "data": "30/07/2026",
+      "id_cliente": "CLI-057",
+      "nome_cliente": "Mp di Simone e Tommaso Pieraccioni S.A.S.",
+      "zona": "Pelago",
+      "formato": "MKT",
+      "miscela": "0",
+      "qty": 200,
+      "prezzo_unit": 0.33,
+      "importo": 66.0,
+      "incassato": 66.0,
+      "n_ordine": "ORD-094"
+    },
+    {
+      "id_consegna": "CON-101",
+      "data": "31/07/2026",
+      "id_cliente": "CLI-010",
+      "nome_cliente": "BERTI SIMONETTA",
+      "zona": "SAN FRANCESCO",
+      "formato": "AMM",
+      "miscela": "B.BLU",
+      "qty": 200,
+      "prezzo_unit": 0.24,
+      "importo": 48.0,
+      "incassato": 49.0,
+      "n_ordine": "ORD-095"
+    },
+    {
+      "id_consegna": "CON-102",
+      "data": "31/07/2026",
+      "id_cliente": "CLI-017",
+      "nome_cliente": "CASO ROBERTO",
+      "zona": "REGGELLO",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-096"
+    },
+    {
+      "id_consegna": "CON-103",
+      "data": "08/01/2026",
+      "id_cliente": "CLI-054",
+      "nome_cliente": "MISURI FIGLIA",
+      "zona": "PELAGO",
+      "formato": "NES",
+      "miscela": "ROMA",
+      "qty": 100,
+      "prezzo_unit": 0.24,
+      "importo": 24.0,
+      "incassato": 24.0,
+      "n_ordine": "ORD-097"
+    },
+    {
+      "id_consegna": "CON-104",
+      "data": "08/01/2026",
+      "id_cliente": "CLI-053",
+      "nome_cliente": "MISURI MIRELLA",
+      "zona": "PELAGO",
+      "formato": "POINT",
+      "miscela": "ROMA",
+      "qty": 200,
+      "prezzo_unit": 0.24,
+      "importo": 48.0,
+      "incassato": 46.0,
+      "n_ordine": "ORD-098"
+    },
+    {
+      "id_consegna": "CON-105",
+      "data": "08/01/2026",
+      "id_cliente": "CLI-028",
+      "nome_cliente": "D'ANTIMI SANDRO",
+      "zona": "PELAGO",
+      "formato": "MKD",
+      "miscela": "SOPHIA",
+      "qty": 4,
+      "prezzo_unit": 9.5,
+      "importo": 38.0,
+      "incassato": 38.0,
+      "n_ordine": "ORD-099"
+    },
+    {
+      "id_consegna": "CON-106",
+      "data": "08/01/2026",
+      "id_cliente": "CLI-027",
+      "nome_cliente": "COSTANTI MAURIZIO",
+      "zona": "SIECI",
+      "formato": "NES",
       "miscela": "BLACK",
-      "carico": 0,
-      "scarico": 0,
-      "rettifica": 100,
-      "giacenza": 100,
-      "scorta_minima": 100
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-100"
+    },
+    {
+      "id_consegna": "CON-107",
+      "data": "08/01/2026",
+      "id_cliente": "CLI-075",
+      "nome_cliente": "TARDUGNO ANTONIO",
+      "zona": "PONTASSIEVE",
+      "formato": "MKT",
+      "miscela": "CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-103"
+    },
+    {
+      "id_consegna": "CON-108",
+      "data": "08/06/2026",
+      "id_cliente": "CLI-049",
+      "nome_cliente": "MARCHIONNI MARCELLO",
+      "zona": "SAN FRANCESCO",
+      "formato": "MKT",
+      "miscela": "PIU' CREMA",
+      "qty": 100,
+      "prezzo_unit": 0.33,
+      "importo": 33.0,
+      "incassato": 33.0,
+      "n_ordine": "ORD-101"
+    },
+    {
+      "id_consegna": "CON-109",
+      "data": "08/06/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-102"
+    },
+    {
+      "id_consegna": "CON-110",
+      "data": "08/06/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-111"
+    },
+    {
+      "id_consegna": "CON-111",
+      "data": "08/06/2026",
+      "id_cliente": "CLI-037",
+      "nome_cliente": "FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "zona": "PELAGO",
+      "formato": "C44",
+      "miscela": "GINSENG",
+      "qty": 50,
+      "prezzo_unit": 0.35,
+      "importo": 17.5,
+      "incassato": 17.5,
+      "n_ordine": "ORD-112"
+    },
+    {
+      "id_consegna": "CON-112",
+      "data": "08/06/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "BLACK",
+      "qty": 500,
+      "prezzo_unit": 0.18,
+      "importo": 90.0,
+      "incassato": 90.0,
+      "n_ordine": "ORD-107"
+    },
+    {
+      "id_consegna": "CON-113",
+      "data": "08/06/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "ETNA",
+      "qty": 300,
+      "prezzo_unit": 0.22,
+      "importo": 66.0,
+      "incassato": 66.0,
+      "n_ordine": "ORD-108"
+    },
+    {
+      "id_consegna": "CON-114",
+      "data": "08/06/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "VENEZIA",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-109"
+    },
+    {
+      "id_consegna": "CON-115",
+      "data": "08/06/2026",
+      "id_cliente": "CLI-039",
+      "nome_cliente": "GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "zona": "DICOMANO",
+      "formato": "C44",
+      "miscela": "CAGLIARI",
+      "qty": 100,
+      "prezzo_unit": 0.22,
+      "importo": 22.0,
+      "incassato": 22.0,
+      "n_ordine": "ORD-110"
+    },
+    {
+      "id_consegna": "CON-116",
+      "data": "08/10/2026",
+      "id_cliente": "CLI-053",
+      "nome_cliente": "MISURI MIRELLA",
+      "zona": "PELAGO",
+      "formato": "POINT",
+      "miscela": "SAN MARINO",
+      "qty": 100,
+      "prezzo_unit": 0.26,
+      "importo": 26.0,
+      "incassato": 26.0,
+      "n_ordine": "ORD-113"
+    },
+    {
+      "id_consegna": "CON-117",
+      "data": "08/10/2026",
+      "id_cliente": "CLI-053",
+      "nome_cliente": "MISURI MIRELLA",
+      "zona": "PELAGO",
+      "formato": "POINT",
+      "miscela": "SAN MARINO",
+      "qty": 100,
+      "prezzo_unit": 0.26,
+      "importo": 26.0,
+      "incassato": 26.0,
+      "n_ordine": "ORD-113"
+    },
+    {
+      "id_consegna": "CON-118",
+      "data": "08/10/2026",
+      "id_cliente": "CLI-030",
+      "nome_cliente": "DEI ORAZIO",
+      "zona": "PONTASSIEVE",
+      "formato": "44",
+      "miscela": "ROMA",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-104"
+    },
+    {
+      "id_consegna": "CON-119",
+      "data": "08/10/2026",
+      "id_cliente": "CLI-030",
+      "nome_cliente": "DEI ORAZIO",
+      "zona": "PONTASSIEVE",
+      "formato": "44",
+      "miscela": "ROMA",
+      "qty": 200,
+      "prezzo_unit": 0.22,
+      "importo": 44.0,
+      "incassato": 44.0,
+      "n_ordine": "ORD-104"
     }
   ],
   "cassa": [
@@ -5387,863 +4848,1323 @@ const INITIAL_DATA = {
       "saldo": 387.45,
       "metodo": "Contanti",
       "note": "C44 PALERMO x100"
+    },
+    {
+      "data": "22/07/2026",
+      "descrizione": "Incasso - ALLAINI MONICA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-078",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 409.45,
+      "metodo": "Contanti",
+      "note": "C44 roma x100"
+    },
+    {
+      "data": "22/07/2026",
+      "descrizione": "Incasso - BATISTONI MARCO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-081",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 442.45,
+      "metodo": "Contanti",
+      "note": "MKT PIU CREMA x100"
+    },
+    {
+      "data": "22/07/2026",
+      "descrizione": "Incasso - BINI ANTONELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-082",
+      "entrata": 66.0,
+      "uscita": 0,
+      "saldo": 508.45,
+      "metodo": "Contanti",
+      "note": "MKT CREMA x200"
+    },
+    {
+      "data": "22/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 41.3,
+      "saldo": 467.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "26/07/2026",
+      "descrizione": "Incasso - CHECCHI ALESSANDRA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-086",
+      "entrata": 39.0,
+      "uscita": 0,
+      "saldo": 506.15,
+      "metodo": "Contanti",
+      "note": "MKD 4 x4"
+    },
+    {
+      "data": "26/07/2026",
+      "descrizione": "Incasso - VIVOLI LORENA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-083",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 530.15,
+      "metodo": "Contanti",
+      "note": "NES B.FORTE x100"
+    },
+    {
+      "data": "26/07/2026",
+      "descrizione": "Incasso - LOLLI FRANCESCA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-080",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 574.15,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x200"
+    },
+    {
+      "data": "24/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 10.0,
+      "saldo": 564.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "28/07/2026",
+      "descrizione": "Incasso - CI SERVICE SNC",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-084",
+      "entrata": 28.0,
+      "uscita": 0,
+      "saldo": 592.15,
+      "metodo": "Contanti",
+      "note": "C44 0 x100"
+    },
+    {
+      "data": "28/07/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-087",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 636.15,
+      "metodo": "Contanti",
+      "note": "C44 FIRENZE x200"
+    },
+    {
+      "data": "28/07/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-088",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 680.15,
+      "metodo": "Contanti",
+      "note": "C44 ROMA x200"
+    },
+    {
+      "data": "28/07/2026",
+      "descrizione": "Incasso - MAZZUOLI PATRIZIA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-089",
+      "entrata": 16.0,
+      "uscita": 0,
+      "saldo": 696.15,
+      "metodo": "Contanti",
+      "note": "DG DECA x50"
+    },
+    {
+      "data": "28/07/2026",
+      "descrizione": "Incasso - CIPRIANI GIULIANA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-090",
+      "entrata": 19.0,
+      "uscita": 0,
+      "saldo": 715.15,
+      "metodo": "Contanti",
+      "note": "DIVA SOPHIA x2"
+    },
+    {
+      "data": "28/07/2026",
+      "descrizione": "Incasso - CIPRIANI GIULIANA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-091",
+      "entrata": 19.0,
+      "uscita": 0,
+      "saldo": 734.15,
+      "metodo": "Contanti",
+      "note": "DIVA MARYLIN x2"
+    },
+    {
+      "data": "28/07/2026",
+      "descrizione": "Incasso - AMHAD SANTO FELAFEL",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-085",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 778.15,
+      "metodo": "Contanti",
+      "note": "C44 CAGLIARI x200"
+    },
+    {
+      "data": "28/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 15.0,
+      "saldo": 763.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "26/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 20.0,
+      "saldo": 743.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "29/07/2026",
+      "descrizione": "Incasso - BETTINI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-092",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 776.15,
+      "metodo": "Contanti",
+      "note": "MKT CREMA x100"
+    },
+    {
+      "data": "29/07/2026",
+      "descrizione": "Incasso - BETTINI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-093",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 809.15,
+      "metodo": "Contanti",
+      "note": "MKT AROMA TOP x100"
+    },
+    {
+      "data": "30/07/2026",
+      "descrizione": "Incasso - Mp di Simone e Tommaso Pieraccioni S.A.S.",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-094",
+      "entrata": 66.0,
+      "uscita": 0,
+      "saldo": 875.15,
+      "metodo": "Contanti",
+      "note": "MKT 0 x200"
+    },
+    {
+      "data": "31/07/2026",
+      "descrizione": "Incasso - BERTI SIMONETTA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-095",
+      "entrata": 49.0,
+      "uscita": 0,
+      "saldo": 924.15,
+      "metodo": "Contanti",
+      "note": "AMM B.BLU x200"
+    },
+    {
+      "data": "31/07/2026",
+      "descrizione": "Incasso - CASO ROBERTO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-096",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 946.15,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x100"
+    },
+    {
+      "data": "31/07/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 22.0,
+      "saldo": 924.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "31/07/2026",
+      "descrizione": "CARBURANTE",
+      "tipo": "",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 14.0,
+      "saldo": 910.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "01/08/2026",
+      "descrizione": "Incasso - MISURI FIGLIA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-097",
+      "entrata": 24.0,
+      "uscita": 0,
+      "saldo": 934.15,
+      "metodo": "Contanti",
+      "note": "NES ROMA x100"
+    },
+    {
+      "data": "01/08/2026",
+      "descrizione": "Incasso - MISURI MIRELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-098",
+      "entrata": 46.0,
+      "uscita": 0,
+      "saldo": 980.15,
+      "metodo": "Contanti",
+      "note": "POINT ROMA x200"
+    },
+    {
+      "data": "01/08/2026",
+      "descrizione": "Incasso - D'ANTIMI SANDRO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-099",
+      "entrata": 38.0,
+      "uscita": 0,
+      "saldo": 1018.15,
+      "metodo": "Contanti",
+      "note": "MKD SOPHIA x4"
+    },
+    {
+      "data": "01/08/2026",
+      "descrizione": "Incasso - COSTANTI MAURIZIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-100",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1040.15,
+      "metodo": "Contanti",
+      "note": "NES BLACK x100"
+    },
+    {
+      "data": "01/08/2026",
+      "descrizione": "Incasso - TARDUGNO ANTONIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-103",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 1073.15,
+      "metodo": "Contanti",
+      "note": "MKT CREMA x100"
+    },
+    {
+      "data": "01/08/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 5.0,
+      "saldo": 1068.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "01/08/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 13.0,
+      "saldo": 1055.15,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "Incasso - MARCHIONNI MARCELLO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-101",
+      "entrata": 33.0,
+      "uscita": 0,
+      "saldo": 1088.15,
+      "metodo": "Contanti",
+      "note": "MKT PIU' CREMA x100"
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-102",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 1132.15,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x200"
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-111",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1154.15,
+      "metodo": "Contanti",
+      "note": "C44 CAGLIARI x100"
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "Incasso - FORNO A LEGNA LA TORRE DI BORSELLI STEFANO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-112",
+      "entrata": 17.5,
+      "uscita": 0,
+      "saldo": 1171.65,
+      "metodo": "Contanti",
+      "note": "C44 GINSENG x50"
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-107",
+      "entrata": 90.0,
+      "uscita": 0,
+      "saldo": 1261.65,
+      "metodo": "Contanti",
+      "note": "C44 BLACK x500"
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-108",
+      "entrata": 66.0,
+      "uscita": 0,
+      "saldo": 1327.65,
+      "metodo": "Contanti",
+      "note": "C44 ETNA x300"
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-109",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1349.65,
+      "metodo": "Contanti",
+      "note": "C44 VENEZIA x100"
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "Incasso - GARAGE 87 SNC DI NICCOLO LUCHERELLI",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-110",
+      "entrata": 22.0,
+      "uscita": 0,
+      "saldo": 1371.65,
+      "metodo": "Contanti",
+      "note": "C44 CAGLIARI x100"
+    },
+    {
+      "data": "06/08/2026",
+      "descrizione": "ALIMENTARI",
+      "tipo": "Altra Uscita",
+      "riferimento": "",
+      "entrata": 0,
+      "uscita": 10.0,
+      "saldo": 1361.65,
+      "metodo": "",
+      "note": ""
+    },
+    {
+      "data": "10/08/2026",
+      "descrizione": "Incasso - MISURI MIRELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-113",
+      "entrata": 26.0,
+      "uscita": 0,
+      "saldo": 1387.65,
+      "metodo": "Contanti",
+      "note": "POINT SAN MARINO x100"
+    },
+    {
+      "data": "10/08/2026",
+      "descrizione": "Incasso - MISURI MIRELLA",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-113",
+      "entrata": 26.0,
+      "uscita": 0,
+      "saldo": 1413.65,
+      "metodo": "Contanti",
+      "note": "POINT SAN MARINO x100"
+    },
+    {
+      "data": "10/08/2026",
+      "descrizione": "Incasso - DEI ORAZIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-104",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 1457.65,
+      "metodo": "Contanti",
+      "note": "44 ROMA x200"
+    },
+    {
+      "data": "10/08/2026",
+      "descrizione": "Incasso - DEI ORAZIO",
+      "tipo": "Incasso Consegna",
+      "riferimento": "ORD-104",
+      "entrata": 44.0,
+      "uscita": 0,
+      "saldo": 1501.65,
+      "metodo": "Contanti",
+      "note": "44 ROMA x200"
     }
   ],
-  "saldo_iniziale": 44.0
-};
-</script>
-<script>
-'use strict';
-// ── DB ──────────────────────────────────────────────────────────────
-const DBK='sc_v3';let DB=null;
-
-function initDB(){
-  const s=localStorage.getItem(DBK);
-  if(s){try{DB=JSON.parse(s);}catch(e){DB=null;}}
-  if(!DB){
-    DB={
-      prodotti:INITIAL_DATA.prodotti,
-      clienti:INITIAL_DATA.clienti.map(c=>({...c})),
-      ordini:[],
-      storico:INITIAL_DATA.storico.map(s=>({...s})),
-      cassa:INITIAL_DATA.cassa.map(c=>({...c})),
-      magazzino:INITIAL_DATA.magazzino.map(m=>({...m,giacenza:m.carico-m.scarico+m.rettifica})),
-      saldo_iniziale:INITIAL_DATA.saldo_iniziale||0,
-      cnt:{ordine:INITIAL_DATA.storico.length+1,consegna:INITIAL_DATA.storico.length+1}
-    };
-    saveDB();
-  }
-  DB.magazzino.forEach(m=>{m.giacenza=m.carico-m.scarico+m.rettifica;});
-}
-function saveDB(){localStorage.setItem(DBK,JSON.stringify(DB));updateBdg();}
-
-// ── NAV ─────────────────────────────────────────────────────────────
-let page='home',sq='';
-function go(p){
-  page=p;sq='';
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
-  const nb=document.getElementById('nb-'+p);if(nb)nb.classList.add('active');
-  const titles={home:'Dashboard',ordini:'Ordini',clienti:'Clienti',cassa:'Cassa',magazzino:'Magazzino',storico:'Storico',listino:'Listino Prodotti'};
-  document.getElementById('hdr-sub').textContent=titles[p]||p;
-  const pages={home:pgHome,ordini:pgOrdini,clienti:pgClienti,cassa:pgCassa,magazzino:pgMagazzino,storico:pgStorico,listino:pgListino};
-  const el=document.getElementById('cnt');el.innerHTML='';
-  if(pages[p])pages[p](el);
-}
-function updateBdg(){
-  const oa=DB.ordini.filter(o=>o.stato==='DA FARE').length;
-  const bo=document.getElementById('bdg-o');
-  if(bo){bo.style.display=oa>0?'block':'none';bo.textContent=oa;}
-  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0).length;
-  const bm=document.getElementById('bdg-m');
-  if(bm){bm.style.display=dr>0?'block':'none';bm.textContent=dr;}
-}
-
-// ── HOME ────────────────────────────────────────────────────────────
-function pgHome(el){
-  const oa=DB.ordini.filter(o=>o.stato==='DA FARE');
-  const sc=saldoCassa();
-  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
-  const cc=DB.clienti.filter(c=>c.sospeso>0);
-  const ts=cc.reduce((s,c)=>s+c.sospeso,0);
-  const og=oggi();
-  const co=DB.storico.filter(s=>s.data===og);
-  const io=co.reduce((s,c)=>s+(c.incassato||0),0);
-  let h=`<div class="kg">
-    <div class="kpi br" onclick="go('cassa')" style="grid-column:1/-1">
-      <span class="lbl">💰 Saldo Cassa</span>
-      <span class="val">€${f(sc)}</span>
-      <span class="sub">Aggiornato ora</span>
-    </div>
-    <div class="kpi go" onclick="go('ordini')">
-      <span class="lbl">📋 Da consegnare</span>
-      <span class="val">${oa.length}</span>
-      <span class="sub">ordini aperti</span>
-    </div>
-    <div class="kpi gn">
-      <span class="lbl">🚚 Oggi</span>
-      <span class="val">${co.length}</span>
-      <span class="sub">€${f(io)} incassato</span>
-    </div>
-    <div class="kpi ${dr.length>0?'rd':'gn'}" onclick="go('magazzino')">
-      <span class="lbl">📦 Riordinare</span>
-      <span class="val">${dr.length}</span>
-      <span class="sub">prodotti sotto scorta</span>
-    </div>
-    <div class="kpi ${ts>0?'rd':'gn'}" onclick="go('clienti')">
-      <span class="lbl">⚠️ Sospesi</span>
-      <span class="val">${cc.length}</span>
-      <span class="sub">€${f(ts)} totale</span>
-    </div>
-  </div>`;
-  h+=`<button class="btn btn-p" onclick="nuovoOrdine()">➕ Nuovo Ordine</button>`;
-  if(oa.length>0){
-    h+=`<div class="st">📋 Ordini da consegnare</div><div class="card">`;
-    oa.slice(0,6).forEach(o=>{
-      h+=`<div class="li" onclick="apriOrdine('${o.id}')">
-        <div class="av" style="background:var(--go2)">📦</div>
-        <div class="nf"><div class="nm">${o.nome_cliente}</div>
-          <div class="sb">${o.prodotti.map(p=>p.qty+'× '+p.miscela).join(', ')}</div></div>
-        <div class="rt"><div class="am" style="color:var(--br)">€${f(o.totale)}</div>
-          <div class="sb">${o.zona||''}</div></div>
-      </div>`;
-    });
-    if(oa.length>6)h+=`<div class="li" onclick="go('ordini')" style="justify-content:center;color:var(--br);font-weight:700">Tutti (${oa.length}) →</div>`;
-    h+=`</div>`;
-  }
-  if(co.length>0){
-    h+=`<div class="st">✅ Consegnato oggi</div><div class="card">`;
-    co.forEach(c=>{
-      h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
-        <div class="nf"><div class="nm">${c.nome_cliente}</div>
-          <div class="sb">${c.formato} ${c.miscela} ×${c.qty}</div></div>
-        <div class="rt"><div class="am" style="color:var(--gn)">€${f(c.incassato)}</div></div>
-      </div>`;
-    });
-    h+=`</div>`;
-  }
-  el.innerHTML=h;
-}
-
-// ── ORDINI ──────────────────────────────────────────────────────────
-function pgOrdini(el){
-  const ap=DB.ordini.filter(o=>o.stato==='DA FARE');
-  const ch=DB.ordini.filter(o=>o.stato==='CONSEGNATA').slice(-10).reverse();
-  let h=`<button class="btn btn-p" onclick="nuovoOrdine()">➕ Nuovo Ordine</button>`;
-  if(ap.length>0){
-    h+=`<div class="st">📋 Da consegnare (${ap.length})</div><div class="card">`;
-    ap.forEach(o=>{
-      const cl=DB.clienti.find(c=>c.id===o.id_cliente);
-      h+=`<div class="li" onclick="apriOrdine('${o.id}')">
-        <div class="av" style="background:var(--go2)">📦</div>
-        <div class="nf"><div class="nm">${o.nome_cliente}</div>
-          <div class="sb">${o.data_ordine} · ${cl?cl.zona:''}</div>
-          <div class="sb">${o.prodotti.map(p=>p.qty+'× '+p.formato+' '+p.miscela).join(', ')}</div></div>
-        <div class="rt"><div class="am" style="color:var(--br)">€${f(o.totale)}</div>
-          <span class="tag to">DA FARE</span></div>
-      </div>`;
-    });
-    h+=`</div>`;
-  }
-  if(ch.length>0){
-    h+=`<div class="st">✅ Recenti</div><div class="card">`;
-    ch.forEach(o=>{
-      h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
-        <div class="nf"><div class="nm">${o.nome_cliente}</div>
-          <div class="sb">${o.data_consegna||o.data_ordine}</div></div>
-        <div class="rt"><div class="am" style="color:var(--gn)">€${f(o.incassato||0)}</div>
-          <span class="tag tg">CONSEGNATA</span></div>
-      </div>`;
-    });
-    h+=`</div>`;
-  }
-  if(ap.length===0&&ch.length===0)h+=`<div class="em"><div class="ic">📋</div><p>Nessun ordine</p></div>`;
-  el.innerHTML=h;
-}
-
-// ── NUOVO ORDINE ─────────────────────────────────────────────────────
-function nuovoOrdine(){
-  let srch='',cl=null,prods=[];
-  function render(){
-    const cf=DB.clienti.filter(c=>!srch||c.nome.toLowerCase().includes(srch.toLowerCase())||(c.zona||'').toLowerCase().includes(srch.toLowerCase())).slice(0,15);
-    let h='<div class="mh"></div><h3>➕ Nuovo Ordine</h3>';
-    if(!cl){
-      h+=`<div class="fg"><label>Cerca Cliente</label>
-        <input class="fc" id="sc" placeholder="Nome o zona..." value="${srch}"
-          oninput="window._ucs(this.value)" autocomplete="off"></div>`;
-      cf.forEach(c=>{
-        const sp=c.sospeso>0?`<span style="color:var(--rd);font-size:11px"> · Debito €${f(c.sospeso)}</span>`:'';
-        h+=`<div class="li" onclick="window._sc('${c.id}')">
-          <div class="av" style="background:var(--cr2)">👤</div>
-          <div class="nf"><div class="nm">${c.nome}${sp}</div>
-            <div class="sb">${c.zona||''} · ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div></div>
-          <div class="rt" style="color:var(--br);font-size:20px">›</div>
-        </div>`;
-      });
-      if(!cf.length)h+=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
-    } else {
-      h+=`<div class="al as">👤 <strong>${cl.nome}</strong> · ${cl.zona||''}
-        <button onclick="window._dc()" style="float:right;background:none;border:none;font-size:18px;cursor:pointer">✕</button></div>`;
-      if(cl.sospeso>0)h+=`<div class="al aw">⚠️ Debito: <strong>€${f(cl.sospeso)}</strong></div>`;
-      h+=`<div class="st">Prodotti</div>`;
-      prods.forEach((p,i)=>{
-        h+=`<div class="pc">
-          <div style="flex:1">
-            <div class="pn">${p.formato} ${p.marchio} ${p.miscela}</div>
-            <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-              <input type="number" value="${p.qty}" min="1" style="width:70px;padding:5px 8px;border:2px solid var(--gy2);border-radius:8px;font-size:14px;font-weight:700"
-                onchange="window._ap(${i},'qty',this.value)">
-              <span style="color:#888;font-size:12px">× €${p.prezzo}</span>
-              <strong style="color:var(--br)">€${f(p.qty*p.prezzo)}</strong>
-            </div>
-          </div>
-          <button onclick="window._rp(${i})" style="color:var(--rd);font-size:20px;background:none;border:none;cursor:pointer;padding:0 4px">🗑</button>
-        </div>`;
-      });
-      h+=`<button class="btn btn-s" onclick="window._add()">➕ Aggiungi prodotto</button>`;
-      if(prods.length>0){
-        const tot=prods.reduce((s,p)=>s+p.qty*p.prezzo,0);
-        h+=`<div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
-          <span style="font-size:13px;color:#666">Totale: </span>
-          <span style="font-size:22px;font-weight:800;color:var(--br)">€${f(tot)}</span>
-        </div>
-        <button class="btn btn-p" onclick="window._co()">✅ Conferma Ordine</button>`;
-      }
+  "saldo_iniziale": 44.0,
+  "magazzino": [
+    {
+      "codice": "44 21 CAFFE SHOP NERA",
+      "formato": "C44",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "carico": 1900,
+      "scarico": 1300,
+      "rettifica": -200,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "44 22 CAFFE SHOP ROSSA",
+      "formato": "C44",
+      "marchio": "CAFFE SHOP",
+      "miscela": "RED",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "44 31 CIALDORO PALERMO",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 700,
+      "scarico": 400,
+      "rettifica": -100,
+      "scorta_minima": 400
+    },
+    {
+      "codice": "44 33 CIALDORO ROMA",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 1250,
+      "scarico": 450,
+      "rettifica": -300,
+      "scorta_minima": 400
+    },
+    {
+      "codice": "44 34 CIALDORO FIRENZE",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "FIRENZE",
+      "carico": 900,
+      "scarico": 700,
+      "rettifica": 100,
+      "scorta_minima": 300
+    },
+    {
+      "codice": "44 35 CIALDORO MILANO",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "44 36 CIALDORO CAGLIARI",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "CAGLIARI",
+      "carico": 1300,
+      "scarico": 1200,
+      "rettifica": 200,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "44 37 CIALDORO VENEZIA",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 1900,
+      "scarico": 1500,
+      "rettifica": -100,
+      "scorta_minima": 700
+    },
+    {
+      "codice": "44 38 CIALDORO DECA",
+      "formato": "C44",
+      "marchio": "CIALDORO",
+      "miscela": "DECA",
+      "carico": 100,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "44 41 MOKONE GRAN RISERVA",
+      "formato": "C44",
+      "marchio": "MOKONE",
+      "miscela": "GRAN RISERVA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "44 42 MOKONE ETNA",
+      "formato": "C44",
+      "marchio": "MOKONE",
+      "miscela": "ETNA",
+      "carico": 1600,
+      "scarico": 1500,
+      "rettifica": 300,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "44 SANDEMETRIO AGRUMI",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "AGRUMI",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "44 SANDEMETRIO CAFFE' AL GINSENG",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "GINSENG",
+      "carico": 150,
+      "scarico": 168,
+      "rettifica": 18,
+      "scorta_minima": 36
+    },
+    {
+      "codice": "44 SANDEMETRIO ORZO",
+      "formato": "C44",
+      "marchio": "SANDEMETRIO",
+      "miscela": "ORZO",
+      "carico": 54,
+      "scarico": 0,
+      "rettifica": -18,
+      "scorta_minima": 18
+    },
+    {
+      "codice": "NES 21 CAFFE SHOP BLACK",
+      "formato": "NES",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "carico": 800,
+      "scarico": 800,
+      "rettifica": 200,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "NES 31 CIALDORO PALERMO",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 200,
+      "scarico": 100,
+      "rettifica": 0,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "NES 33 CIALDORO ROMA",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 400,
+      "scarico": 300,
+      "rettifica": 0,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "NES 35 CIALDORO MILANO",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 200,
+      "scarico": 100,
+      "rettifica": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "NES 37 CIALDORO VENEZIA",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 200,
+      "scarico": 90,
+      "rettifica": -10,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "NES 38 CIALDORO DECA",
+      "formato": "NES",
+      "marchio": "CIALDORO",
+      "miscela": "DECA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 100,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "NES 41 MOKONE BAR DOLCE",
+      "formato": "NES",
+      "marchio": "MOKONE",
+      "miscela": "BAR DOLCE",
+      "carico": 30,
+      "scarico": 25,
+      "rettifica": 120,
+      "scorta_minima": 30
+    },
+    {
+      "codice": "NES 42 MOKONE BAR FORTE",
+      "formato": "NES",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "carico": 200,
+      "scarico": 200,
+      "rettifica": 400,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "NES BORBONE BLU",
+      "formato": "NES",
+      "marchio": "BORBONE",
+      "miscela": "BLU",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "NES DOLCE VITA ORZO 10 PZ",
+      "formato": "NES",
+      "marchio": "DOLCEVITA",
+      "miscela": "ORZO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "NES DOLCE VITA NOCCIOLINO 10 PZ",
+      "formato": "NES",
+      "marchio": "DOLCEVITA",
+      "miscela": "NOCCIOLINO",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "AMM 03 BORBONE BLU",
+      "formato": "AMM",
+      "marchio": "BORBONE",
+      "miscela": "BLU",
+      "carico": 200,
+      "scarico": 200,
+      "rettifica": 0,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "AMM 31 CIALDORO PALERMO",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "AMM 33 CIALDORO ROMA",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 200,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 200
+    },
+    {
+      "codice": "AMM 35 CIALDORO MILANO",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "AMM 37 CIALDORO VENEZIA",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "AMM 38 CIALDORO DECA",
+      "formato": "AMM",
+      "marchio": "CIALDORO",
+      "miscela": "DECA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "AMM 42 MOKONE BAR FORTE",
+      "formato": "AMM",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "carico": 100,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT 01 BORBONE BLU",
+      "formato": "POINT",
+      "marchio": "BORBONE",
+      "miscela": "NERO",
+      "carico": 100,
+      "scarico": 200,
+      "rettifica": 100,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 21 CAFFE SHOP BLACK",
+      "formato": "POINT",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "carico": 80,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 31 CIALDORO PALERMO",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 200,
+      "scarico": 200,
+      "rettifica": 100,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 33 CIALDORO ROMA",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 100,
+      "scarico": 600,
+      "rettifica": 900,
+      "scorta_minima": 500
+    },
+    {
+      "codice": "POINT 35 CIALDORO MILANO",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 400,
+      "scarico": 400,
+      "rettifica": 0,
+      "scorta_minima": 300
+    },
+    {
+      "codice": "POINT 37 CIALDORO VENEZIA",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT 38 CIALDORO DECA",
+      "formato": "POINT",
+      "marchio": "CIALDORO",
+      "miscela": "DECA",
+      "carico": 200,
+      "scarico": 100,
+      "rettifica": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 41 MOKONE BAR DOLCE",
+      "formato": "POINT",
+      "marchio": "MOKONE",
+      "miscela": "BAR DOLCE",
+      "carico": 300,
+      "scarico": 100,
+      "rettifica": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "POINT 42 MOKONE BAR FORTE",
+      "formato": "POINT",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT AROMALIGHT GINSENG",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT AROMALIGHT NOCCIOLINO",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "NOCCIOLINO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "POINT AROMALIGHT ORZO",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "ORZO",
+      "carico": 30,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 30
+    },
+    {
+      "codice": "POINT AROMALIGHT TE LIMONE",
+      "formato": "POINT",
+      "marchio": "AROMALIGHT",
+      "miscela": "LIMONE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG 21 CAFFE SHOP BLACK",
+      "formato": "DG",
+      "marchio": "CAFFE SHOP",
+      "miscela": "BLACK",
+      "carico": 0,
+      "scarico": 110,
+      "rettifica": 110,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG 22 CAFFE SHOP RED",
+      "formato": "DG",
+      "marchio": "CAFFE SHOP",
+      "miscela": "RED",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG 30 CIALDORO ETNA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "ETNA",
+      "carico": 250,
+      "scarico": 200,
+      "rettifica": 0,
+      "scorta_minima": 100
+    },
+    {
+      "codice": "DG 31 CIALDORO PALERMO",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "PALERMO",
+      "carico": 100,
+      "scarico": 50,
+      "rettifica": 0,
+      "scorta_minima": 50
+    },
+    {
+      "codice": "DG 33 CIALDORO ROMA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 150,
+      "scarico": 50,
+      "rettifica": -50,
+      "scorta_minima": 50
+    },
+    {
+      "codice": "DG 35 CIALDORO MILANO",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 100,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 50
+    },
+    {
+      "codice": "DG 37 CIALDORO VENEZIA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 50,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 50
+    },
+    {
+      "codice": "DG 38 CIALDORO DECA",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "DECA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 50,
+      "scorta_minima": 3
+    },
+    {
+      "codice": "DG CIALDORO GINSENG 12PZ",
+      "formato": "DG",
+      "marchio": "CIALDORO",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG DOLCEVITA GIANDUIA 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "GIANDUIA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG DOLCEVITA GINSENG 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG DOLCEVITA MAXI CIOCK 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "MAXI CIOCC",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "DG DOLCEVITA NOCCIOLONE 12 PZ",
+      "formato": "DG",
+      "marchio": "DOLCEVITA",
+      "miscela": "NOCCIOLNE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 72,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 30 CIALDORO ETNA",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "ETNA",
+      "carico": 320,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 32 CIALDORO NAPOLI",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "NAPOLI",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 35 CIALDORO MILANO",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 38 CIALDORO SAN MARINO",
+      "formato": "CFY",
+      "marchio": "CIALDORO",
+      "miscela": "SAN MARINO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "CFY 42 MOKONE BAR FORTE",
+      "formato": "CFY",
+      "marchio": "MOKONE",
+      "miscela": "BAR FORTE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 320,
+      "scorta_minima": 320
+    },
+    {
+      "codice": "MKD MOKADOR 01 MARYLIN 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "MARYLIN",
+      "carico": 16,
+      "scarico": 8,
+      "rettifica": 0,
+      "scorta_minima": 16
+    },
+    {
+      "codice": "MKD MOKADOR 02 SOPHIA 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "SOPHIA",
+      "carico": 24,
+      "scarico": 12,
+      "rettifica": -1,
+      "scorta_minima": 16
+    },
+    {
+      "codice": "MKD MOKADOR 03 BRIGITTE 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "BRIGITTE",
+      "carico": 4,
+      "scarico": 0,
+      "rettifica": -3,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKD MOKADOR 04 GRACE DEC 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "GRACE",
+      "carico": 24,
+      "scarico": 0,
+      "rettifica": -12,
+      "scorta_minima": 12
+    },
+    {
+      "codice": "MKD MOKADOR 05 ORZO 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "ORZO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKD MOKADOR 06 TE LIMONE 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "LIMONE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKD MOKADOR 07 GINSENG 1X25",
+      "formato": "MKD",
+      "marchio": "MOKADOR",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKT MOKADOR 01 PIU' CREMA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "PIU CREMA",
+      "carico": 400,
+      "scarico": 1000,
+      "rettifica": 800,
+      "scorta_minima": 300
+    },
+    {
+      "codice": "MKT MOKADOR 02 CREMA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "CREMA",
+      "carico": 700,
+      "scarico": 600,
+      "rettifica": 100,
+      "scorta_minima": 400
+    },
+    {
+      "codice": "MKT MOKADOR 03 AROMA TOP",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "AROMA TOP",
+      "carico": 200,
+      "scarico": 200,
+      "rettifica": 300,
+      "scorta_minima": 400
+    },
+    {
+      "codice": "MKT MOKADOR 04 DECA",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "DECA",
+      "carico": 80,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKT MOKADOR 05 ORZO",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "ORZO",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKT MOKADOR 06 THE' LIMONE",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "LIMONE",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "MKT MOKADOR 08 GINSENG",
+      "formato": "MKT",
+      "marchio": "MOKADOR",
+      "miscela": "GINSENG",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "GRA 03 CIALDORO GRANI \"ROMA\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "ROMA",
+      "carico": 3,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "GRA 05 CIALDORO GRANI \"MILANO\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "MILANO",
+      "carico": 1,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "GRA 07 CIALDORO GRANI \"VENEZIA\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "VENEZIA",
+      "carico": 2,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 2
+    },
+    {
+      "codice": "GRA 08 CIALDORO GRANI \"DECAFFEINATO\" 1.000 gr",
+      "formato": "GRA",
+      "marchio": "CIALDORO",
+      "miscela": "DECA",
+      "carico": 0,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 0
+    },
+    {
+      "codice": "ACC BICCHIERI CARTA CIALDORO 50 pz",
+      "formato": "ACC",
+      "marchio": "ACCESSORI",
+      "miscela": "BICCHIERI 80CC",
+      "carico": 5,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 5
+    },
+    {
+      "codice": "ESSSECAFFE SEGAFREDO CAPSULE",
+      "formato": "ESSSE",
+      "marchio": "CIALDORO",
+      "miscela": "BLACK",
+      "carico": 100,
+      "scarico": 0,
+      "rettifica": 0,
+      "scorta_minima": 100
     }
-    document.getElementById('mc').innerHTML=h;
-    if(!cl){const i=document.getElementById('sc');if(i)setTimeout(()=>i.focus(),50);}
-  }
-  window._ucs=v=>{srch=v;render();};
-  window._sc=id=>{cl=DB.clienti.find(c=>c.id===id);
-    if(cl&&cl.formato_abituale){
-      const p=DB.prodotti.find(p=>p.formato===cl.formato_abituale&&p.miscela===cl.miscela_abituale);
-      prods=[{codice:p?p.codice:'',formato:cl.formato_abituale,marchio:p?p.marchio:'',
-        miscela:cl.miscela_abituale,qty:cl.qty_abituale||1,prezzo:cl.prezzo_abituale||(p?p.prezzo_vendita:0)}];
-    }render();};
-  window._dc=()=>{cl=null;prods=[];render();};
-  window._ap=(i,k,v)=>{prods[i][k]=k==='qty'?Math.max(1,parseInt(v)||1):v;render();};
-  window._rp=i=>{prods.splice(i,1);render();};
-  window._add=()=>{
-    let ps='';
-    function rpa(){
-      const pf=DB.prodotti.filter(p=>!ps||p.codice.toLowerCase().includes(ps.toLowerCase())||
-        p.miscela.toLowerCase().includes(ps.toLowerCase())||p.formato.toLowerCase().includes(ps.toLowerCase())||
-        p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,25);
-      let h=`<div class="mh"></div><h3>Scegli Prodotto</h3>
-        <input class="fc" placeholder="Cerca..." value="${ps}" oninput="window._ups(this.value)" style="margin-bottom:10px" autofocus>`;
-      pf.forEach(p=>{
-        h+=`<div class="li" onclick="window._agp(${DB.prodotti.indexOf(p)})">
-          <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
-            <div class="sb">€${p.prezzo_vendita}/pz</div></div>
-          <div class="rt" style="color:var(--br);font-size:20px">+</div>
-        </div>`;
-      });
-      document.getElementById('mc').innerHTML=h;
-      setTimeout(()=>{const i=document.querySelector('.mc input');if(i)i.focus();},50);
-    }
-    window._ups=v=>{ps=v;rpa();};
-    window._agp=idx=>{const p=DB.prodotti[idx];
-      if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,
-        miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});render();};
-    rpa();
-  };
-  window._co=()=>{
-    if(!cl||!prods.length)return;
-    const tot=prods.reduce((s,p)=>s+p.qty*p.prezzo,0);
-    const id='ORD-'+String(DB.cnt.ordine).padStart(3,'0');DB.cnt.ordine++;
-    DB.ordini.push({id,id_cliente:cl.id,nome_cliente:cl.nome,zona:cl.zona||'',
-      prodotti:prods.map(p=>({...p})),totale:Math.round(tot*100)/100,
-      stato:'DA FARE',data_ordine:oggi(),data_consegna:null,incassato:0,da_pagare:0});
-    saveDB();closeMO();toast(`Ordine ${id} creato per ${cl.nome}`);go('ordini');
-  };
-  openMO();render();
+  ]
 }
-
-function apriOrdine(id){
-  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
-  const cl=DB.clienti.find(c=>c.id===o.id_cliente);
-  let h=`<div class="mh"></div><h3>${o.id}</h3>
-  <div class="al ${o.stato==='DA FARE'?'aw':'as'}">👤 <strong>${o.nome_cliente}</strong> · ${o.zona}</div>
-  <div class="st">Prodotti</div>`;
-  o.prodotti.forEach(p=>{
-    h+=`<div class="pc"><div style="flex:1">
-      <div class="pn">${p.formato} ${p.marchio} ${p.miscela}</div>
-      <div class="pp">${p.qty} × €${p.prezzo} = <strong>€${f(p.qty*p.prezzo)}</strong></div>
-    </div></div>`;
-  });
-  h+=`<div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
-    Totale: <span style="font-size:22px;font-weight:800;color:var(--br)">€${f(o.totale)}</span>
-  </div>`;
-  if(o.stato==='DA FARE'){
-    h+=`<button class="btn btn-ok" onclick="registraConsegna('${id}')">🚚 Registra Consegna</button>
-    <button class="btn btn-p" onclick="modificaOrdine('${id}')">✏️ Modifica Ordine</button>
-    <button class="btn btn-x" onclick="annullaOrdine('${id}')">❌ Annulla</button>`;
-  } else {
-    h+=`<div class="al as">✅ Consegnato ${o.data_consegna} · Incassato €${f(o.incassato)}</div>`;
-  }
-  h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-}
-
-function registraConsegna(id){
-  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
-  // Build editable product rows
-  let prodRows=o.prodotti.map((p,i)=>`
-    <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--gy)">
-      <span style="flex:1;font-size:12px">${p.qty}× ${p.formato} ${p.miscela}</span>
-      <span style="font-size:11px;color:#888">€</span>
-      <input type="number" value="${p.prezzo}" step="0.001" min="0"
-        style="width:70px;padding:4px 6px;border:2px solid var(--gy2);border-radius:6px;font-size:13px;font-weight:700;text-align:center"
-        onchange="aggiornaPrezzoProd(${i},this.value)" id="pp${i}">
-      <strong style="width:60px;text-align:right;font-size:13px" id="tot${i}">€${f(p.qty*p.prezzo)}</strong>
-    </div>`).join('');
-  let h=`<div class="mh"></div><h3>🚚 Consegna</h3>
-  <div class="al as">👤 <strong>${o.nome_cliente}</strong></div>
-  <div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:14px">
-    <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:700;text-transform:uppercase">Prodotti — modifica prezzo se necessario</div>
-    ${prodRows}
-    <div class="dv"></div>
-    <div style="display:flex;justify-content:space-between">
-      <span style="font-weight:700">TOTALE</span>
-      <strong style="color:var(--br);font-size:18px" id="tot-ord">€${f(o.totale)}</strong>
-    </div>
-  </div>
-  <div class="fg"><label>Importo incassato (€)</label>
-    <input class="fc" type="number" id="inc" value="${o.totale}" step="0.01" min="0"
-      style="font-size:24px;font-weight:700;text-align:center"></div>
-  <div class="fg"><label>Metodo pagamento</label>
-    <select class="fc" id="met">
-      <option>Contanti</option><option>Bonifico</option><option>POS</option><option>Da Saldare</option>
-    </select></div>
-  <button class="btn btn-ok" onclick="confConsegna('${id}')">✅ Conferma</button>
-  <button class="btn btn-s" onclick="apriOrdine('${id}')">← Indietro</button>`;
-  document.getElementById('mc').innerHTML=h;
-}
-
-window.confConsegna=function(id){
-  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
-  const inc=parseFloat(document.getElementById('inc').value)||0;
-  const met=document.getElementById('met').value;
-  const dp=Math.max(0,Math.round((o.totale-inc)*100)/100);
-  const og=oggi();
-  o.stato='CONSEGNATA';o.data_consegna=og;o.incassato=inc;o.da_pagare=dp;
-  // Magazzino
-  o.prodotti.forEach(p=>{
-    const m=DB.magazzino.find(m=>m.formato.toUpperCase()===p.formato.toUpperCase()&&m.miscela.toUpperCase()===p.miscela.toUpperCase());
-    if(m){m.scarico+=p.qty;m.giacenza=m.carico-m.scarico+m.rettifica;}
-  });
-  // Storico
-  o.prodotti.forEach(p=>{
-    const nc='CON-'+String(DB.cnt.consegna).padStart(3,'0');DB.cnt.consegna++;
-    DB.storico.push({id_consegna:nc,data:og,id_cliente:o.id_cliente,nome_cliente:o.nome_cliente,
-      zona:o.zona,formato:p.formato,miscela:p.miscela,qty:p.qty,prezzo_unit:p.prezzo,
-      importo:p.qty*p.prezzo,incassato:inc,n_ordine:o.id});
-  });
-  // Cliente
-  const cl=DB.clienti.find(c=>c.id===o.id_cliente);
-  if(cl){
-    if(dp>0)cl.sospeso=Math.round(((cl.sospeso||0)+dp)*100)/100;
-    cl.ultima_consegna_1=cl.ultima_consegna_2||'';
-    cl.ultima_consegna_2=cl.ultima_consegna_3||'';
-    cl.ultima_consegna_3=og;
-  }
-  // Cassa
-  if(inc>0){
-    const sp=saldoCassa();
-    DB.cassa.push({data:og,descrizione:'Incasso - '+o.nome_cliente,tipo:'Incasso Consegna',
-      riferimento:o.id,entrata:inc,uscita:0,saldo:Math.round((sp+inc)*100)/100,metodo:met,
-      note:o.prodotti.map(p=>p.formato+' '+p.miscela+' ×'+p.qty).join(', ')});
-  }
-  saveDB();closeMO();
-  toast(`✅ Consegnato! €${f(inc)} incassato${dp>0?' · Da pagare €'+f(dp):''}`);
-  go('ordini');
-};
-
-window.annullaOrdine=function(id){
-  if(!confirm('Annullare questo ordine?'))return;
-  const o=DB.ordini.find(x=>x.id===id);if(o)o.stato='ANNULLATA';
-  saveDB();closeMO();toast('Ordine annullato');go('ordini');
-};
-
-// ── CLIENTI ─────────────────────────────────────────────────────────
-function pgClienti(el){
-  const q=sq.toLowerCase();
-  const cf=DB.clienti.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.zona||'').toLowerCase().includes(q));
-  let h=`<div class="sb"><span style="color:#aaa;font-size:16px">🔍</span>
-    <input placeholder="Cerca cliente o zona..." value="${sq}"
-      oninput="sq=this.value;pgClienti(document.getElementById('cnt'))" autocomplete="off"></div>
-  <div style="font-size:12px;color:#888;margin-bottom:6px">${cf.length} clienti</div><div class="card">`;
-  if(!cf.length)h+=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
-  cf.forEach(c=>{
-    h+=`<div class="li" onclick="apriCliente('${c.id}')">
-      <div class="av" style="background:${c.sospeso>0?'var(--rd2)':'var(--bl2)'}">
-        ${c.sospeso>0?'⚠️':'👤'}</div>
-      <div class="nf"><div class="nm">${c.nome}</div>
-        <div class="sb">${c.zona||''} · ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
-        ${c.ultima_consegna_3?`<div class="sb">Ultima: ${c.ultima_consegna_3}</div>`:''}
-      </div>
-      <div class="rt">
-        ${c.sospeso>0?`<div class="am" style="color:var(--rd)">€${f(c.sospeso)}</div><div class="sb">sospeso</div>`:''}
-        <span style="color:var(--br);font-size:18px">›</span>
-      </div>
-    </div>`;
-  });
-  h+=`</div>`;el.innerHTML=h;
-}
-
-function apriCliente(id){
-  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
-  const co=DB.storico.filter(s=>s.id_cliente===id).slice(-5).reverse();
-  let h=`<div class="mh"></div><h3>${c.nome}</h3>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-    <div style="background:var(--cr2);border-radius:10px;padding:10px">
-      <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase">Zona</div>
-      <div style="font-weight:700;margin-top:2px">${c.zona||'—'}</div>
-    </div>
-    <div style="background:var(--cr2);border-radius:10px;padding:10px">
-      <div style="font-size:10px;color:#888;font-weight:700;text-transform:uppercase">Telefono</div>
-      <div style="font-weight:700;margin-top:2px;font-size:13px">${c.telefono||'—'}</div>
-    </div>
-  </div>
-  <div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px">
-    <div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:6px">Prodotto Abituale</div>
-    <div style="font-weight:700;font-size:15px">${c.formato_abituale} ${c.miscela_abituale}</div>
-    <div style="color:#666;font-size:13px">${c.qty_abituale} pz × €${c.prezzo_abituale} = <strong>€${f(c.qty_abituale*c.prezzo_abituale)}</strong></div>
-  </div>`;
-  if(c.sospeso>0){
-    h+=`<div class="al ae">⚠️ Debito: <strong>€${f(c.sospeso)}</strong>
-      <button onclick="apriSaldo('${id}')" style="float:right;background:var(--rd);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">Salda</button>
-    </div>`;
-  }
-  if(c.ultima_consegna_1||c.ultima_consegna_2||c.ultima_consegna_3){
-    h+=`<div class="st">📅 Ultime consegne</div>
-    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-      ${c.ultima_consegna_1?`<span class="tag ty">${c.ultima_consegna_1}</span>`:''}
-      ${c.ultima_consegna_2?`<span class="tag ty">${c.ultima_consegna_2}</span>`:''}
-      ${c.ultima_consegna_3?`<span class="tag tg">${c.ultima_consegna_3}</span>`:''}
-    </div>`;
-  }
-  if(co.length>0){
-    h+=`<div class="st">Storico recente</div><div class="card">`;
-    co.forEach(s=>{
-      h+=`<div class="li"><div class="nf">
-        <div class="nm" style="font-size:13px">${s.formato} ${s.miscela} ×${s.qty}</div>
-        <div class="sb">${s.data}</div></div>
-        <div class="rt"><div class="am" style="color:var(--gn)">€${f(s.incassato)}</div></div>
-      </div>`;
-    });
-    h+=`</div>`;
-  }
-  h+=`<button class="btn btn-p" onclick="nuovoOrdineCliente('${id}')">➕ Nuovo Ordine</button>
-  <button class="btn btn-s" onclick="modificaProdAbit('${id}')">✏️ Modifica Prodotto Abituale</button>
-  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-}
-
-function nuovoOrdineCliente(id){
-  closeMO();
-  setTimeout(()=>{nuovoOrdine();setTimeout(()=>window._sc&&window._sc(id),100);},300);
-}
-
-function apriSaldo(id){
-  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
-  let h=`<div class="mh"></div><h3>💳 Registra Saldo</h3>
-  <div class="al aw">👤 <strong>${c.nome}</strong><br>Debito: <strong>€${f(c.sospeso)}</strong></div>
-  <div class="fg"><label>Importo pagato (€)</label>
-    <input class="fc" type="number" id="si" value="${c.sospeso}" step="0.01" min="0"
-      style="font-size:24px;font-weight:700;text-align:center"></div>
-  <button class="btn btn-ok" onclick="confSaldo('${id}')">✅ Conferma</button>
-  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-}
-
-window.confSaldo=function(id){
-  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
-  const pag=parseFloat(document.getElementById('si').value)||0;
-  const ns=Math.max(0,Math.round((c.sospeso-pag)*100)/100);
-  c.sospeso=ns;
-  const sp=saldoCassa();
-  DB.cassa.push({data:oggi(),descrizione:'Saldo debito - '+c.nome,tipo:'Saldo Debito',
-    riferimento:c.id,entrata:pag,uscita:0,saldo:Math.round((sp+pag)*100)/100,metodo:'Contanti',note:''});
-  saveDB();closeMO();toast(`Saldo €${f(pag)} · Residuo €${f(ns)}`);go('clienti');
-};
-
-function modificaProdAbit(id){
-  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
-  let ps='';
-  function rend(){
-    const pf=DB.prodotti.filter(p=>!ps||p.miscela.toLowerCase().includes(ps.toLowerCase())||
-      p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
-    let h=`<div class="mh"></div><h3>✏️ Prodotto Abituale</h3>
-    <div class="al as">${c.nome} · Attuale: ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
-    <input class="fc" placeholder="Cerca prodotto..." value="${ps}" oninput="window._mpas(this.value)" style="margin-bottom:8px">
-    <div class="card">`;
-    pf.forEach(p=>{
-      h+=`<div class="li" onclick="window._mpsel('${c.id}',${DB.prodotti.indexOf(p)})">
-        <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
-          <div class="sb">€${p.prezzo_vendita}/pz</div></div>
-        <div class="rt" style="color:var(--br);font-size:20px">›</div>
-      </div>`;
-    });
-    h+=`</div><button class="btn btn-s" onclick="apriCliente('${id}')">← Indietro</button>`;
-    document.getElementById('mc').innerHTML=h;
-  }
-  window._mpas=v=>{ps=v;rend();};
-  window._mpsel=function(cid,cod){
-    const cl=DB.clienti.find(x=>x.id===cid);const pr=DB.prodotti.find(p=>p.codice===cod);
-    if(!cl||!pr)return;
-    document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Conferma</h3>
-    <div class="al as">${pr.formato} ${pr.marchio} ${pr.miscela}</div>
-    <div class="fg"><label>Quantità abituale</label>
-      <input class="fc" type="number" id="mq" value="${cl.qty_abituale||100}" style="font-size:22px;text-align:center"></div>
-    <div class="fg"><label>Prezzo (€)</label>
-      <input class="fc" type="number" id="mp" value="${pr.prezzo_vendita}" step="0.001" style="font-size:22px;text-align:center"></div>
-    <button class="btn btn-ok" onclick="window._mpsave('${cid}',${idx})">✅ Salva</button>
-    <button class="btn btn-s" onclick="modificaProdAbit('${cid}')">← Indietro</button>`;
-  };
-  window._mpsave=function(cid,cod){
-    const cl=DB.clienti.find(x=>x.id===cid);const pr=DB.prodotti.find(p=>p.codice===cod);
-    if(!cl||!pr)return;
-    cl.formato_abituale=pr.formato;cl.miscela_abituale=pr.miscela;
-    cl.qty_abituale=parseInt(document.getElementById('mq').value)||1;
-    cl.prezzo_abituale=parseFloat(document.getElementById('mp').value)||pr.prezzo_vendita;
-    saveDB();closeMO();toast('Prodotto abituale aggiornato!');go('clienti');
-  };
-  rend();
-}
-
-// ── CASSA ───────────────────────────────────────────────────────────
-function saldoCassa(){
-  const te=DB.cassa.reduce((s,r)=>s+(r.entrata||0),0);
-  const tu=DB.cassa.reduce((s,r)=>s+(r.uscita||0),0);
-  return Math.round((DB.saldo_iniziale+te-tu)*100)/100;
-}
-
-function pgCassa(el){
-  const sc=saldoCassa();
-  const te=DB.cassa.reduce((s,r)=>s+(r.entrata||0),0);
-  const tu=DB.cassa.reduce((s,r)=>s+(r.uscita||0),0);
-  const og=oggi();
-  const eo=DB.cassa.filter(r=>r.data===og).reduce((s,r)=>s+(r.entrata||0),0);
-  const uo=DB.cassa.filter(r=>r.data===og).reduce((s,r)=>s+(r.uscita||0),0);
-  const ul=DB.cassa.slice(-30).reverse();
-  let h=`<div class="kg">
-    <div class="kpi br" style="grid-column:1/-1">
-      <span class="lbl">💰 Saldo Attuale</span>
-      <span class="val">€${f(sc)}</span>
-      <span class="sub">Saldo iniziale: €${f(DB.saldo_iniziale)}</span>
-    </div>
-    <div class="kpi gn">
-      <span class="lbl">↑ Entrate tot.</span>
-      <span class="val">€${f(te)}</span>
-      <span class="sub">+€${f(eo)} oggi</span>
-    </div>
-    <div class="kpi rd">
-      <span class="lbl">↓ Uscite tot.</span>
-      <span class="val">€${f(tu)}</span>
-      <span class="sub">-€${f(uo)} oggi</span>
-    </div>
-  </div>
-  <div style="display:flex;gap:8px;margin-bottom:10px">
-    <button class="btn btn-ok btn-sm" style="flex:1" onclick="moEntrata()">↑ Entrata</button>
-    <button class="btn btn-x btn-sm" style="flex:1" onclick="moUscita()">↓ Spesa</button>
-    <button class="btn btn-g btn-sm" style="flex:1" onclick="moContaCassa()">🧮 Conta</button>
-  </div>
-  <div class="st">Ultime operazioni</div><div class="card">`;
-  if(!ul.length)h+=`<div class="em" style="padding:20px"><p>Nessuna operazione</p></div>`;
-  ul.forEach(r=>{
-    const ie=r.entrata>0;
-    h+=`<div class="li">
-      <div class="av" style="background:${ie?'var(--gn2)':'var(--rd2)'};font-size:16px">${ie?'↑':'↓'}</div>
-      <div class="nf"><div class="nm" style="font-size:13px">${r.descrizione}</div>
-        <div class="sb">${r.data} · ${r.tipo}</div></div>
-      <div class="rt">
-        <div class="am" style="color:${ie?'var(--gn)':'var(--rd)'}">${ie?'+':'-'}€${f(ie?r.entrata:r.uscita)}</div>
-        <div class="sb">Saldo €${f(r.saldo)}</div>
-      </div>
-    </div>`;
-  });
-  h+=`</div>`;el.innerHTML=h;
-}
-
-function moEntrata(){
-  let h=`<div class="mh"></div><h3>↑ Registra Entrata</h3>
-  <div class="fg"><label>Descrizione</label>
-    <input class="fc" id="ed" placeholder="es. Incasso..." autofocus></div>
-  <div class="fg"><label>Importo (€)</label>
-    <input class="fc" type="number" id="ei" step="0.01" min="0" style="font-size:24px;text-align:center"></div>
-  <div class="fg"><label>Tipo</label>
-    <select class="fc" id="et"><option>Incasso Consegna</option><option>Saldo Debito</option><option>Altra Entrata</option></select></div>
-  <div class="fg"><label>Metodo</label>
-    <select class="fc" id="em"><option>Contanti</option><option>Bonifico</option><option>POS</option></select></div>
-  <button class="btn btn-ok" onclick="salvaCassa('e')">✅ Salva</button>
-  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-}
-
-function moUscita(){
-  let h=`<div class="mh"></div><h3>↓ Registra Spesa</h3>
-  <div class="fg"><label>Descrizione</label>
-    <input class="fc" id="ud" placeholder="es. Carburante..." autofocus></div>
-  <div class="fg"><label>Importo (€)</label>
-    <input class="fc" type="number" id="ui" step="0.01" min="0" style="font-size:24px;text-align:center"></div>
-  <div class="fg"><label>Tipo</label>
-    <select class="fc" id="ut"><option>Acquisto Merce</option><option>Carburante</option><option>Telefono/Internet</option><option>Altra Uscita</option></select></div>
-  <div class="fg"><label>Note</label><input class="fc" id="un" placeholder="Facoltativo..."></div>
-  <button class="btn btn-x" onclick="salvaCassa('u')">✅ Salva Spesa</button>
-  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-}
-
-window.salvaCassa=function(tipo){
-  const ie=tipo==='e';
-  const desc=(document.getElementById(ie?'ed':'ud').value||'').trim();
-  const imp=parseFloat(document.getElementById(ie?'ei':'ui').value)||0;
-  const tip=document.getElementById(ie?'et':'ut').value;
-  if(!desc||imp<=0){toast('Inserisci descrizione e importo');return;}
-  const sp=saldoCassa();
-  DB.cassa.push({data:oggi(),descrizione:desc,tipo:tip,riferimento:'',
-    entrata:ie?imp:0,uscita:ie?0:imp,
-    saldo:Math.round((sp+(ie?imp:-imp))*100)/100,
-    metodo:ie?document.getElementById('em').value:'Contanti',
-    note:ie?'':(document.getElementById('un').value||'')});
-  saveDB();closeMO();toast(`${ie?'Entrata':'Spesa'} €${f(imp)} registrata`);go('cassa');
-};
-
-function moContaCassa(){
-  const tgl=[{l:'💵 500€',v:500},{l:'💵 200€',v:200},{l:'💵 100€',v:100},
-    {l:'💵 50€',v:50},{l:'💵 20€',v:20},{l:'💵 10€',v:10},{l:'💵 5€',v:5},
-    {l:'🪙 2€',v:2},{l:'🪙 1€',v:1},{l:'🪙 0,50€',v:.5},{l:'🪙 0,20€',v:.2},{l:'🪙 0,10€',v:.1}];
-  let h=`<div class="mh"></div><h3>🧮 Conta Cassa</h3>
-  <div style="font-size:12px;color:#888;margin-bottom:12px">Nr. pezzi per ogni taglio</div>`;
-  tgl.forEach((t,i)=>{
-    h+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-      <span style="flex:1;font-weight:600">${t.l}</span>
-      <input type="number" min="0" value="0" id="tg${i}" class="fc"
-        style="width:80px;text-align:center;padding:8px" oninput="aggCC()">
-      <span style="width:70px;text-align:right;font-size:13px;color:#666" id="tt${i}">€0</span>
-    </div>`;
-  });
-  h+=`<div class="dv"></div>
-  <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;margin-bottom:14px">
-    <span>Totale contato:</span><span id="cctot" style="color:var(--br)">€0,00</span>
-  </div>
-  <div id="ccres" style="display:none"></div>
-  <button class="btn btn-g" onclick="calcCC()">🧮 Calcola Differenza</button>
-  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
-  document.getElementById('mc').innerHTML=h;
-  window._tgl=tgl;
-  window.aggCC=function(){
-    let tot=0;
-    tgl.forEach((t,i)=>{const pz=parseInt(document.getElementById('tg'+i).value)||0;const v=pz*t.v;tot+=v;document.getElementById('tt'+i).textContent='€'+f(v);});
-    document.getElementById('cctot').textContent='€'+f(tot);
-  };
-  window.calcCC=function(){
-    let tot=0;tgl.forEach((t,i)=>tot+=(parseInt(document.getElementById('tg'+i).value)||0)*t.v);
-    const te=saldoCassa();const df=tot-te;
-    const res=document.getElementById('ccres');res.style.display='block';
-    res.innerHTML=`<div class="al ${Math.abs(df)<.01?'as':df>0?'aw':'ae'}">
-      <div>Cassa reale: <strong>€${f(tot)}</strong></div>
-      <div>Cassa teorica: <strong>€${f(te)}</strong></div>
-      <div style="margin-top:6px;font-size:16px;font-weight:800">
-        ${Math.abs(df)<.01?'✅ Cassa in ordine!':df>0?'⬆️ Eccedenza: +€'+f(df):'⬇️ Ammanco: -€'+f(Math.abs(df))}
-      </div></div>`;
-  };
-  openMO();
-}
-
-// ── MAGAZZINO ───────────────────────────────────────────────────────
-function pgMagazzino(el){
-  const q=sq.toLowerCase();
-  const mf=DB.magazzino.filter(m=>!q||m.codice.toLowerCase().includes(q)||m.miscela.toLowerCase().includes(q)||m.formato.toLowerCase().includes(q)||m.marchio.toLowerCase().includes(q));
-  const dr=mf.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
-  let h=`<div class="sb"><span style="color:#aaa">🔍</span>
-    <input placeholder="Cerca prodotto..." value="${sq}"
-      oninput="sq=this.value;pgMagazzino(document.getElementById('cnt'))" autocomplete="off"></div>`;
-  if(dr.length>0&&!sq)h+=`<div class="al ae">⚠️ ${dr.length} prodotti sotto scorta minima</div>`;
-  h+=`<div class="card">`;
-  mf.forEach(m=>{
-    const al=m.giacenza<=m.scorta_minima&&m.scorta_minima>0;
-    const pct=m.scorta_minima>0?Math.min(100,(m.giacenza/m.scorta_minima)*100):100;
-    const cod=m.codice.replace(/'/g,"\\'");
-    h+=`<div class="li" onclick="apriMag('${cod}')">
-      <div class="av" style="background:${al?'var(--rd2)':'var(--gn2)'}">${al?'⚠️':'📦'}</div>
-      <div class="nf"><div class="nm" style="font-size:13px">${m.formato} ${m.marchio} ${m.miscela}</div>
-        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-          <div class="pb"><div class="pbf" style="width:${pct}%;background:${al?'var(--rd)':'var(--gn)'}"></div></div>
-          <span style="font-size:11px;color:#888">min ${m.scorta_minima}</span>
-        </div></div>
-      <div class="rt">
-        <div class="am" style="color:${al?'var(--rd)':'var(--gn)'}">${m.giacenza}</div>
-        <div class="sb">pezzi</div>
-      </div>
-    </div>`;
-  });
-  h+=`</div>`;el.innerHTML=h;
-}
-
-function apriMag(cod){
-  const m=DB.magazzino.find(x=>x.codice===cod);if(!m)return;
-  const al=m.giacenza<=m.scorta_minima&&m.scorta_minima>0;
-  let h=`<div class="mh"></div><h3>${m.formato} ${m.marchio}</h3>
-  <div style="font-size:15px;color:#666;margin-bottom:14px">${m.miscela}</div>
-  <div class="kg" style="margin-bottom:14px">
-    <div class="kpi ${al?'rd':'gn'}"><span class="lbl">Giacenza</span><span class="val">${m.giacenza}</span><span class="sub">pezzi</span></div>
-    <div class="kpi"><span class="lbl">Scorta Min.</span><span class="val">${m.scorta_minima}</span></div>
-    <div class="kpi"><span class="lbl">Carico tot.</span><span class="val">${m.carico}</span></div>
-    <div class="kpi"><span class="lbl">Scarico tot.</span><span class="val">${m.scarico}</span></div>
-  </div>
-  <div class="fg"><label>Aggiungi arrivo merce (pezzi)</label>
-    <input class="fc" type="number" id="ap" min="0" placeholder="es. 500" style="font-size:22px;text-align:center"></div>
-  <button class="btn btn-p" onclick="salvArr('${cod}')">📦 Registra Arrivo</button>
-  <div class="fg" style="margin-top:12px"><label>Rettifica giacenza (+ aggiunge, - toglie)</label>
-    <input class="fc" type="number" id="rp" value="${m.rettifica}" style="font-size:18px;text-align:center"></div>
-  <button class="btn btn-s" onclick="salvRett('${cod}')">✏️ Salva Rettifica</button>
-  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-}
-
-window.salvArr=function(cod){
-  const pz=parseInt(document.getElementById('ap').value)||0;
-  if(pz<=0){toast('Inserisci il numero di pezzi');return;}
-  const m=DB.magazzino.find(x=>x.codice===cod);
-  if(m){m.carico+=pz;m.giacenza=m.carico-m.scarico+m.rettifica;saveDB();closeMO();toast(`Arrivo ${pz} pezzi registrato`);go('magazzino');}
-};
-window.salvRett=function(cod){
-  const r=parseInt(document.getElementById('rp').value)||0;
-  const m=DB.magazzino.find(x=>x.codice===cod);
-  if(m){m.rettifica=r;m.giacenza=m.carico-m.scarico+m.rettifica;saveDB();closeMO();toast('Rettifica salvata');go('magazzino');}
-};
-
-// ── STORICO ─────────────────────────────────────────────────────────
-function pgStorico(el){
-  const ul=DB.storico.slice(-60).reverse();
-  let h=`<div class="st">Ultime ${ul.length} consegne</div><div class="card">`;
-  ul.forEach(s=>{
-    h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
-      <div class="nf"><div class="nm" style="font-size:13px">${s.nome_cliente}</div>
-        <div class="sb">${s.data} · ${s.formato} ${s.miscela} ×${s.qty}</div></div>
-      <div class="rt"><div class="am" style="color:var(--gn);font-size:14px">€${f(s.incassato)}</div></div>
-    </div>`;
-  });
-  h+=`</div>`;el.innerHTML=h;
-}
-
-// ── MENU ────────────────────────────────────────────────────────────
-function apriMenu(){
-  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
-  const tot=dr.reduce((s,m)=>{
-    const p=DB.prodotti.find(x=>x.formato===m.formato&&x.miscela===m.miscela);
-    return s+(m.scorta_minima-m.giacenza)*(p?p.prezzo_acquisto:0);
-  },0);
-  let h=`<div class="mh"></div><h3>⚙️ Strumenti</h3>
-  <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
-  <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
-  <button class="btn btn-p" onclick="closeMO();go('storico')">📜 Storico Consegne</button>
-  <button class="btn btn-p" onclick="closeMO();go('listino')">📄 Gestione Listino</button>
-  <div class="dv"></div>
-  <button class="btn btn-s" onclick="esportaBackup()">💾 Scarica Backup JSON</button>
-  <button class="btn btn-s" onclick="importaBackup()">📂 Importa Backup</button>
-  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-}
-
-function moOrdineFornitore(){
-  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0).map(m=>{
-    const p=DB.prodotti.find(x=>x.formato===m.formato&&x.miscela===m.miscela);
-    const qty=m.scorta_minima-m.giacenza;
-    return{...m,qty_ord:qty,prezzo_acq:p?p.prezzo_acquisto:0,totale:qty*(p?p.prezzo_acquisto:0)};
-  });
-  const totOrd=dr.reduce((s,p)=>s+p.totale,0);
-  let h=`<div class="mh"></div><h3>🏭 Ordine Fornitore</h3>
-  <div style="font-size:12px;color:#888;margin-bottom:10px">${oggi()}</div>`;
-  if(!dr.length){h+=`<div class="al as">✅ Nessun prodotto da riordinare</div>`;}
-  else{
-    h+=`<div class="card" style="margin-bottom:12px">`;
-    dr.forEach(p=>{
-      h+=`<div class="li"><div class="nf">
-        <div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
-        <div class="sb">Giacenza: ${p.giacenza} · Min: ${p.scorta_minima}</div></div>
-        <div class="rt"><div class="am" style="color:var(--br)">${p.qty_ord} pz</div>
-          <div class="sb">€${f(p.totale)}</div></div>
-      </div>`;
-    });
-    h+=`</div>
-    <div style="background:var(--go2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
-      Totale: <span style="font-size:22px;font-weight:800;color:var(--br)">€${f(totOrd)}</span>
-    </div>
-    <button class="btn btn-p" onclick="esportaOrdine()">📤 Esporta CSV</button>`;
-    window._dr=dr;
-  }
-  h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-  window.esportaOrdine=function(){
-    let csv='Codice,Formato,Marchio,Miscela,Qty da Ordinare\n';
-    window._dr.forEach(p=>{csv+=`"${p.codice}","${p.formato}","${p.marchio}","${p.miscela}",${p.qty_ord}\n`;});
-    scaricaFile(csv,'text/csv',`ORDINE_CAFFE_${oggi().replace(/\//g,'-')}.csv`);
-    toast('Ordine esportato!');
-  };
-}
-
-function moStatistiche(){
-  const pm={};
-  DB.storico.forEach(s=>{
-    if(!s.data)return;
-    const pt=s.data.split('/');if(pt.length<3)return;
-    const k=`${pt[1]}/${pt[2]}`;
-    if(!pm[k])pm[k]={c:0,i:0,p:0};
-    pm[k].c++;pm[k].i+=(s.incassato||0);pm[k].p+=(s.qty||0);
-  });
-  const mesi=Object.keys(pm).sort().reverse().slice(0,6);
-  const pp={};
-  DB.storico.forEach(s=>{const k=`${s.formato} ${s.miscela}`;if(!pp[k])pp[k]=0;pp[k]+=(s.qty||0);});
-  const top=Object.entries(pp).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  let h=`<div class="mh"></div><h3>📊 Statistiche</h3>`;
-  if(!mesi.length){h+=`<div class="em"><p>Nessun dato</p></div>`;}
-  else{
-    h+=`<div class="card">`;
-    mesi.forEach(m=>{
-      const d=pm[m];const[mm,yy]=m.split('/');
-      const nm=new Date(parseInt(yy),parseInt(mm)-1).toLocaleDateString('it-IT',{month:'long',year:'numeric'});
-      h+=`<div class="li"><div class="av" style="background:var(--bl2);color:var(--bl)">📅</div>
-        <div class="nf"><div class="nm">${nm.charAt(0).toUpperCase()+nm.slice(1)}</div>
-          <div class="sb">${d.c} consegne · ${d.p} pz</div></div>
-        <div class="rt"><div class="am" style="color:var(--gn)">€${f(d.i)}</div></div>
-      </div>`;
-    });
-    h+=`</div><div class="st">🏆 Top 5 Prodotti</div><div class="card">`;
-    top.forEach(([nm,qty],i)=>{
-      h+=`<div class="li"><div class="av" style="background:var(--go2);color:var(--br);font-weight:800">${i+1}</div>
-        <div class="nf"><div class="nm" style="font-size:13px">${nm}</div></div>
-        <div class="rt"><div class="am" style="color:var(--br)">${qty} pz</div></div>
-      </div>`;
-    });
-    h+=`</div>`;
-  }
-  h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
-  document.getElementById('mc').innerHTML=h;openMO();
-}
-
-// ── BACKUP ──────────────────────────────────────────────────────────
-function esportaBackup(){
-  scaricaFile(JSON.stringify(DB,null,2),'application/json',`shopcaffe_${oggi().replace(/\//g,'-')}.json`);
-  toast('Backup scaricato!');
-}
-function importaBackup(){
-  const i=document.createElement('input');i.type='file';i.accept='.json';
-  i.onchange=e=>{
-    const file=e.target.files[0];if(!file)return;
-    const r=new FileReader();r.onload=ev=>{
-      try{const d=JSON.parse(ev.target.result);
-        if(d.clienti&&d.prodotti){if(confirm('Importare il backup? I dati attuali verranno sostituiti.')){
-          localStorage.setItem(DBK,ev.target.result);location.reload();}}
-        else toast('File non valido');
-      }catch(e){toast('Errore lettura file');}
-    };r.readAsText(file);
-  };i.click();
-}
-function scaricaFile(content,type,name){
-  const b=new Blob([content],{type});const u=URL.createObjectURL(b);
-  const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
-}
-
-// ── MODAL ───────────────────────────────────────────────────────────
-function openMO(){document.getElementById('mo').classList.add('open');}
-function closeMO(e){if(e&&e.target!==document.getElementById('mo'))return;document.getElementById('mo').classList.remove('open');}
-
-// ── TOAST ───────────────────────────────────────────────────────────
-function toast(msg){
-  const c=document.getElementById('tst');const el=document.createElement('div');
-  el.className='tm';el.textContent=msg;c.appendChild(el);
-  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
-  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},3200);
-}
-
-// ── HELPERS ─────────────────────────────────────────────────────────
-function f(n){return parseFloat(n||0).toFixed(2).replace('.',',');}
-function oggi(){return new Date().toLocaleDateString('it-IT');}
-
-// ── INIT ────────────────────────────────────────────────────────────
-initDB();go('home');
-</script>
-</body>
-</html>
