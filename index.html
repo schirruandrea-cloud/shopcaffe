@@ -933,7 +933,7 @@ const INITIAL_DATA = {
       "miscela_abituale": "VENEZIA",
       "qty_abituale": 100,
       "prezzo_abituale": 0.22,
-      "sospeso": 22.0,
+      "sospeso": 0.0,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "",
       "ultima_consegna_3": "09/06/2026",
@@ -997,7 +997,7 @@ const INITIAL_DATA = {
       "miscela_abituale": "",
       "qty_abituale": 100,
       "prezzo_abituale": 0.32,
-      "sospeso": 1.0,
+      "sospeso": 0.0,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "04/07/2026",
       "ultima_consegna_3": "04/07/2026",
@@ -1205,7 +1205,7 @@ const INITIAL_DATA = {
       "miscela_abituale": "4",
       "qty_abituale": 4,
       "prezzo_abituale": 9.9,
-      "sospeso": 0.6,
+      "sospeso": 0.0,
       "ultima_consegna_1": "",
       "ultima_consegna_2": "",
       "ultima_consegna_3": "26/07/2026",
@@ -1733,7 +1733,7 @@ const INITIAL_DATA = {
       "miscela_abituale": "ROMA",
       "qty_abituale": 100,
       "prezzo_abituale": 0.24,
-      "sospeso": 26.0,
+      "sospeso": 0.0,
       "ultima_consegna_1": "01/08/2026",
       "ultima_consegna_2": "10/08/2026",
       "ultima_consegna_3": "10/08/2026",
@@ -1909,7 +1909,7 @@ const INITIAL_DATA = {
       "miscela_abituale": "PALERMO",
       "qty_abituale": 100,
       "prezzo_abituale": 0.3,
-      "sospeso": 21.0,
+      "sospeso": 0.0,
       "ultima_consegna_1": "15/07/2026",
       "ultima_consegna_2": "15/07/2026",
       "ultima_consegna_3": "24/07/2026",
@@ -1989,7 +1989,7 @@ const INITIAL_DATA = {
       "miscela_abituale": "ETNA",
       "qty_abituale": 100,
       "prezzo_abituale": 0.22,
-      "sospeso": 1.0,
+      "sospeso": 0.0,
       "ultima_consegna_1": "04/06/2026",
       "ultima_consegna_2": "04/06/2026",
       "ultima_consegna_3": "13/06/2026",
@@ -2149,7 +2149,7 @@ const INITIAL_DATA = {
       "miscela_abituale": "CAGLIARI",
       "qty_abituale": 200,
       "prezzo_abituale": 0.22,
-      "sospeso": 44.0,
+      "sospeso": 0.0,
       "ultima_consegna_1": "06/07/2026",
       "ultima_consegna_2": "26/07/2026",
       "ultima_consegna_3": "28/07/2026",
@@ -6311,7 +6311,7 @@ const INITIAL_DATA = {
   "saldo_iniziale": 44.0
 };
 
-const DBK='sc_v4';let DB=null;
+const DBK='sc_v5';let DB=null;
 
 function initDB(){
   const s=localStorage.getItem(DBK);
@@ -6931,6 +6931,9 @@ function pgCassa(el){
     <button class="btn btn-x btn-sm" style="flex:1" onclick="moUscita()">↓ Spesa</button>
     <button class="btn btn-g btn-sm" style="flex:1" onclick="moContaCassa()">🧮 Conta</button>
   </div>
+  <div style="margin-bottom:10px">
+    <button class="btn btn-s btn-sm" style="width:100%" onclick="moRettificaCassa()">⚖️ Rettifica Cassa (Conguaglio)</button>
+  </div>
   <div class="st">Ultime operazioni</div><div class="card">`;
   if(!ul.length)h+=`<div class="em" style="padding:20px"><p>Nessuna operazione</p></div>`;
   ul.forEach(r=>{
@@ -6990,6 +6993,39 @@ window.salvaCassa=function(tipo){
     metodo:ie?document.getElementById('em').value:'Contanti',
     note:ie?'':(document.getElementById('un').value||'')});
   saveDB();closeMO();toast(`${ie?'Entrata':'Spesa'} €${f(imp)} registrata`);go('cassa');
+};
+
+// ── RETTIFICA CASSA (conguaglio manuale) ──────────────────────────────
+function moRettificaCassa(){
+  const sc=saldoCassa();
+  let h=`<div class="mh"></div><h3>⚖️ Rettifica Cassa</h3>
+  <div class="al as">Saldo attuale: <strong>€${f(sc)}</strong></div>
+  <div class="fg"><label>Importo rettifica (€)</label>
+    <input class="fc" type="number" id="rf-imp" step="0.01" style="font-size:24px;text-align:center"
+      placeholder="es. 5 oppure -3.50" oninput="window._rfprev()" autofocus></div>
+  <div style="font-size:12px;color:#888;margin:-8px 0 12px 2px">Positivo se in cassa c'è di più del previsto, negativo se manca qualcosa</div>
+  <div class="fg"><label>Motivo / Nota</label>
+    <input class="fc" id="rf-desc" placeholder="es. Conguaglio conta cassa" value="Rettifica cassa"></div>
+  <div id="rf-prev" style="font-size:13px;color:#666;margin-bottom:10px;min-height:18px"></div>
+  <button class="btn btn-ok" onclick="salvaRettificaCassa()">✅ Registra Rettifica</button>
+  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+  window._rfprev=function(){
+    const v=parseFloat(document.getElementById('rf-imp').value);
+    const pv=document.getElementById('rf-prev');
+    pv.textContent=(v||v===0)&&!isNaN(v)?`Nuovo saldo dopo la rettifica: €${f(sc+v)}`:'';
+  };
+}
+
+window.salvaRettificaCassa=function(){
+  const imp=parseFloat(document.getElementById('rf-imp').value);
+  const desc=(document.getElementById('rf-desc').value||'Rettifica cassa').trim();
+  if(!imp){toast('Inserisci un importo di rettifica diverso da zero');return;}
+  const sp=saldoCassa();
+  DB.cassa.push({data:oggi(),descrizione:desc,tipo:'Rettifica',riferimento:'',
+    entrata:imp>0?imp:0,uscita:imp<0?Math.abs(imp):0,
+    saldo:Math.round((sp+imp)*100)/100,metodo:'',note:''});
+  saveDB();closeMO();toast(`Rettifica di €${f(imp)} registrata`);go('cassa');
 };
 
 function moContaCassa(){
@@ -7229,17 +7265,29 @@ function apriMenu(){
     const p=DB.prodotti.find(x=>x.formato===m.formato&&x.miscela===m.miscela);
     return s+(m.scorta_minima-m.giacenza)*(p?p.prezzo_acquisto:0);
   },0);
+  const nSosp=DB.clienti.filter(c=>c.sospeso>0).length;
   let h=`<div class="mh"></div><h3>⚙️ Strumenti</h3>
   <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
   <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
   <button class="btn btn-p" onclick="closeMO();go('storico')">📜 Storico Consegne</button>
   <button class="btn btn-p" onclick="closeMO();go('listino')">📄 Gestione Listino</button>
   <div class="dv"></div>
+  <button class="btn btn-s" onclick="azzeraSospesi()">🔄 Azzera Debiti Sospesi${nSosp>0?' ('+nSosp+')':''}</button>
+  <div class="dv"></div>
   <button class="btn btn-s" onclick="esportaBackup()">💾 Scarica Backup JSON</button>
   <button class="btn btn-s" onclick="importaBackup()">📂 Importa Backup</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
+
+window.azzeraSospesi=function(){
+  const cc=DB.clienti.filter(c=>c.sospeso>0);
+  if(!cc.length){toast('Nessun debito sospeso da azzerare');return;}
+  const tot=cc.reduce((s,c)=>s+c.sospeso,0);
+  if(!confirm(`Azzerare i debiti sospesi di ${cc.length} clienti per un totale di €${f(tot)}?\n\nQuesta azione non registra nessun incasso in cassa: i debiti verranno semplicemente rimossi dalle schede clienti. Non è reversibile.`))return;
+  cc.forEach(c=>c.sospeso=0);
+  saveDB();closeMO();toast(`Azzerati i debiti di ${cc.length} clienti`);go('clienti');
+};
 
 function moOrdineFornitore(){
   const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0).map(m=>{
@@ -7372,4 +7420,3 @@ initDB();go('home');
 </script>
 </body>
 </html>
-
