@@ -6459,6 +6459,13 @@ function pgHome(el){
       <span style="font-size:12px">Tocca qui per confrontarle e recuperare eventuali dati mancanti.</span>
     </div>`;
   }
+  const giorniReport=DB.ultimo_report?Math.floor((Date.now()-parseDataIt(DB.ultimo_report))/86400000):Infinity;
+  if(giorniReport>=7){
+    h+=`<div class="al as" style="background:#e7f3ff;border-color:#4a90d9;margin-bottom:12px;cursor:pointer" onclick="generaReport()">
+      📊 <strong>${DB.ultimo_report?'Sono passati '+giorniReport+' giorni dal report precedente.':'Non hai ancora generato un report movimenti.'}</strong><br>
+      <span style="font-size:12px">Tocca qui per salvarne uno ora (consigliato ogni settimana).</span>
+    </div>`;
+  }
   h+=`<div class="kg">
     <div class="kpi br" onclick="go('cassa')" style="grid-column:1/-1">
       <span class="lbl">💰 Saldo Cassa</span>
@@ -7444,6 +7451,7 @@ function apriMenu(){
   const nSosp=DB.clienti.filter(c=>c.sospeso>0).length;
   let h=`<div class="mh"></div><h3>⚙️ Strumenti</h3>
   <button class="btn btn-x" onclick="closeMO();mostraRecuperoDati()">🆘 Recupero Dati</button>
+  <button class="btn btn-p" onclick="closeMO();generaReport()">📊 Report Movimenti (PDF/Excel)</button>
   <div class="dv"></div>
   <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
   <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
@@ -7572,6 +7580,172 @@ function importaBackup(){
     };r.readAsText(file);
   };i.click();
 }
+// ── REPORT MOVIMENTI (PDF stampabile / Excel CSV) ─────────────────────
+function escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function inRangeData(dataStr,iniMs,finMs){
+  const t=parseDataIt(dataStr);
+  if(!t)return false;
+  return t>=iniMs&&t<=finMs;
+}
+function raccogliDatiReport(iniMs,finMs){
+  const ordiniCreati=DB.ordini.filter(o=>inRangeData(o.data_ordine,iniMs,finMs));
+  const consegne=DB.storico.filter(s=>inRangeData(s.data,iniMs,finMs));
+  const movCassa=DB.cassa.filter(c=>inRangeData(c.data,iniMs,finMs));
+  return {ordiniCreati,consegne,movCassa};
+}
+function fmtDataObj(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
+
+function generaReport(){
+  let periodo='mese';
+  function calcolaRange(p){
+    const t=new Date();t.setHours(0,0,0,0);
+    let ini=new Date(t);
+    if(p==='oggi'){/* ini = oggi */}
+    else if(p==='settimana'){ini.setDate(ini.getDate()-6);}
+    else if(p==='mese'){ini=new Date(t.getFullYear(),t.getMonth(),1);}
+    else if(p==='tutto'){ini=new Date(2000,0,1);return{ini,fin:new Date(2100,0,1)};}
+    return{ini,fin:new Date()};
+  }
+  function render(){
+    let h=`<div class="mh"></div><h3>📊 Report Movimenti</h3>
+    <div class="fg"><label>Periodo</label>
+      <select class="fc" id="rp-periodo" onchange="window._rpchg(this.value)">
+        <option value="oggi" ${periodo==='oggi'?'selected':''}>Oggi</option>
+        <option value="settimana" ${periodo==='settimana'?'selected':''}>Ultimi 7 giorni</option>
+        <option value="mese" ${periodo==='mese'?'selected':''}>Questo mese</option>
+        <option value="tutto" ${periodo==='tutto'?'selected':''}>Tutto lo storico</option>
+        <option value="custom" ${periodo==='custom'?'selected':''}>Periodo personalizzato</option>
+      </select></div>`;
+    if(periodo==='custom'){
+      h+=`<div class="fg"><label>Dal</label><input class="fc" type="date" id="rp-dal"></div>
+      <div class="fg"><label>Al</label><input class="fc" type="date" id="rp-al"></div>`;
+    }
+    h+=`<button class="btn btn-p" onclick="window._rpgen('pdf')">🖨️ Genera PDF (stampabile)</button>
+    <button class="btn btn-p" onclick="window._rpgen('excel')">📊 Genera Excel (CSV)</button>
+    <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+    document.getElementById('mc').innerHTML=h;openMO();
+  }
+  window._rpchg=v=>{periodo=v;render();};
+  window._rpgen=function(tipo){
+    let ini,fin;
+    if(periodo==='custom'){
+      const dv=document.getElementById('rp-dal').value,av=document.getElementById('rp-al').value;
+      if(!dv||!av){toast('Seleziona entrambe le date');return;}
+      ini=new Date(dv+'T00:00:00');fin=new Date(av+'T23:59:59');
+    }else{
+      const r=calcolaRange(periodo);ini=r.ini;fin=r.fin;
+      ini.setHours(0,0,0,0);fin.setHours(23,59,59,999);
+    }
+    const dati=raccogliDatiReport(ini.getTime(),fin.getTime());
+    if(tipo==='pdf')apriReportPDF(dati,ini,fin);
+    else scaricaReportExcel(dati,ini,fin);
+    DB.ultimo_report=oggi();saveDB();
+    closeMO();
+  };
+  render();
+}
+
+function scaricaReportExcel(dati,ini,fin){
+  let csv='REPORT MOVIMENTI - Shop Caffè\n';
+  csv+=`Periodo: dal ${fmtDataObj(ini)} al ${fmtDataObj(fin)}\n`;
+  csv+=`Generato il: ${oggi()}\n\n`;
+
+  csv+='=== ORDINI CREATI NEL PERIODO ===\n';
+  csv+='ID Ordine,Cliente,Zona,Data Creazione,Stato,Prodotti,Totale (EUR)\n';
+  let totOrdini=0;
+  dati.ordiniCreati.forEach(o=>{
+    const prod=o.prodotti.map(p=>`${p.formato} ${p.marchio} ${p.miscela} x${p.qty}`).join(' + ');
+    csv+=`"${o.id}","${o.nome_cliente}","${o.zona||''}","${o.data_ordine}","${o.stato}","${prod}",${o.totale.toFixed(2)}\n`;
+    totOrdini+=o.totale;
+  });
+  csv+=`TOTALE,${dati.ordiniCreati.length} ordini,,,,,${totOrdini.toFixed(2)}\n\n`;
+
+  csv+='=== CONSEGNE EVASE NEL PERIODO ===\n';
+  csv+='N. Consegna,Data,Cliente,Zona,Prodotto,Quantita,Prezzo Unit.,Importo,Incassato,N. Ordine\n';
+  let totImp=0,totInc=0;
+  dati.consegne.forEach(s=>{
+    csv+=`"${s.id_consegna}","${s.data}","${s.nome_cliente}","${s.zona||''}","${s.formato} ${s.miscela}",${s.qty},${s.prezzo_unit},${s.importo.toFixed(2)},${s.incassato.toFixed(2)},"${s.n_ordine||''}"\n`;
+    totImp+=s.importo;totInc+=s.incassato;
+  });
+  csv+=`TOTALE,${dati.consegne.length} consegne,,,,,,${totImp.toFixed(2)},${totInc.toFixed(2)}\n\n`;
+
+  csv+='=== MOVIMENTI CASSA NEL PERIODO ===\n';
+  csv+='Data,Descrizione,Tipo,Entrata,Uscita,Saldo Progressivo\n';
+  let totEntrate=0,totUscite=0;
+  dati.movCassa.forEach(c=>{
+    csv+=`"${c.data}","${c.descrizione}","${c.tipo||''}",${(c.entrata||0).toFixed(2)},${(c.uscita||0).toFixed(2)},${(c.saldo||0).toFixed(2)}\n`;
+    totEntrate+=c.entrata||0;totUscite+=c.uscita||0;
+  });
+  csv+=`TOTALE,${dati.movCassa.length} movimenti,,${totEntrate.toFixed(2)},${totUscite.toFixed(2)},\n`;
+
+  scaricaFile(csv,'text/csv',`report_shopcaffe_${oggi().replace(/\//g,'-')}.csv`);
+  toast('Report Excel (CSV) scaricato');
+}
+
+function apriReportPDF(dati,ini,fin){
+  const totOrdini=dati.ordiniCreati.reduce((s,o)=>s+o.totale,0);
+  const totImp=dati.consegne.reduce((s,c)=>s+c.importo,0);
+  const totInc=dati.consegne.reduce((s,c)=>s+c.incassato,0);
+  const totEntrate=dati.movCassa.reduce((s,c)=>s+(c.entrata||0),0);
+  const totUscite=dati.movCassa.reduce((s,c)=>s+(c.uscita||0),0);
+
+  let html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Report Shop Caffè</title>
+  <style>
+    body{font-family:-apple-system,Segoe UI,Arial,sans-serif;padding:20px;color:#222;max-width:900px;margin:0 auto}
+    h1{font-size:20px;margin-bottom:2px}
+    h2{font-size:15px;margin-top:26px;margin-bottom:8px;border-bottom:2px solid #6F4E37;padding-bottom:4px;color:#6F4E37}
+    .meta{color:#666;font-size:13px;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px}
+    th,td{border:1px solid #ddd;padding:5px 7px;text-align:left}
+    th{background:#f2ede6}
+    tfoot td{font-weight:700;background:#faf7f3}
+    .empty{color:#999;font-style:italic;font-size:12px;padding:8px 0}
+    .btn-print{position:fixed;top:12px;right:12px;padding:10px 18px;background:#6F4E37;color:#fff;
+      border:none;border-radius:8px;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+    @media print{.btn-print{display:none}}
+  </style></head><body>
+  <button class="btn-print" onclick="window.print()">🖨️ Stampa / Salva PDF</button>
+  <h1>☕ Shop Caffè — Report Movimenti</h1>
+  <div class="meta">Periodo: dal ${fmtDataObj(ini)} al ${fmtDataObj(fin)} · Generato il ${oggi()}</div>
+
+  <h2>📋 Ordini creati nel periodo (${dati.ordiniCreati.length})</h2>`;
+  if(!dati.ordiniCreati.length)html+=`<div class="empty">Nessun ordine creato in questo periodo.</div>`;
+  else{
+    html+=`<table><thead><tr><th>ID</th><th>Cliente</th><th>Zona</th><th>Data</th><th>Stato</th><th>Prodotti</th><th>Totale</th></tr></thead><tbody>`;
+    dati.ordiniCreati.forEach(o=>{
+      const prod=o.prodotti.map(p=>`${p.formato} ${p.miscela} x${p.qty}`).join(', ');
+      html+=`<tr><td>${escHtml(o.id)}</td><td>${escHtml(o.nome_cliente)}</td><td>${escHtml(o.zona||'')}</td><td>${escHtml(o.data_ordine)}</td><td>${escHtml(o.stato)}</td><td>${escHtml(prod)}</td><td>€${f(o.totale)}</td></tr>`;
+    });
+    html+=`</tbody><tfoot><tr><td colspan="6">Totale</td><td>€${f(totOrdini)}</td></tr></tfoot></table>`;
+  }
+
+  html+=`<h2>✅ Consegne evase nel periodo (${dati.consegne.length})</h2>`;
+  if(!dati.consegne.length)html+=`<div class="empty">Nessuna consegna in questo periodo.</div>`;
+  else{
+    html+=`<table><thead><tr><th>N.Cons</th><th>Data</th><th>Cliente</th><th>Prodotto</th><th>Qty</th><th>Prezzo</th><th>Importo</th><th>Incassato</th></tr></thead><tbody>`;
+    dati.consegne.forEach(s=>{
+      html+=`<tr><td>${escHtml(s.id_consegna)}</td><td>${escHtml(s.data)}</td><td>${escHtml(s.nome_cliente)}</td><td>${escHtml(s.formato+' '+s.miscela)}</td><td>${s.qty}</td><td>€${s.prezzo_unit}</td><td>€${f(s.importo)}</td><td>€${f(s.incassato)}</td></tr>`;
+    });
+    html+=`</tbody><tfoot><tr><td colspan="6">Totale</td><td>€${f(totImp)}</td><td>€${f(totInc)}</td></tr></tfoot></table>`;
+  }
+
+  html+=`<h2>💰 Movimenti cassa nel periodo (${dati.movCassa.length})</h2>`;
+  if(!dati.movCassa.length)html+=`<div class="empty">Nessun movimento di cassa in questo periodo.</div>`;
+  else{
+    html+=`<table><thead><tr><th>Data</th><th>Descrizione</th><th>Tipo</th><th>Entrata</th><th>Uscita</th></tr></thead><tbody>`;
+    dati.movCassa.forEach(c=>{
+      html+=`<tr><td>${escHtml(c.data)}</td><td>${escHtml(c.descrizione)}</td><td>${escHtml(c.tipo||'')}</td><td>${c.entrata?'€'+f(c.entrata):''}</td><td>${c.uscita?'€'+f(c.uscita):''}</td></tr>`;
+    });
+    html+=`</tbody><tfoot><tr><td colspan="3">Totale</td><td>€${f(totEntrate)}</td><td>€${f(totUscite)}</td></tr></tfoot></table>`;
+  }
+  html+=`</body></html>`;
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
+  toast('Report generato in una nuova scheda');
+}
+
 function scaricaFile(content,type,name){
   const b=new Blob([content],{type});const u=URL.createObjectURL(b);
   const a=document.createElement('a');a.href=u;a.download=name;a.click();URL.revokeObjectURL(u);
