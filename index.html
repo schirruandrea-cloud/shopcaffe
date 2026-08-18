@@ -6333,6 +6333,93 @@ function initDB(){
 }
 function saveDB(){localStorage.setItem(DBK,JSON.stringify(DB));updateBdg();}
 
+// ── RECUPERO DATI: trova versioni precedenti salvate sul dispositivo ──
+function parseDataIt(s){
+  if(!s)return 0;
+  const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s).trim());
+  if(!m)return 0;
+  return new Date(+m[3],+m[2]-1,+m[1]).getTime();
+}
+function scansionaVersioniDati(){
+  const risultati=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!/^sc_v\d+$/.test(k))continue;
+    let d=null;
+    try{d=JSON.parse(localStorage.getItem(k));}catch(e){continue;}
+    if(!d||!Array.isArray(d.storico)||!Array.isArray(d.cassa))continue;
+    const ultimaData=d.storico.reduce((mx,s)=>Math.max(mx,parseDataIt(s.data)),0);
+    const saldo=(d.saldo_iniziale||0)+d.cassa.reduce((s,c)=>s+(c.entrata||0)-(c.uscita||0),0);
+    const ordiniAperti=(d.ordini||[]).filter(o=>o.stato==='DA FARE').length;
+    risultati.push({
+      key:k,
+      attiva:k===DBK,
+      nClienti:(d.clienti||[]).length,
+      nStorico:d.storico.length,
+      ultimaData,
+      ultimaDataStr:ultimaData?new Date(ultimaData).toLocaleDateString('it-IT'):'—',
+      nCassa:d.cassa.length,
+      saldo:Math.round(saldo*100)/100,
+      ordiniAperti
+    });
+  }
+  risultati.sort((a,b)=>b.ultimaData-a.ultimaData);
+  return risultati;
+}
+function mostraRecuperoDati(){
+  const vers=scansionaVersioniDati();
+  let h=`<div class="mh"></div><h3>🆘 Recupero Dati</h3>
+  <div class="al as" style="margin-bottom:12px">Qui vedi tutte le versioni di dati salvate su questo telefono, comprese quelle "vecchie" lasciate da aggiornamenti precedenti. Confronta l'ultima data di consegna e il saldo di ciascuna prima di scegliere. Puoi scaricare un backup di ognuna prima di decidere.</div>`;
+  if(!vers.length){
+    h+=`<div class="em" style="padding:20px"><p>Nessuna versione trovata su questo dispositivo.</p></div>`;
+  }else{
+    vers.forEach(v=>{
+      h+=`<div class="card" style="margin-bottom:12px;padding:12px">
+        <div style="margin-bottom:6px"><strong>${v.key}</strong>${v.attiva?' <span style="color:var(--gn);font-size:12px">● in uso ora</span>':''}</div>
+        <div style="font-size:13px;color:#555;line-height:1.7">
+          📅 Ultima consegna registrata: <strong>${v.ultimaDataStr}</strong><br>
+          👤 Clienti: ${v.nClienti} &nbsp;·&nbsp; 📜 Consegne: ${v.nStorico} &nbsp;·&nbsp; 💰 Movimenti cassa: ${v.nCassa}<br>
+          💶 Saldo cassa: <strong>€${f(v.saldo)}</strong> &nbsp;·&nbsp; 📋 Ordini aperti: ${v.ordiniAperti}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-s btn-sm" style="flex:1" onclick="scaricaVersione('${v.key}')">💾 Scarica Backup</button>
+          ${v.attiva?'':`<button class="btn btn-ok btn-sm" style="flex:1" onclick="usaVersione('${v.key}')">✅ Usa questi dati</button>`}
+        </div>
+      </div>`;
+    });
+  }
+  h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+window.scaricaVersione=function(key){
+  const raw=localStorage.getItem(key);
+  if(!raw){toast('Dati non trovati');return;}
+  scaricaFile(raw,'application/json',`backup_${key}_${oggi().replace(/\//g,'-')}.json`);
+  toast('Backup scaricato');
+};
+window.usaVersione=function(key){
+  if(key===DBK){toast('Questi sono già i dati in uso');return;}
+  if(!confirm(`Sostituire i dati attualmente in uso con quelli della versione "${key}"?\n\nTi consiglio di scaricare PRIMA il backup di questa versione E di quella attuale, per sicurezza.\n\nProcedere?`))return;
+  const raw=localStorage.getItem(key);
+  if(!raw){toast('Dati non trovati');return;}
+  try{
+    const d=JSON.parse(raw);
+    if(!Array.isArray(d.prodotti)||!Array.isArray(d.clienti)){toast('Dati non validi in questa versione');return;}
+    DB=d;
+    if(!DB.ordini)DB.ordini=[];
+    if(!DB.magazzino)DB.magazzino=[];
+    DB.magazzino.forEach(m=>{m.giacenza=(m.carico||0)-(m.scarico||0)+(m.rettifica||0);});
+    if(!DB.cnt)DB.cnt={ordine:(DB.storico?.length||0)+1,consegna:(DB.storico?.length||0)+1};
+    saveDB();
+    closeMO();
+    toast('Dati ripristinati da '+key);
+    go('home');
+  }catch(e){
+    toast('Errore nel ripristino: dati corrotti');
+  }
+};
+
+
 // ── NAV ─────────────────────────────────────────────────────────────
 let page='home',sq='';
 function go(p){
@@ -6364,7 +6451,15 @@ function pgHome(el){
   const og=oggi();
   const co=DB.storico.filter(s=>s.data===og);
   const io=co.reduce((s,c)=>s+(c.incassato||0),0);
-  let h=`<div class="kg">
+  let h='';
+  const altreVersioni=scansionaVersioniDati().filter(v=>!v.attiva);
+  if(altreVersioni.length){
+    h+=`<div class="al as" style="background:#fff3cd;border-color:#ffc107;margin-bottom:12px;cursor:pointer" onclick="mostraRecuperoDati()">
+      ⚠️ <strong>Trovate ${altreVersioni.length} altre versioni di dati salvate su questo telefono.</strong><br>
+      <span style="font-size:12px">Tocca qui per confrontarle e recuperare eventuali dati mancanti.</span>
+    </div>`;
+  }
+  h+=`<div class="kg">
     <div class="kpi br" onclick="go('cassa')" style="grid-column:1/-1">
       <span class="lbl">💰 Saldo Cassa</span>
       <span class="val">€${f(sc)}</span>
@@ -7348,6 +7443,8 @@ function apriMenu(){
   },0);
   const nSosp=DB.clienti.filter(c=>c.sospeso>0).length;
   let h=`<div class="mh"></div><h3>⚙️ Strumenti</h3>
+  <button class="btn btn-x" onclick="closeMO();mostraRecuperoDati()">🆘 Recupero Dati</button>
+  <div class="dv"></div>
   <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
   <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
   <button class="btn btn-p" onclick="closeMO();go('storico')">📜 Storico Consegne</button>
