@@ -6311,7 +6311,7 @@ const INITIAL_DATA = {
   "saldo_iniziale": 44.0
 };
 
-const DBK='sc_v5';let DB=null;
+const DBK='sc_v6';let DB=null;
 
 function initDB(){
   const s=localStorage.getItem(DBK);
@@ -6749,7 +6749,8 @@ window.annullaOrdine=function(id){
 function pgClienti(el){
   const q=sq.toLowerCase();
   const cf=DB.clienti.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.zona||'').toLowerCase().includes(q));
-  let h=`<div class="sb"><span style="color:#aaa;font-size:16px">🔍</span>
+  let h=`<button class="btn btn-p" onclick="nuovoCliente()">➕ Nuovo Cliente</button>
+  <div class="sb"><span style="color:#aaa;font-size:16px">🔍</span>
     <input placeholder="Cerca cliente o zona..." value="${sq}"
       oninput="sq=this.value;pgClienti(document.getElementById('cnt'))" autocomplete="off"></div>
   <div style="font-size:12px;color:#888;margin-bottom:6px">${cf.length} clienti</div><div class="card">`;
@@ -6769,6 +6770,86 @@ function pgClienti(el){
     </div>`;
   });
   h+=`</div>`;el.innerHTML=h;
+}
+
+function nextClientId(){
+  let max=0;
+  DB.clienti.forEach(c=>{const m=/CLI-(\d+)/.exec(c.id||'');if(m)max=Math.max(max,parseInt(m[1],10));});
+  return 'CLI-'+String(max+1).padStart(3,'0');
+}
+
+// ── NUOVO CLIENTE ───────────────────────────────────────────────────
+function nuovoCliente(){
+  let nc={nome:'',telefono:'',indirizzo:'',zona:''};
+  function renderForm(){
+    let h=`<div class="mh"></div><h3>➕ Nuovo Cliente</h3>
+    <div class="fg"><label>Nome / Ragione Sociale</label>
+      <input class="fc" id="nc-nome" placeholder="es. Mario Rossi" value="${nc.nome}" autofocus></div>
+    <div class="fg"><label>Telefono</label>
+      <input class="fc" id="nc-tel" placeholder="es. +39 333 1234567" value="${nc.telefono}"></div>
+    <div class="fg"><label>Indirizzo</label>
+      <input class="fc" id="nc-ind" placeholder="es. Via Roma 10" value="${nc.indirizzo}"></div>
+    <div class="fg"><label>Zona / Giro</label>
+      <input class="fc" id="nc-zona" placeholder="es. RUFINA" value="${nc.zona}"></div>
+    <button class="btn btn-ok" onclick="window._ncnext()">Avanti: scegli prodotto ›</button>
+    <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+    document.getElementById('mc').innerHTML=h;openMO();
+  }
+  window._ncnext=function(){
+    nc.nome=(document.getElementById('nc-nome').value||'').trim();
+    if(!nc.nome){toast('Inserisci il nome del cliente');return;}
+    nc.telefono=(document.getElementById('nc-tel').value||'').trim();
+    nc.indirizzo=(document.getElementById('nc-ind').value||'').trim();
+    nc.zona=(document.getElementById('nc-zona').value||'').trim();
+    let ps='';
+    function rp(){
+      const pf=DB.prodotti.filter(p=>!ps||p.miscela.toLowerCase().includes(ps.toLowerCase())||
+        p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
+      let h=`<div class="mh"></div><h3>☕ Prodotto Abituale</h3>
+      <div class="al as">👤 ${nc.nome}</div>
+      <input class="fc" placeholder="Cerca prodotto..." value="${ps}" oninput="window._ncps(this.value)" style="margin-bottom:8px">
+      <div class="card">`;
+      pf.forEach(p=>{
+        const codEsc=p.codice.replace(/'/g,"\\'");
+        h+=`<div class="li" onclick="window._ncpick('${codEsc}')">
+          <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
+            <div class="sb">€${p.prezzo_vendita}/pz</div></div>
+          <div class="rt" style="color:var(--br);font-size:20px">›</div>
+        </div>`;
+      });
+      if(!pf.length)h+=`<div class="em" style="padding:16px"><p>Nessun prodotto trovato</p></div>`;
+      h+=`</div><button class="btn btn-s" onclick="window._ncback()">← Indietro</button>`;
+      document.getElementById('mc').innerHTML=h;
+      setTimeout(()=>{const i=document.querySelector('.mc input');if(i)i.focus();},50);
+    }
+    window._ncps=v=>{ps=v;rp();};
+    window._ncback=()=>{renderForm();};
+    window._ncpick=function(cod){
+      const pr=DB.prodotti.find(p=>p.codice===cod);if(!pr)return;
+      const codEsc=cod.replace(/'/g,"\\'");
+      document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Conferma</h3>
+      <div class="al as">👤 <strong>${nc.nome}</strong><br>${pr.formato} ${pr.marchio} ${pr.miscela}</div>
+      <div class="fg"><label>Quantità abituale</label>
+        <input class="fc" type="number" id="nc-qty" value="100" min="1" style="font-size:22px;text-align:center"></div>
+      <div class="fg"><label>Prezzo (€)</label>
+        <input class="fc" type="number" id="nc-prezzo" value="${pr.prezzo_vendita}" step="0.001" min="0" style="font-size:22px;text-align:center"></div>
+      <button class="btn btn-ok" onclick="window._ncsave('${codEsc}')">✅ Crea Cliente</button>
+      <button class="btn btn-s" onclick="window._ncredo()">← Indietro</button>`;
+    };
+    window._ncredo=()=>rp();
+    window._ncsave=function(cod){
+      const pr=DB.prodotti.find(p=>p.codice===cod);if(!pr)return;
+      const qty=Math.max(1,parseInt(document.getElementById('nc-qty').value)||1);
+      const prezzo=Math.max(0,parseFloat(document.getElementById('nc-prezzo').value)||pr.prezzo_vendita);
+      const id=nextClientId();
+      DB.clienti.push({id,nome:nc.nome,telefono:nc.telefono,indirizzo:nc.indirizzo,zona:nc.zona,
+        formato_abituale:pr.formato,miscela_abituale:pr.miscela,qty_abituale:qty,prezzo_abituale:prezzo,
+        sospeso:0,ultima_consegna_1:'',ultima_consegna_2:'',ultima_consegna_3:'',note:''});
+      saveDB();closeMO();toast('Cliente creato: '+nc.nome);go('clienti');
+    };
+    rp();
+  };
+  renderForm();
 }
 
 function apriCliente(id){
