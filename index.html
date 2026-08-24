@@ -6542,7 +6542,7 @@ function liOrdine(o){
   const cl=DB.clienti.find(c=>c.id===o.id_cliente);
   return`<div class="li" onclick="apriOrdine('${o.id}')">
     <div class="av" style="background:var(--go2)">📦</div>
-    <div class="nf"><div class="nm">${o.nome_cliente}</div>
+    <div class="nf"><div class="nm">${o.ora_prevista?'🕐 '+o.ora_prevista+' · ':''}${o.nome_cliente}</div>
       <div class="sb">${o.data_ordine} · ${cl?cl.zona:''}</div>
       <div class="sb">${o.prodotti.map(p=>p.qty+'× '+p.formato+' '+p.miscela).join(', ')}</div>
       ${o.note?`<div class="sb" style="color:var(--br);font-weight:600">📝 ${escHtml(o.note)}</div>`:''}
@@ -6557,7 +6557,11 @@ function pgOrdini(el){
   let h=`<button class="btn btn-p" onclick="nuovoOrdine()">➕ Nuovo Ordine</button>`;
   if(ap.length>0){
     h+=`<div class="st">📋 Da consegnare (${ap.length})</div>`;
-    const conData=ap.filter(o=>o.data_prevista).sort((a,b)=>a.data_prevista.localeCompare(b.data_prevista));
+    const conData=ap.filter(o=>o.data_prevista).sort((a,b)=>{
+      const c=a.data_prevista.localeCompare(b.data_prevista);
+      if(c!==0)return c;
+      return(a.ora_prevista||'99:99').localeCompare(b.ora_prevista||'99:99');
+    });
     const senzaData=ap.filter(o=>!o.data_prevista);
     const gruppi=[];
     conData.forEach(o=>{
@@ -6596,7 +6600,7 @@ function pgOrdini(el){
 
 // ── NUOVO ORDINE ─────────────────────────────────────────────────────
 function nuovoOrdine(){
-  let srch='',cl=null,prods=[],dataPrevista='',note='';
+  let srch='',cl=null,prods=[],dataPrevista='',oraPrevista='',note='';
   function render(){
     const cf=DB.clienti.filter(c=>!srch||c.nome.toLowerCase().includes(srch.toLowerCase())||(c.zona||'').toLowerCase().includes(srch.toLowerCase())).slice(0,15);
     let h='<div class="mh"></div><h3>➕ Nuovo Ordine</h3>';
@@ -6620,6 +6624,8 @@ function nuovoOrdine(){
       if(cl.sospeso>0)h+=`<div class="al aw">⚠️ Debito: <strong>€${f(cl.sospeso)}</strong></div>`;
       h+=`<div class="fg"><label>📅 Data di consegna prevista (opzionale)</label>
         <input class="fc" type="date" value="${dataPrevista}" onchange="window._odp(this.value)"></div>`;
+      h+=`<div class="fg"><label>🕐 Orario previsto (opzionale)</label>
+        <input class="fc" type="time" value="${oraPrevista}" onchange="window._oop(this.value)"></div>`;
       h+=`<div class="fg"><label>📝 Note (opzionale)</label>
         <textarea class="fc" rows="2" placeholder="es. citofono rotto, chiamare prima di salire..."
           oninput="window._onote(this.value)">${escHtml(note)}</textarea></div>`;
@@ -6653,6 +6659,7 @@ function nuovoOrdine(){
   }
   window._ucs=v=>{srch=v;render();};
   window._odp=v=>{dataPrevista=v;};
+  window._oop=v=>{oraPrevista=v;};
   window._onote=v=>{note=v;};
   window._sc=id=>{cl=DB.clienti.find(c=>c.id===id);
     if(cl&&cl.formato_abituale){
@@ -6694,7 +6701,7 @@ function nuovoOrdine(){
     DB.ordini.push({id,id_cliente:cl.id,nome_cliente:cl.nome,zona:cl.zona||'',
       prodotti:prods.map(p=>({...p})),totale:Math.round(tot*100)/100,
       stato:'DA FARE',data_ordine:oggi(),data_consegna:null,incassato:0,da_pagare:0,
-      data_prevista:dataPrevista||null,note:note||''});
+      data_prevista:dataPrevista||null,ora_prevista:oraPrevista||null,note:note||''});
     saveDB();closeMO();toast(`Ordine ${id} creato per ${cl.nome}`);go('ordini');
   };
   openMO();render();
@@ -6708,8 +6715,10 @@ function apriOrdine(id){
   if(o.stato==='DA FARE'){
     h+=`<div class="fg"><label>📅 Data di consegna prevista</label>
       <input class="fc" type="date" value="${o.data_prevista||''}" onchange="window._aggdp('${id}',this.value)"></div>`;
+    h+=`<div class="fg"><label>🕐 Orario previsto</label>
+      <input class="fc" type="time" value="${o.ora_prevista||''}" onchange="window._aggora('${id}',this.value)"></div>`;
   }else if(o.data_prevista){
-    h+=`<div class="sb" style="margin-bottom:10px">📅 Prevista per: ${fmtISO(o.data_prevista)}</div>`;
+    h+=`<div class="sb" style="margin-bottom:10px">📅 Prevista per: ${fmtISO(o.data_prevista)}${o.ora_prevista?' ore '+o.ora_prevista:''}</div>`;
   }
   if(o.stato==='DA FARE'){
     h+=`<div class="fg"><label>📝 Note</label>
@@ -6901,6 +6910,11 @@ window.confConsegna=function(id){
 window._aggdp=function(id,v){
   const o=DB.ordini.find(x=>x.id===id);if(!o)return;
   o.data_prevista=v||null;saveDB();toast(v?'Data prevista impostata: '+fmtISO(v):'Data prevista rimossa');
+};
+
+window._aggora=function(id,v){
+  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
+  o.ora_prevista=v||null;saveDB();toast(v?'Orario previsto impostato: '+v:'Orario previsto rimosso');
 };
 
 window._aggnote=function(id,v){
