@@ -6340,6 +6340,16 @@ function parseDataIt(s){
   if(!m)return 0;
   return new Date(+m[3],+m[2]-1,+m[1]).getTime();
 }
+function isoToIt(iso){
+  if(!iso)return '';
+  const p=iso.split('-');if(p.length!==3)return '';
+  return `${p[2]}/${p[1]}/${p[0]}`;
+}
+function itToIso(it){
+  if(!it)return '';
+  const p=it.split('/');if(p.length!==3)return '';
+  return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+}
 function scansionaVersioniDati(){
   const risultati=[];
   for(let i=0;i<localStorage.length;i++){
@@ -6523,31 +6533,57 @@ function pgHome(el){
 }
 
 // ── ORDINI ──────────────────────────────────────────────────────────
+function fmtISO(iso){
+  if(!iso)return'';
+  const parts=iso.split('-');if(parts.length!==3)return iso;
+  const[y,m,d]=parts;return`${d}/${m}/${y}`;
+}
+function liOrdine(o){
+  const cl=DB.clienti.find(c=>c.id===o.id_cliente);
+  return`<div class="li" onclick="apriOrdine('${o.id}')">
+    <div class="av" style="background:var(--go2)">📦</div>
+    <div class="nf"><div class="nm">${o.nome_cliente}</div>
+      <div class="sb">${o.data_ordine} · ${cl?cl.zona:''}</div>
+      <div class="sb">${o.prodotti.map(p=>p.qty+'× '+p.formato+' '+p.miscela).join(', ')}</div>
+      ${o.note?`<div class="sb" style="color:var(--br);font-weight:600">📝 ${escHtml(o.note)}</div>`:''}
+    </div>
+    <div class="rt"><div class="am" style="color:var(--br)">€${f(o.totale)}</div>
+      <span class="tag to">DA FARE</span></div>
+  </div>`;
+}
 function pgOrdini(el){
   const ap=DB.ordini.filter(o=>o.stato==='DA FARE');
   const ch=DB.ordini.filter(o=>o.stato==='CONSEGNATA').slice(-10).reverse();
   let h=`<button class="btn btn-p" onclick="nuovoOrdine()">➕ Nuovo Ordine</button>`;
   if(ap.length>0){
-    h+=`<div class="st">📋 Da consegnare (${ap.length})</div><div class="card">`;
-    ap.forEach(o=>{
-      const cl=DB.clienti.find(c=>c.id===o.id_cliente);
-      h+=`<div class="li" onclick="apriOrdine('${o.id}')">
-        <div class="av" style="background:var(--go2)">📦</div>
-        <div class="nf"><div class="nm">${o.nome_cliente}</div>
-          <div class="sb">${o.data_ordine} · ${cl?cl.zona:''}</div>
-          <div class="sb">${o.prodotti.map(p=>p.qty+'× '+p.formato+' '+p.miscela).join(', ')}</div></div>
-        <div class="rt"><div class="am" style="color:var(--br)">€${f(o.totale)}</div>
-          <span class="tag to">DA FARE</span></div>
-      </div>`;
+    h+=`<div class="st">📋 Da consegnare (${ap.length})</div>`;
+    const conData=ap.filter(o=>o.data_prevista).sort((a,b)=>a.data_prevista.localeCompare(b.data_prevista));
+    const senzaData=ap.filter(o=>!o.data_prevista);
+    const gruppi=[];
+    conData.forEach(o=>{
+      let g=gruppi.find(x=>x.data===o.data_prevista);
+      if(!g){g={data:o.data_prevista,ordini:[]};gruppi.push(g);}
+      g.ordini.push(o);
     });
-    h+=`</div>`;
+    gruppi.forEach(g=>{
+      h+=`<div style="font-size:12px;font-weight:700;color:var(--br);margin:12px 2px 6px">📅 ${fmtISO(g.data)}</div><div class="card">`;
+      g.ordini.forEach(o=>{h+=liOrdine(o);});
+      h+=`</div>`;
+    });
+    if(senzaData.length){
+      h+=`<div style="font-size:12px;font-weight:700;color:#888;margin:12px 2px 6px">📅 Senza data prevista</div><div class="card">`;
+      senzaData.forEach(o=>{h+=liOrdine(o);});
+      h+=`</div>`;
+    }
   }
   if(ch.length>0){
     h+=`<div class="st">✅ Recenti</div><div class="card">`;
     ch.forEach(o=>{
       h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
         <div class="nf"><div class="nm">${o.nome_cliente}</div>
-          <div class="sb">${o.data_consegna||o.data_ordine}</div></div>
+          <div class="sb">${o.data_consegna||o.data_ordine}</div>
+          ${o.note?`<div class="sb" style="color:var(--br)">📝 ${escHtml(o.note)}</div>`:''}
+        </div>
         <div class="rt"><div class="am" style="color:var(--gn)">€${f(o.incassato||0)}</div>
           <span class="tag tg">CONSEGNATA</span></div>
       </div>`;
@@ -6560,7 +6596,7 @@ function pgOrdini(el){
 
 // ── NUOVO ORDINE ─────────────────────────────────────────────────────
 function nuovoOrdine(){
-  let srch='',cl=null,prods=[];
+  let srch='',cl=null,prods=[],dataPrevista='',note='';
   function render(){
     const cf=DB.clienti.filter(c=>!srch||c.nome.toLowerCase().includes(srch.toLowerCase())||(c.zona||'').toLowerCase().includes(srch.toLowerCase())).slice(0,15);
     let h='<div class="mh"></div><h3>➕ Nuovo Ordine</h3>';
@@ -6582,6 +6618,11 @@ function nuovoOrdine(){
       h+=`<div class="al as">👤 <strong>${cl.nome}</strong> · ${cl.zona||''}
         <button onclick="window._dc()" style="float:right;background:none;border:none;font-size:18px;cursor:pointer">✕</button></div>`;
       if(cl.sospeso>0)h+=`<div class="al aw">⚠️ Debito: <strong>€${f(cl.sospeso)}</strong></div>`;
+      h+=`<div class="fg"><label>📅 Data di consegna prevista (opzionale)</label>
+        <input class="fc" type="date" value="${dataPrevista}" onchange="window._odp(this.value)"></div>`;
+      h+=`<div class="fg"><label>📝 Note (opzionale)</label>
+        <textarea class="fc" rows="2" placeholder="es. citofono rotto, chiamare prima di salire..."
+          oninput="window._onote(this.value)">${escHtml(note)}</textarea></div>`;
       h+=`<div class="st">Prodotti</div>`;
       prods.forEach((p,i)=>{
         h+=`<div class="pc">
@@ -6611,6 +6652,8 @@ function nuovoOrdine(){
     if(!cl){const i=document.getElementById('sc');if(i)setTimeout(()=>i.focus(),50);}
   }
   window._ucs=v=>{srch=v;render();};
+  window._odp=v=>{dataPrevista=v;};
+  window._onote=v=>{note=v;};
   window._sc=id=>{cl=DB.clienti.find(c=>c.id===id);
     if(cl&&cl.formato_abituale){
       const p=DB.prodotti.find(p=>p.formato===cl.formato_abituale&&p.miscela===cl.miscela_abituale);
@@ -6650,7 +6693,8 @@ function nuovoOrdine(){
     const id='ORD-'+String(DB.cnt.ordine).padStart(3,'0');DB.cnt.ordine++;
     DB.ordini.push({id,id_cliente:cl.id,nome_cliente:cl.nome,zona:cl.zona||'',
       prodotti:prods.map(p=>({...p})),totale:Math.round(tot*100)/100,
-      stato:'DA FARE',data_ordine:oggi(),data_consegna:null,incassato:0,da_pagare:0});
+      stato:'DA FARE',data_ordine:oggi(),data_consegna:null,incassato:0,da_pagare:0,
+      data_prevista:dataPrevista||null,note:note||''});
     saveDB();closeMO();toast(`Ordine ${id} creato per ${cl.nome}`);go('ordini');
   };
   openMO();render();
@@ -6660,8 +6704,21 @@ function apriOrdine(id){
   const o=DB.ordini.find(x=>x.id===id);if(!o)return;
   const cl=DB.clienti.find(c=>c.id===o.id_cliente);
   let h=`<div class="mh"></div><h3>${o.id}</h3>
-  <div class="al ${o.stato==='DA FARE'?'aw':'as'}">👤 <strong>${o.nome_cliente}</strong> · ${o.zona}</div>
-  <div class="st">Prodotti</div>`;
+  <div class="al ${o.stato==='DA FARE'?'aw':'as'}">👤 <strong>${o.nome_cliente}</strong> · ${o.zona}</div>`;
+  if(o.stato==='DA FARE'){
+    h+=`<div class="fg"><label>📅 Data di consegna prevista</label>
+      <input class="fc" type="date" value="${o.data_prevista||''}" onchange="window._aggdp('${id}',this.value)"></div>`;
+  }else if(o.data_prevista){
+    h+=`<div class="sb" style="margin-bottom:10px">📅 Prevista per: ${fmtISO(o.data_prevista)}</div>`;
+  }
+  if(o.stato==='DA FARE'){
+    h+=`<div class="fg"><label>📝 Note</label>
+      <textarea class="fc" rows="2" placeholder="es. citofono rotto, chiamare prima..."
+        onchange="window._aggnote('${id}',this.value)">${escHtml(o.note||'')}</textarea></div>`;
+  }else if(o.note){
+    h+=`<div class="al as" style="margin-bottom:10px">📝 ${escHtml(o.note)}</div>`;
+  }
+  h+=`<div class="st">Prodotti</div>`;
   o.prodotti.forEach(p=>{
     h+=`<div class="pc"><div style="flex:1">
       <div class="pn">${p.formato} ${p.marchio} ${p.miscela}</div>
@@ -6819,7 +6876,7 @@ window.confConsegna=function(id){
     const nc='CON-'+String(DB.cnt.consegna).padStart(3,'0');DB.cnt.consegna++;
     DB.storico.push({id_consegna:nc,data:og,id_cliente:o.id_cliente,nome_cliente:o.nome_cliente,
       zona:o.zona,formato:p.formato,miscela:p.miscela,qty:p.qty,prezzo_unit:p.prezzo,
-      importo:p.qty*p.prezzo,incassato:inc,n_ordine:o.id});
+      importo:p.qty*p.prezzo,incassato:inc,n_ordine:o.id,note:o.note||''});
   });
   // Cliente
   const cl=DB.clienti.find(c=>c.id===o.id_cliente);
@@ -6839,6 +6896,16 @@ window.confConsegna=function(id){
   saveDB();closeMO();
   toast(`✅ Consegnato! €${f(inc)} incassato${dp>0?' · Da pagare €'+f(dp):''}`);
   go('ordini');
+};
+
+window._aggdp=function(id,v){
+  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
+  o.data_prevista=v||null;saveDB();toast(v?'Data prevista impostata: '+fmtISO(v):'Data prevista rimossa');
+};
+
+window._aggnote=function(id,v){
+  const o=DB.ordini.find(x=>x.id===id);if(!o)return;
+  o.note=v||'';saveDB();toast(v?'Nota salvata':'Nota rimossa');
 };
 
 window.annullaOrdine=function(id){
@@ -7331,7 +7398,9 @@ function pgStorico(el){
   ul.forEach(s=>{
     h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
       <div class="nf"><div class="nm" style="font-size:13px">${s.nome_cliente}</div>
-        <div class="sb">${s.data} · ${s.formato} ${s.miscela} ×${s.qty}</div></div>
+        <div class="sb">${s.data} · ${s.formato} ${s.miscela} ×${s.qty}</div>
+        ${s.note?`<div class="sb" style="color:var(--br)">📝 ${escHtml(s.note)}</div>`:''}
+      </div>
       <div class="rt"><div class="am" style="color:var(--gn);font-size:14px">€${f(s.incassato)}</div></div>
     </div>`;
   });
