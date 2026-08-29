@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#3E1F00">
 <title>☕ Shop Caffè</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -7339,7 +7340,8 @@ function pgMagazzino(el){
   const q=sq.toLowerCase();
   const mf=DB.magazzino.filter(m=>!q||m.codice.toLowerCase().includes(q)||m.miscela.toLowerCase().includes(q)||m.formato.toLowerCase().includes(q)||m.marchio.toLowerCase().includes(q));
   const dr=mf.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
-  let h=`<div class="sb"><span style="color:#aaa">🔍</span>
+  let h=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Prodotto Mancante / Nuovo</button>
+  <div class="sb"><span style="color:#aaa">🔍</span>
     <input placeholder="Cerca prodotto..." value="${sq}"
       oninput="sq=this.value;pgMagazzino(document.getElementById('cnt'))" autocomplete="off"></div>`;
   if(dr.length>0&&!sq)h+=`<div class="al ae">⚠️ ${dr.length} prodotti sotto scorta minima</div>`;
@@ -7478,7 +7480,7 @@ window.salvaNuovoProdotto=function(){
   const sm=Math.max(0,parseInt(document.getElementById('np-sm').value)||0);
   DB.prodotti.push({codice:cod,formato:fmt,marchio:mar,miscela:mis,prezzo_vendita:pv,pz_cartone:pc,prezzo_acquisto:pa});
   DB.magazzino.push({codice:cod,formato:fmt,marchio:mar,miscela:mis,carico:0,scarico:0,rettifica:0,giacenza:0,scorta_minima:sm});
-  saveDB();closeMO();toast('Prodotto creato!');go('listino');
+  saveDB();closeMO();toast('Prodotto creato!');go(page==='magazzino'?'magazzino':'listino');
 };
 
 function apriProdotto(cod){
@@ -7587,7 +7589,7 @@ function moOrdineFornitore(){
     <div style="background:var(--go2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
       Totale: <span style="font-size:22px;font-weight:800;color:var(--br)" id="of-tot">€${f(calcTot())}</span>
     </div>
-    <button class="btn btn-p" onclick="esportaOrdine()">📤 Esporta CSV</button>`;
+    <button class="btn btn-p" onclick="esportaOrdine()">📤 Esporta Excel</button>`;
   }
   h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
@@ -7599,10 +7601,28 @@ function moOrdineFornitore(){
   window.esportaOrdine=function(){
     const sel=window._dr.filter(p=>p.qty_ord>0);
     if(!sel.length){toast('Nessuna quantità da ordinare');return;}
-    let csv='Codice,Formato,Marchio,Miscela,Qty da Ordinare\n';
-    sel.forEach(p=>{csv+=`"${p.codice}","${p.formato}","${p.marchio}","${p.miscela}",${p.qty_ord}\n`;});
-    scaricaFile(csv,'text/csv',`ORDINE_CAFFE_${oggi().replace(/\//g,'-')}.csv`);
-    toast('Ordine esportato!');
+    if(typeof XLSX==='undefined'){toast('Libreria Excel non disponibile: controlla la connessione e riprova');return;}
+    const rows=[['Codice','Formato','Marchio','Miscela','Giacenza','Scorta Minima','Quantità da Ordinare','Prezzo Acquisto (€)','Totale (€)']];
+    sel.forEach(p=>{
+      rows.push([p.codice,p.formato,p.marchio,p.miscela,p.giacenza,p.scorta_minima,p.qty_ord,p.prezzo_acq,
+        Math.round(p.qty_ord*p.prezzo_acq*100)/100]);
+    });
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    // Formule live: modificando quantità o prezzo in Excel, i totali si aggiornano da soli
+    for(let i=0;i<sel.length;i++){
+      const r=i+2;
+      ws['I'+r]={t:'n',f:`G${r}*H${r}`,v:Math.round(sel[i].qty_ord*sel[i].prezzo_acq*100)/100};
+    }
+    const lastDataRow=sel.length+1;
+    const totRow=lastDataRow+1;
+    XLSX.utils.sheet_add_aoa(ws,[['','','','','','','','TOTALE ORDINE',null]],{origin:'A'+totRow});
+    ws['I'+totRow]={t:'n',f:`SUM(I2:I${lastDataRow})`,v:Math.round(sel.reduce((s,p)=>s+p.qty_ord*p.prezzo_acq,0)*100)/100};
+    ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:totRow-1,c:8}});
+    ws['!cols']=[{wch:24},{wch:9},{wch:14},{wch:14},{wch:10},{wch:12},{wch:14},{wch:16},{wch:12}];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Ordine Fornitore');
+    XLSX.writeFile(wb,`ordine_fornitore_${oggi().replace(/\//g,'-')}.xlsx`);
+    toast('File Excel scaricato');
   };
 }
 
