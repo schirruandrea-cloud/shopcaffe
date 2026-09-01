@@ -6187,30 +6187,67 @@ function trovaDateAnomale(){
   const oggiMs=parseDataIt(oggi());
   return DB.storico.filter(s=>parseDataIt(s.data)>oggiMs);
 }
+function swapGiornoMese(dataStr){
+  const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(dataStr).trim());
+  if(!m)return null;
+  const gg=parseInt(m[1],10),mm=parseInt(m[2],10);
+  if(gg>12)return null; // non è un possibile scambio giorno/mese valido
+  return `${String(mm).padStart(2,'0')}/${String(gg).padStart(2,'0')}/${m[3]}`;
+}
 function mostraDateAnomale(){
   const list=trovaDateAnomale();
   let h=`<div class="mh"></div><h3>🗓️ Date Anomale nello Storico</h3>`;
   if(!list.length){
     h+=`<div class="em" style="padding:20px"><p>Nessuna data anomala trovata.</p></div>`;
   }else{
-    h+=`<div class="al as" style="margin-bottom:12px">Trovate ${list.length} consegne con data futura rispetto a oggi — refusi giorno/mese ereditati dall'Excel originale, risalenti alla prima fase di test.</div>
+    h+=`<div class="al as" style="margin-bottom:12px">Trovate ${list.length} consegne con data futura rispetto a oggi — probabile refuso giorno/mese nell'Excel originale (prima fase di test). Per ognuna puoi correggere (scambio automatico giorno↔mese) o eliminare.</div>
     <div class="card" style="margin-bottom:12px">`;
     list.forEach(s=>{
+      const idEsc=s.id_consegna.replace(/'/g,"\\'");
+      const proposta=swapGiornoMese(s.data);
       h+=`<div class="li"><div class="nf">
         <div class="nm" style="font-size:13px">${escHtml(s.nome_cliente)}</div>
-        <div class="sb">Data: <strong>${s.data}</strong> · ${escHtml(s.formato+' '+s.miscela)} ×${s.qty} · €${f(s.incassato)}</div>
+        <div class="sb">Attuale: <strong>${s.data}</strong>${proposta?` → proposta: <strong style="color:var(--gn)">${proposta}</strong>`:' · correzione automatica non possibile'}</div>
+        <div class="sb">${escHtml(s.formato+' '+s.miscela)} ×${s.qty} · €${f(s.incassato)}</div>
+      </div>
+      <div class="rt" style="display:flex;flex-direction:column;gap:4px">
+        ${proposta?`<button class="btn btn-ok btn-sm" onclick="correggiDataAnomala('${idEsc}')">✅ Correggi</button>`:''}
+        <button class="btn btn-x btn-sm" onclick="eliminaSingolaDataAnomala('${idEsc}')">🗑 Elimina</button>
       </div></div>`;
     });
-    h+=`</div>
-    <button class="btn btn-x" onclick="eliminaDateAnomale()">🗑 Elimina tutte queste ${list.length} consegne</button>`;
+    h+=`</div>`;
+    const correggibili=list.filter(s=>swapGiornoMese(s.data)).length;
+    if(correggibili>0){
+      h+=`<button class="btn btn-ok" onclick="correggiTutteDateAnomale()">✅ Correggi tutte (${correggibili})</button>`;
+    }
+    h+=`<button class="btn btn-x" onclick="eliminaDateAnomale()">🗑 Elimina tutte le rimanenti (${list.length})</button>`;
   }
   h+=`<button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
+window.correggiDataAnomala=function(idCons){
+  const s=DB.storico.find(x=>x.id_consegna===idCons);if(!s)return;
+  const proposta=swapGiornoMese(s.data);
+  if(!proposta){toast('Correzione automatica non disponibile per questa voce');return;}
+  s.data=proposta;
+  saveDB();toast('Data corretta: '+proposta);mostraDateAnomale();
+};
+window.eliminaSingolaDataAnomala=function(idCons){
+  if(!confirm('Eliminare questa consegna dallo storico?'))return;
+  DB.storico=DB.storico.filter(x=>x.id_consegna!==idCons);
+  saveDB();toast('Consegna eliminata');mostraDateAnomale();
+};
+window.correggiTutteDateAnomale=function(){
+  const list=trovaDateAnomale().filter(s=>swapGiornoMese(s.data));
+  if(!list.length){toast('Nessuna data correggibile automaticamente');return;}
+  if(!confirm(`Correggere automaticamente la data (scambio giorno↔mese) di queste ${list.length} consegne?`))return;
+  list.forEach(s=>{s.data=swapGiornoMese(s.data);});
+  saveDB();closeMO();toast(`Corrette ${list.length} date`);go('home');
+};
 window.eliminaDateAnomale=function(){
   const list=trovaDateAnomale();
   if(!list.length){toast('Nessuna data anomala da eliminare');return;}
-  if(!confirm(`Eliminare definitivamente queste ${list.length} consegne dallo storico?\n\nSono dati della prima fase di test con data sbagliata. Non è reversibile.`))return;
+  if(!confirm(`Eliminare definitivamente queste ${list.length} consegne dallo storico?\n\nNon è reversibile.`))return;
   const ids=new Set(list.map(s=>s.id_consegna));
   DB.storico=DB.storico.filter(x=>!ids.has(x.id_consegna));
   saveDB();closeMO();toast(`Eliminate ${list.length} consegne con data anomala`);go('home');
@@ -7420,7 +7457,7 @@ function apriMenu(){
   <button class="btn btn-p" onclick="closeMO();go('listino')">📄 Gestione Listino</button>
   <div class="dv"></div>
   <button class="btn btn-s" onclick="azzeraSospesi()">🔄 Azzera Debiti Sospesi${nSosp>0?' ('+nSosp+')':''}</button>
-  ${nAnomale>0?`<button class="btn btn-s" onclick="closeMO();mostraDateAnomale()">🗓️ Pulisci Date Anomale nello Storico (${nAnomale})</button>`:''}
+  ${nAnomale>0?`<button class="btn btn-s" onclick="closeMO();mostraDateAnomale()">🗓️ Correggi Date Anomale nello Storico (${nAnomale})</button>`:''}
   <div class="dv"></div>
   <button class="btn btn-s" onclick="esportaBackup()">💾 Scarica Backup JSON</button>
   <button class="btn btn-s" onclick="importaBackup()">📂 Importa Backup</button>
