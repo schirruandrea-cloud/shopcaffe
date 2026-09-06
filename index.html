@@ -6345,6 +6345,24 @@ window.usaVersione=function(key){
 
 // ── NAV ─────────────────────────────────────────────────────────────
 let page='home',sq='';
+
+// Mantiene il focus e la posizione del cursore in un campo di ricerca quando il
+// contenuto viene ricostruito (altrimenti ogni lettera digitata fa perdere il focus)
+function keepFocus(id,fn){
+  const el=document.getElementById(id);
+  let pos=null;
+  if(el&&document.activeElement===el){
+    pos=[el.selectionStart,el.selectionEnd];
+  }
+  fn();
+  if(pos){
+    const el2=document.getElementById(id);
+    if(el2){
+      el2.focus();
+      try{el2.setSelectionRange(pos[0],pos[1]);}catch(e){}
+    }
+  }
+}
 function go(p){
   page=p;sq='';
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
@@ -6520,7 +6538,7 @@ function nuovoOrdine(){
     if(!cl){
       h+=`<div class="fg"><label>Cerca Cliente</label>
         <input class="fc" id="sc" placeholder="Nome o zona..." value="${srch}"
-          oninput="window._ucs(this.value)" autocomplete="off"></div>`;
+          oninput="keepFocus('sc',()=>window._ucs(this.value))" autocomplete="off"></div>`;
       cf.forEach(c=>{
         const sp=c.sospeso>0?`<span style="color:var(--rd);font-size:11px"> · Debito €${f(c.sospeso)}</span>`:'';
         h+=`<div class="li" onclick="window._sc('${c.id}')">
@@ -6590,7 +6608,7 @@ function nuovoOrdine(){
         p.miscela.toLowerCase().includes(ps.toLowerCase())||p.formato.toLowerCase().includes(ps.toLowerCase())||
         p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,25);
       let h=`<div class="mh"></div><h3>Scegli Prodotto</h3>
-        <input class="fc" placeholder="Cerca..." value="${ps}" oninput="window._ups(this.value)" style="margin-bottom:10px" autofocus>`;
+        <input class="fc" id="srch-nuord-prod" placeholder="Cerca..." value="${ps}" oninput="keepFocus('srch-nuord-prod',()=>window._ups(this.value))" style="margin-bottom:10px" autofocus>`;
       pf.forEach(p=>{
         h+=`<div class="li" onclick="window._agp(${DB.prodotti.indexOf(p)})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
@@ -6706,7 +6724,7 @@ function modificaOrdine(id){
         p.miscela.toLowerCase().includes(ps.toLowerCase())||p.formato.toLowerCase().includes(ps.toLowerCase())||
         p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,25);
       let h=`<div class="mh"></div><h3>Scegli Prodotto</h3>
-        <input class="fc" placeholder="Cerca..." value="${ps}" oninput="window._moups(this.value)" style="margin-bottom:10px" autofocus>`;
+        <input class="fc" id="srch-modord-prod" placeholder="Cerca..." value="${ps}" oninput="keepFocus('srch-modord-prod',()=>window._moups(this.value))" style="margin-bottom:10px" autofocus>`;
       pf.forEach(p=>{
         h+=`<div class="li" onclick="window._moagp(${DB.prodotti.indexOf(p)})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
@@ -6734,6 +6752,8 @@ function modificaOrdine(id){
 
 function registraConsegna(id){
   const o=DB.ordini.find(x=>x.id===id);if(!o)return;
+  const cl=DB.clienti.find(x=>x.id===o.id_cliente);
+  const saldoCliente=cl?(cl.sospeso||0):0;
   // Build editable product rows
   let prodRows=o.prodotti.map((p,i)=>`
     <div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--gy)">
@@ -6746,6 +6766,8 @@ function registraConsegna(id){
     </div>`).join('');
   let h=`<div class="mh"></div><h3>🚚 Consegna</h3>
   <div class="al as">👤 <strong>${o.nome_cliente}</strong></div>
+  ${saldoCliente>0?`<div class="al ae" style="margin-top:-6px">⚠️ Debito precedente: <strong>€${f(saldoCliente)}</strong></div>`:''}
+  ${saldoCliente<0?`<div class="al as" style="margin-top:-6px">✅ Credito cliente: <strong>€${f(Math.abs(saldoCliente))}</strong></div>`:''}
   <div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:14px">
     <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:700;text-transform:uppercase">Prodotti — modifica prezzo se necessario</div>
     ${prodRows}
@@ -6847,8 +6869,8 @@ function pgClienti(el){
   const cf=DB.clienti.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.zona||'').toLowerCase().includes(q));
   let h=`<button class="btn btn-p" onclick="nuovoCliente()">➕ Nuovo Cliente</button>
   <div class="sb"><span style="color:#aaa;font-size:16px">🔍</span>
-    <input placeholder="Cerca cliente o zona..." value="${sq}"
-      oninput="sq=this.value;pgClienti(document.getElementById('cnt'))" autocomplete="off"></div>
+    <input id="srch-clienti" placeholder="Cerca cliente o zona..." value="${sq}"
+      oninput="sq=this.value;keepFocus('srch-clienti',()=>pgClienti(document.getElementById('cnt')))" autocomplete="off"></div>
   <div style="font-size:12px;color:#888;margin-bottom:6px">${cf.length} clienti</div><div class="card">`;
   if(!cf.length)h+=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
   cf.forEach(c=>{
@@ -6903,7 +6925,7 @@ function nuovoCliente(){
         p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
       let h=`<div class="mh"></div><h3>☕ Prodotto Abituale</h3>
       <div class="al as">👤 ${nc.nome}</div>
-      <input class="fc" placeholder="Cerca prodotto..." value="${ps}" oninput="window._ncps(this.value)" style="margin-bottom:8px">
+      <input class="fc" id="srch-nc-prod" placeholder="Cerca prodotto..." value="${ps}" oninput="keepFocus('srch-nc-prod',()=>window._ncps(this.value))" style="margin-bottom:8px">
       <div class="card">`;
       pf.forEach(p=>{
         const codEsc=p.codice.replace(/'/g,"\\'");
@@ -6971,6 +6993,8 @@ function apriCliente(id){
     h+=`<div class="al ae">⚠️ Debito: <strong>€${f(c.sospeso)}</strong>
       <button onclick="apriSaldo('${id}')" style="float:right;background:var(--rd);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">Salda</button>
     </div>`;
+  }else if(c.sospeso<0){
+    h+=`<div class="al as">✅ Credito: <strong>€${f(Math.abs(c.sospeso))}</strong> a favore del cliente</div>`;
   }
   if(c.ultima_consegna_1||c.ultima_consegna_2||c.ultima_consegna_3){
     h+=`<div class="st">📅 Ultime consegne</div>
@@ -6993,6 +7017,7 @@ function apriCliente(id){
   }
   h+=`<button class="btn btn-p" onclick="nuovoOrdineCliente('${id}')">➕ Nuovo Ordine</button>
   <button class="btn btn-s" onclick="modificaProdAbit('${id}')">✏️ Modifica Prodotto Abituale</button>
+  <button class="btn btn-s" onclick="modificaSaldoManuale('${id}')">💳 Modifica Saldo</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
@@ -7004,11 +7029,12 @@ function nuovoOrdineCliente(id){
 
 function apriSaldo(id){
   const c=DB.clienti.find(x=>x.id===id);if(!c)return;
-  let h=`<div class="mh"></div><h3>💳 Registra Saldo</h3>
-  <div class="al aw">👤 <strong>${c.nome}</strong><br>Debito: <strong>€${f(c.sospeso)}</strong></div>
-  <div class="fg"><label>Importo pagato (€)</label>
+  let h=`<div class="mh"></div><h3>💳 Registra Pagamento</h3>
+  <div class="al aw">👤 <strong>${c.nome}</strong><br>Debito attuale: <strong>€${f(c.sospeso)}</strong></div>
+  <div class="fg"><label>Importo pagato ora (€)</label>
     <input class="fc" type="number" id="si" value="${c.sospeso}" step="0.01" min="0"
       style="font-size:24px;font-weight:700;text-align:center"></div>
+  <div style="font-size:12px;color:#888;margin:-8px 0 12px 2px">Se paga più del dovuto, il saldo resterà a credito</div>
   <button class="btn btn-ok" onclick="confSaldo('${id}')">✅ Conferma</button>
   <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
@@ -7016,13 +7042,37 @@ function apriSaldo(id){
 
 window.confSaldo=function(id){
   const c=DB.clienti.find(x=>x.id===id);if(!c)return;
-  const pag=parseFloat(document.getElementById('si').value)||0;
-  const ns=Math.max(0,Math.round((c.sospeso-pag)*100)/100);
+  const pag=Math.max(0,parseFloat(document.getElementById('si').value)||0);
+  const ns=Math.round((c.sospeso-pag)*100)/100;
   c.sospeso=ns;
   const sp=saldoCassa();
   DB.cassa.push({data:oggi(),descrizione:'Saldo debito - '+c.nome,tipo:'Saldo Debito',
     riferimento:c.id,entrata:pag,uscita:0,saldo:Math.round((sp+pag)*100)/100,metodo:'Contanti',note:''});
-  saveDB();closeMO();toast(`Saldo €${f(pag)} · Residuo €${f(ns)}`);go('clienti');
+  saveDB();closeMO();
+  toast(ns>0?`Pagato €${f(pag)} · Residuo debito €${f(ns)}`:ns<0?`Pagato €${f(pag)} · Credito €${f(Math.abs(ns))}`:`Pagato €${f(pag)} · Saldo azzerato`);
+  go('clienti');
+};
+
+// Modifica manuale del saldo (correzione diretta, positiva o negativa, senza toccare la cassa)
+function modificaSaldoManuale(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  let h=`<div class="mh"></div><h3>💳 Modifica Saldo</h3>
+  <div class="al as">👤 <strong>${c.nome}</strong></div>
+  <div class="fg"><label>Saldo (€) — positivo = debito del cliente, negativo = credito a suo favore</label>
+    <input class="fc" type="number" id="sm" value="${c.sospeso||0}" step="0.01"
+      style="font-size:24px;font-weight:700;text-align:center"></div>
+  <div style="font-size:12px;color:#888;margin:-8px 0 12px 2px">Correzione diretta: non registra nulla in cassa. Per un pagamento ricevuto usa invece "Salda" dalla scheda cliente.</div>
+  <button class="btn btn-ok" onclick="salvaSaldoManuale('${id}')">✅ Salva</button>
+  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+window.salvaSaldoManuale=function(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const v=Math.round((parseFloat(document.getElementById('sm').value)||0)*100)/100;
+  c.sospeso=v;
+  saveDB();closeMO();
+  toast(v>0?`Saldo impostato: debito €${f(v)}`:v<0?`Saldo impostato: credito €${f(Math.abs(v))}`:'Saldo azzerato');
+  go('clienti');
 };
 
 function modificaProdAbit(id){
@@ -7033,7 +7083,7 @@ function modificaProdAbit(id){
       p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
     let h=`<div class="mh"></div><h3>✏️ Prodotto Abituale</h3>
     <div class="al as">${c.nome} · Attuale: ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
-    <input class="fc" placeholder="Cerca prodotto..." value="${ps}" oninput="window._mpas(this.value)" style="margin-bottom:8px">
+    <input class="fc" id="srch-mpa" placeholder="Cerca prodotto..." value="${ps}" oninput="keepFocus('srch-mpa',()=>window._mpas(this.value))" style="margin-bottom:8px">
     <div class="card">`;
     pf.forEach(p=>{
       const codEsc=p.codice.replace(/'/g,"\\'");
@@ -7254,8 +7304,8 @@ function pgMagazzino(el){
   const dr=mf.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
   let h=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Prodotto Mancante / Nuovo</button>
   <div class="sb"><span style="color:#aaa">🔍</span>
-    <input placeholder="Cerca prodotto..." value="${sq}"
-      oninput="sq=this.value;pgMagazzino(document.getElementById('cnt'))" autocomplete="off"></div>`;
+    <input id="srch-magazzino" placeholder="Cerca prodotto..." value="${sq}"
+      oninput="sq=this.value;keepFocus('srch-magazzino',()=>pgMagazzino(document.getElementById('cnt')))" autocomplete="off"></div>`;
   if(dr.length>0&&!sq)h+=`<div class="al ae">⚠️ ${dr.length} prodotti sotto scorta minima</div>`;
   h+=`<div class="card">`;
   mf.forEach(m=>{
@@ -7318,8 +7368,8 @@ function pgStorico(el){
     (s.formato||'').toLowerCase().includes(q)||(s.miscela||'').toLowerCase().includes(q)||(s.n_ordine||'').toLowerCase().includes(q));
   const ul=all.slice(-100).reverse();
   let h=`<div class="sb"><span style="color:#aaa">🔍</span>
-    <input placeholder="Cerca cliente, zona, prodotto..." value="${sq}"
-      oninput="sq=this.value;pgStorico(document.getElementById('cnt'))" autocomplete="off"></div>
+    <input id="srch-storico" placeholder="Cerca cliente, zona, prodotto..." value="${sq}"
+      oninput="sq=this.value;keepFocus('srch-storico',()=>pgStorico(document.getElementById('cnt')))" autocomplete="off"></div>
   <div style="font-size:12px;color:#888;margin-bottom:6px">${all.length} consegne totali${all.length>ul.length?' · ultime '+ul.length+' mostrate':''}</div>
   <div class="card">`;
   if(!ul.length)h+=`<div class="em" style="padding:20px"><p>Nessuna consegna trovata</p></div>`;
@@ -7342,8 +7392,8 @@ function pgListino(el){
     p.formato.toLowerCase().includes(q)||p.marchio.toLowerCase().includes(q));
   let h=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Nuovo Prodotto</button>
   <div class="sb"><span style="color:#aaa">🔍</span>
-    <input placeholder="Cerca prodotto..." value="${sq}"
-      oninput="sq=this.value;pgListino(document.getElementById('cnt'))" autocomplete="off"></div>
+    <input id="srch-listino" placeholder="Cerca prodotto..." value="${sq}"
+      oninput="sq=this.value;keepFocus('srch-listino',()=>pgListino(document.getElementById('cnt')))" autocomplete="off"></div>
   <div style="font-size:12px;color:#888;margin-bottom:6px">${pf.length} prodotti</div><div class="card">`;
   if(!pf.length)h+=`<div class="em" style="padding:20px"><p>Nessun prodotto trovato</p></div>`;
   pf.forEach(p=>{
