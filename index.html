@@ -6532,63 +6532,70 @@ function pgOrdini(el){
 // ── NUOVO ORDINE ─────────────────────────────────────────────────────
 function nuovoOrdine(){
   let srch='',cl=null,prods=[],dataPrevista='',oraPrevista='',note='';
-  function render(){
+  function renderSearch(){
+    document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>➕ Nuovo Ordine</h3>
+      <div class="fg"><label>Cerca Cliente</label>
+        <input class="fc" id="sc" placeholder="Nome o zona..." value=""
+          oninput="window._ucs(this.value)" autocomplete="off"></div>
+      <div id="risultati-nuord-cli"></div>`;
+    renderRisultatiCliente();
+    const i=document.getElementById('sc');if(i)setTimeout(()=>i.focus(),50);
+  }
+  function renderRisultatiCliente(){
     const cf=DB.clienti.filter(c=>!srch||c.nome.toLowerCase().includes(srch.toLowerCase())||(c.zona||'').toLowerCase().includes(srch.toLowerCase())).slice(0,15);
+    let h='';
+    cf.forEach(c=>{
+      const sp=c.sospeso>0?`<span style="color:var(--rd);font-size:11px"> · Debito €${f(c.sospeso)}</span>`:'';
+      h+=`<div class="li" onclick="window._sc('${c.id}')">
+        <div class="av" style="background:var(--cr2)">👤</div>
+        <div class="nf"><div class="nm">${c.nome}${sp}</div>
+          <div class="sb">${c.zona||''} · ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div></div>
+        <div class="rt" style="color:var(--br);font-size:20px">›</div>
+      </div>`;
+    });
+    if(!cf.length)h=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
+    const rEl=document.getElementById('risultati-nuord-cli');
+    if(rEl)rEl.innerHTML=h;
+  }
+  function render(){
     let h='<div class="mh"></div><h3>➕ Nuovo Ordine</h3>';
-    if(!cl){
-      h+=`<div class="fg"><label>Cerca Cliente</label>
-        <input class="fc" id="sc" placeholder="Nome o zona..." value="${srch}"
-          oninput="keepFocus('sc',()=>window._ucs(this.value))" autocomplete="off"></div>`;
-      cf.forEach(c=>{
-        const sp=c.sospeso>0?`<span style="color:var(--rd);font-size:11px"> · Debito €${f(c.sospeso)}</span>`:'';
-        h+=`<div class="li" onclick="window._sc('${c.id}')">
-          <div class="av" style="background:var(--cr2)">👤</div>
-          <div class="nf"><div class="nm">${c.nome}${sp}</div>
-            <div class="sb">${c.zona||''} · ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div></div>
-          <div class="rt" style="color:var(--br);font-size:20px">›</div>
-        </div>`;
-      });
-      if(!cf.length)h+=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
-    } else {
-      h+=`<div class="al as">👤 <strong>${cl.nome}</strong> · ${cl.zona||''}
-        <button onclick="window._dc()" style="float:right;background:none;border:none;font-size:18px;cursor:pointer">✕</button></div>`;
-      if(cl.sospeso>0)h+=`<div class="al aw">⚠️ Debito: <strong>€${f(cl.sospeso)}</strong></div>`;
-      h+=`<div class="fg"><label>📅 Data di consegna prevista (opzionale)</label>
-        <input class="fc" type="date" value="${dataPrevista}" onchange="window._odp(this.value)"></div>`;
-      h+=`<div class="fg"><label>🕐 Orario previsto (opzionale)</label>
-        <input class="fc" type="time" value="${oraPrevista}" onchange="window._oop(this.value)"></div>`;
-      h+=`<div class="fg"><label>📝 Note (opzionale)</label>
-        <textarea class="fc" rows="2" placeholder="es. citofono rotto, chiamare prima di salire..."
-          oninput="window._onote(this.value)">${escHtml(note)}</textarea></div>`;
-      h+=`<div class="st">Prodotti</div>`;
-      prods.forEach((p,i)=>{
-        h+=`<div class="pc">
-          <div style="flex:1">
-            <div class="pn">${p.formato} ${p.marchio} ${p.miscela}</div>
-            <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
-              <input type="number" value="${p.qty}" min="1" style="width:70px;padding:5px 8px;border:2px solid var(--gy2);border-radius:8px;font-size:14px;font-weight:700"
-                onchange="window._ap(${i},'qty',this.value)">
-              <span style="color:#888;font-size:12px">× €${p.prezzo}</span>
-              <strong style="color:var(--br)">€${f(p.qty*p.prezzo)}</strong>
-            </div>
+    h+=`<div class="al as">👤 <strong>${cl.nome}</strong> · ${cl.zona||''}
+      <button onclick="window._dc()" style="float:right;background:none;border:none;font-size:18px;cursor:pointer">✕</button></div>`;
+    if(cl.sospeso>0)h+=`<div class="al aw">⚠️ Debito: <strong>€${f(cl.sospeso)}</strong></div>`;
+    h+=`<div class="fg"><label>📅 Data di consegna prevista (opzionale)</label>
+      <input class="fc" type="date" value="${dataPrevista}" onchange="window._odp(this.value)"></div>`;
+    h+=`<div class="fg"><label>🕐 Orario previsto (opzionale)</label>
+      <input class="fc" type="time" value="${oraPrevista}" onchange="window._oop(this.value)"></div>`;
+    h+=`<div class="fg"><label>📝 Note (opzionale)</label>
+      <textarea class="fc" rows="2" placeholder="es. citofono rotto, chiamare prima di salire..."
+        oninput="window._onote(this.value)">${escHtml(note)}</textarea></div>`;
+    h+=`<div class="st">Prodotti</div>`;
+    prods.forEach((p,i)=>{
+      h+=`<div class="pc">
+        <div style="flex:1">
+          <div class="pn">${p.formato} ${p.marchio} ${p.miscela}</div>
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+            <input type="number" value="${p.qty}" min="1" style="width:70px;padding:5px 8px;border:2px solid var(--gy2);border-radius:8px;font-size:14px;font-weight:700"
+              onchange="window._ap(${i},'qty',this.value)">
+            <span style="color:#888;font-size:12px">× €${p.prezzo}</span>
+            <strong style="color:var(--br)">€${f(p.qty*p.prezzo)}</strong>
           </div>
-          <button onclick="window._rp(${i})" style="color:var(--rd);font-size:20px;background:none;border:none;cursor:pointer;padding:0 4px">🗑</button>
-        </div>`;
-      });
-      h+=`<button class="btn btn-s" onclick="window._add()">➕ Aggiungi prodotto</button>`;
-      if(prods.length>0){
-        const tot=prods.reduce((s,p)=>s+p.qty*p.prezzo,0);
-        h+=`<div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
-          <span style="font-size:13px;color:#666">Totale: </span>
-          <span style="font-size:22px;font-weight:800;color:var(--br)">€${f(tot)}</span>
         </div>
-        <button class="btn btn-p" onclick="window._co()">✅ Conferma Ordine</button>`;
-      }
+        <button onclick="window._rp(${i})" style="color:var(--rd);font-size:20px;background:none;border:none;cursor:pointer;padding:0 4px">🗑</button>
+      </div>`;
+    });
+    h+=`<button class="btn btn-s" onclick="window._add()">➕ Aggiungi prodotto</button>`;
+    if(prods.length>0){
+      const tot=prods.reduce((s,p)=>s+p.qty*p.prezzo,0);
+      h+=`<div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
+        <span style="font-size:13px;color:#666">Totale: </span>
+        <span style="font-size:22px;font-weight:800;color:var(--br)">€${f(tot)}</span>
+      </div>
+      <button class="btn btn-p" onclick="window._co()">✅ Conferma Ordine</button>`;
     }
     document.getElementById('mc').innerHTML=h;
-    if(!cl){const i=document.getElementById('sc');if(i)setTimeout(()=>i.focus(),50);}
   }
-  window._ucs=v=>{srch=v;render();};
+  window._ucs=v=>{srch=v;renderRisultatiCliente();};
   window._odp=v=>{dataPrevista=v;};
   window._oop=v=>{oraPrevista=v;};
   window._onote=v=>{note=v;};
@@ -6598,17 +6605,24 @@ function nuovoOrdine(){
       prods=[{codice:p?p.codice:'',formato:cl.formato_abituale,marchio:p?p.marchio:'',
         miscela:cl.miscela_abituale,qty:cl.qty_abituale||1,prezzo:cl.prezzo_abituale||(p?p.prezzo_vendita:0)}];
     }render();};
-  window._dc=()=>{cl=null;prods=[];render();};
+  window._dc=()=>{cl=null;prods=[];srch='';renderSearch();};
   window._ap=(i,k,v)=>{prods[i][k]=k==='qty'?Math.max(1,parseInt(v)||1):v;render();};
   window._rp=i=>{prods.splice(i,1);render();};
   window._add=()=>{
     let ps='';
-    function rpa(){
+    function rpaShell(){
+      document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Scegli Prodotto</h3>
+        <input class="fc" id="srch-nuord-prod" placeholder="Cerca..." value=""
+          oninput="window._ups(this.value)" style="margin-bottom:10px">
+        <div id="risultati-nuord-prod"></div>`;
+      rpaResults();
+      const i=document.getElementById('srch-nuord-prod');if(i)setTimeout(()=>i.focus(),50);
+    }
+    function rpaResults(){
       const pf=DB.prodotti.filter(p=>!ps||p.codice.toLowerCase().includes(ps.toLowerCase())||
         p.miscela.toLowerCase().includes(ps.toLowerCase())||p.formato.toLowerCase().includes(ps.toLowerCase())||
         p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,25);
-      let h=`<div class="mh"></div><h3>Scegli Prodotto</h3>
-        <input class="fc" id="srch-nuord-prod" placeholder="Cerca..." value="${ps}" oninput="keepFocus('srch-nuord-prod',()=>window._ups(this.value))" style="margin-bottom:10px" autofocus>`;
+      let h='';
       pf.forEach(p=>{
         h+=`<div class="li" onclick="window._agp(${DB.prodotti.indexOf(p)})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
@@ -6616,14 +6630,15 @@ function nuovoOrdine(){
           <div class="rt" style="color:var(--br);font-size:20px">+</div>
         </div>`;
       });
-      document.getElementById('mc').innerHTML=h;
-      setTimeout(()=>{const i=document.querySelector('.mc input');if(i)i.focus();},50);
+      if(!pf.length)h=`<div class="em" style="padding:20px"><p>Nessun prodotto trovato</p></div>`;
+      const rEl=document.getElementById('risultati-nuord-prod');
+      if(rEl)rEl.innerHTML=h;
     }
-    window._ups=v=>{ps=v;rpa();};
+    window._ups=v=>{ps=v;rpaResults();};
     window._agp=idx=>{const p=DB.prodotti[idx];
       if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,
         miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});render();};
-    rpa();
+    rpaShell();
   };
   window._co=()=>{
     if(!cl||!prods.length)return;
@@ -6635,7 +6650,7 @@ function nuovoOrdine(){
       data_prevista:dataPrevista||null,ora_prevista:oraPrevista||null,note:note||''});
     saveDB();closeMO();toast(`Ordine ${id} creato per ${cl.nome}`);go('ordini');
   };
-  openMO();render();
+  openMO();renderSearch();
 }
 
 function apriOrdine(id){
@@ -6719,12 +6734,19 @@ function modificaOrdine(id){
   window._mor=i=>{prods.splice(i,1);render();};
   window._moadd=()=>{
     let ps='';
-    function rpa(){
+    function rpaShell(){
+      document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Scegli Prodotto</h3>
+        <input class="fc" id="srch-modord-prod" placeholder="Cerca..." value=""
+          oninput="window._moups(this.value)" style="margin-bottom:10px">
+        <div id="risultati-modord-prod"></div>`;
+      rpaResults();
+      const i=document.getElementById('srch-modord-prod');if(i)setTimeout(()=>i.focus(),50);
+    }
+    function rpaResults(){
       const pf=DB.prodotti.filter(p=>!ps||p.codice.toLowerCase().includes(ps.toLowerCase())||
         p.miscela.toLowerCase().includes(ps.toLowerCase())||p.formato.toLowerCase().includes(ps.toLowerCase())||
         p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,25);
-      let h=`<div class="mh"></div><h3>Scegli Prodotto</h3>
-        <input class="fc" id="srch-modord-prod" placeholder="Cerca..." value="${ps}" oninput="keepFocus('srch-modord-prod',()=>window._moups(this.value))" style="margin-bottom:10px" autofocus>`;
+      let h='';
       pf.forEach(p=>{
         h+=`<div class="li" onclick="window._moagp(${DB.prodotti.indexOf(p)})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
@@ -6732,14 +6754,15 @@ function modificaOrdine(id){
           <div class="rt" style="color:var(--br);font-size:20px">+</div>
         </div>`;
       });
-      document.getElementById('mc').innerHTML=h;
-      setTimeout(()=>{const i=document.querySelector('.mc input');if(i)i.focus();},50);
+      if(!pf.length)h=`<div class="em" style="padding:20px"><p>Nessun prodotto trovato</p></div>`;
+      const rEl=document.getElementById('risultati-modord-prod');
+      if(rEl)rEl.innerHTML=h;
     }
-    window._moups=v=>{ps=v;rpa();};
+    window._moups=v=>{ps=v;rpaResults();};
     window._moagp=idx=>{const p=DB.prodotti[idx];
       if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});
       render();};
-    rpa();
+    rpaShell();
   };
   window._mosave=()=>{
     if(!prods.length){toast('Aggiungi almeno un prodotto');return;}
@@ -6865,14 +6888,21 @@ window.annullaOrdine=function(id){
 
 // ── CLIENTI ─────────────────────────────────────────────────────────
 function pgClienti(el){
-  const q=sq.toLowerCase();
-  const cf=DB.clienti.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.zona||'').toLowerCase().includes(q));
-  let h=`<button class="btn btn-p" onclick="nuovoCliente()">➕ Nuovo Cliente</button>
+  el.innerHTML=`<button class="btn btn-p" onclick="nuovoCliente()">➕ Nuovo Cliente</button>
   <div class="sb"><span style="color:#aaa;font-size:16px">🔍</span>
     <input id="srch-clienti" placeholder="Cerca cliente o zona..." value="${sq}"
-      oninput="sq=this.value;keepFocus('srch-clienti',()=>pgClienti(document.getElementById('cnt')))" autocomplete="off"></div>
-  <div style="font-size:12px;color:#888;margin-bottom:6px">${cf.length} clienti</div><div class="card">`;
-  if(!cf.length)h+=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
+      oninput="sq=this.value;renderListaClienti()" autocomplete="off"></div>
+  <div id="info-clienti" style="font-size:12px;color:#888;margin-bottom:6px"></div>
+  <div id="lista-clienti" class="card"></div>`;
+  renderListaClienti();
+}
+function renderListaClienti(){
+  const q=sq.toLowerCase();
+  const cf=DB.clienti.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.zona||'').toLowerCase().includes(q));
+  const info=document.getElementById('info-clienti');
+  if(info)info.textContent=cf.length+' clienti';
+  let h='';
+  if(!cf.length)h=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
   cf.forEach(c=>{
     h+=`<div class="li" onclick="apriCliente('${c.id}')">
       <div class="av" style="background:${c.sospeso>0?'var(--rd2)':'var(--bl2)'}">
@@ -6887,7 +6917,8 @@ function pgClienti(el){
       </div>
     </div>`;
   });
-  h+=`</div>`;el.innerHTML=h;
+  const list=document.getElementById('lista-clienti');
+  if(list)list.innerHTML=h;
 }
 
 function nextClientId(){
@@ -6920,13 +6951,20 @@ function nuovoCliente(){
     nc.indirizzo=(document.getElementById('nc-ind').value||'').trim();
     nc.zona=(document.getElementById('nc-zona').value||'').trim();
     let ps='';
-    function rp(){
+    function rpShell(){
+      document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>☕ Prodotto Abituale</h3>
+      <div class="al as">👤 ${nc.nome}</div>
+      <input class="fc" id="srch-nc-prod" placeholder="Cerca prodotto..." value=""
+        oninput="window._ncps(this.value)" style="margin-bottom:8px">
+      <div id="risultati-nc-prod" class="card"></div>
+      <button class="btn btn-s" onclick="window._ncback()">← Indietro</button>`;
+      rpResults();
+      const i=document.getElementById('srch-nc-prod');if(i)setTimeout(()=>i.focus(),50);
+    }
+    function rpResults(){
       const pf=DB.prodotti.filter(p=>!ps||p.miscela.toLowerCase().includes(ps.toLowerCase())||
         p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
-      let h=`<div class="mh"></div><h3>☕ Prodotto Abituale</h3>
-      <div class="al as">👤 ${nc.nome}</div>
-      <input class="fc" id="srch-nc-prod" placeholder="Cerca prodotto..." value="${ps}" oninput="keepFocus('srch-nc-prod',()=>window._ncps(this.value))" style="margin-bottom:8px">
-      <div class="card">`;
+      let h='';
       pf.forEach(p=>{
         const codEsc=p.codice.replace(/'/g,"\\'");
         h+=`<div class="li" onclick="window._ncpick('${codEsc}')">
@@ -6935,12 +6973,11 @@ function nuovoCliente(){
           <div class="rt" style="color:var(--br);font-size:20px">›</div>
         </div>`;
       });
-      if(!pf.length)h+=`<div class="em" style="padding:16px"><p>Nessun prodotto trovato</p></div>`;
-      h+=`</div><button class="btn btn-s" onclick="window._ncback()">← Indietro</button>`;
-      document.getElementById('mc').innerHTML=h;
-      setTimeout(()=>{const i=document.querySelector('.mc input');if(i)i.focus();},50);
+      if(!pf.length)h=`<div class="em" style="padding:16px"><p>Nessun prodotto trovato</p></div>`;
+      const rEl=document.getElementById('risultati-nc-prod');
+      if(rEl)rEl.innerHTML=h;
     }
-    window._ncps=v=>{ps=v;rp();};
+    window._ncps=v=>{ps=v;rpResults();};
     window._ncback=()=>{renderForm();};
     window._ncpick=function(cod){
       const pr=DB.prodotti.find(p=>p.codice===cod);if(!pr)return;
@@ -6954,7 +6991,7 @@ function nuovoCliente(){
       <button class="btn btn-ok" onclick="window._ncsave('${codEsc}')">✅ Crea Cliente</button>
       <button class="btn btn-s" onclick="window._ncredo()">← Indietro</button>`;
     };
-    window._ncredo=()=>rp();
+    window._ncredo=()=>rpShell();
     window._ncsave=function(cod){
       const pr=DB.prodotti.find(p=>p.codice===cod);if(!pr)return;
       const qty=Math.max(1,parseInt(document.getElementById('nc-qty').value)||1);
@@ -6965,7 +7002,7 @@ function nuovoCliente(){
         sospeso:0,ultima_consegna_1:'',ultima_consegna_2:'',ultima_consegna_3:'',note:''});
       saveDB();closeMO();toast('Cliente creato: '+nc.nome);go('clienti');
     };
-    rp();
+    rpShell();
   };
   renderForm();
 }
@@ -7078,13 +7115,20 @@ window.salvaSaldoManuale=function(id){
 function modificaProdAbit(id){
   const c=DB.clienti.find(x=>x.id===id);if(!c)return;
   let ps='';
-  function rend(){
+  function rendShell(){
+    document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>✏️ Prodotto Abituale</h3>
+    <div class="al as">${c.nome} · Attuale: ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
+    <input class="fc" id="srch-mpa" placeholder="Cerca prodotto..." value=""
+      oninput="window._mpas(this.value)" style="margin-bottom:8px">
+    <div id="risultati-mpa" class="card"></div>
+    <button class="btn btn-s" onclick="apriCliente('${id}')">← Indietro</button>`;
+    rendResults();
+    const i=document.getElementById('srch-mpa');if(i)setTimeout(()=>i.focus(),50);
+  }
+  function rendResults(){
     const pf=DB.prodotti.filter(p=>!ps||p.miscela.toLowerCase().includes(ps.toLowerCase())||
       p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
-    let h=`<div class="mh"></div><h3>✏️ Prodotto Abituale</h3>
-    <div class="al as">${c.nome} · Attuale: ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
-    <input class="fc" id="srch-mpa" placeholder="Cerca prodotto..." value="${ps}" oninput="keepFocus('srch-mpa',()=>window._mpas(this.value))" style="margin-bottom:8px">
-    <div class="card">`;
+    let h='';
     pf.forEach(p=>{
       const codEsc=p.codice.replace(/'/g,"\\'");
       h+=`<div class="li" onclick="window._mpsel('${c.id}','${codEsc}')">
@@ -7093,10 +7137,11 @@ function modificaProdAbit(id){
         <div class="rt" style="color:var(--br);font-size:20px">›</div>
       </div>`;
     });
-    h+=`</div><button class="btn btn-s" onclick="apriCliente('${id}')">← Indietro</button>`;
-    document.getElementById('mc').innerHTML=h;
+    if(!pf.length)h=`<div class="em" style="padding:16px"><p>Nessun prodotto trovato</p></div>`;
+    const rEl=document.getElementById('risultati-mpa');
+    if(rEl)rEl.innerHTML=h;
   }
-  window._mpas=v=>{ps=v;rend();};
+  window._mpas=v=>{ps=v;rendResults();};
   window._mpsel=function(cid,cod){
     const cl=DB.clienti.find(x=>x.id===cid);const pr=DB.prodotti.find(p=>p.codice===cod);
     if(!cl||!pr)return;
@@ -7118,7 +7163,7 @@ function modificaProdAbit(id){
     cl.prezzo_abituale=parseFloat(document.getElementById('mp').value)||pr.prezzo_vendita;
     saveDB();closeMO();toast('Prodotto abituale aggiornato!');go('clienti');
   };
-  rend();
+  rendShell();
 }
 
 // ── CASSA ───────────────────────────────────────────────────────────
@@ -7299,15 +7344,21 @@ function moContaCassa(){
 
 // ── MAGAZZINO ───────────────────────────────────────────────────────
 function pgMagazzino(el){
+  el.innerHTML=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Prodotto Mancante / Nuovo</button>
+  <div class="sb"><span style="color:#aaa">🔍</span>
+    <input id="srch-magazzino" placeholder="Cerca prodotto..." value="${sq}"
+      oninput="sq=this.value;renderListaMagazzino()" autocomplete="off"></div>
+  <div id="alert-magazzino"></div>
+  <div id="lista-magazzino" class="card"></div>`;
+  renderListaMagazzino();
+}
+function renderListaMagazzino(){
   const q=sq.toLowerCase();
   const mf=DB.magazzino.filter(m=>!q||m.codice.toLowerCase().includes(q)||m.miscela.toLowerCase().includes(q)||m.formato.toLowerCase().includes(q)||m.marchio.toLowerCase().includes(q));
   const dr=mf.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
-  let h=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Prodotto Mancante / Nuovo</button>
-  <div class="sb"><span style="color:#aaa">🔍</span>
-    <input id="srch-magazzino" placeholder="Cerca prodotto..." value="${sq}"
-      oninput="sq=this.value;keepFocus('srch-magazzino',()=>pgMagazzino(document.getElementById('cnt')))" autocomplete="off"></div>`;
-  if(dr.length>0&&!sq)h+=`<div class="al ae">⚠️ ${dr.length} prodotti sotto scorta minima</div>`;
-  h+=`<div class="card">`;
+  const alertEl=document.getElementById('alert-magazzino');
+  if(alertEl)alertEl.innerHTML=(dr.length>0&&!sq)?`<div class="al ae">⚠️ ${dr.length} prodotti sotto scorta minima</div>`:'';
+  let h='';
   mf.forEach(m=>{
     const al=m.giacenza<=m.scorta_minima&&m.scorta_minima>0;
     const pct=m.scorta_minima>0?Math.min(100,(m.giacenza/m.scorta_minima)*100):100;
@@ -7325,7 +7376,8 @@ function pgMagazzino(el){
       </div>
     </div>`;
   });
-  h+=`</div>`;el.innerHTML=h;
+  const list=document.getElementById('lista-magazzino');
+  if(list)list.innerHTML=h;
 }
 
 function apriMag(cod){
@@ -7363,16 +7415,22 @@ window.salvRett=function(cod){
 
 // ── STORICO ─────────────────────────────────────────────────────────
 function pgStorico(el){
+  el.innerHTML=`<div class="sb"><span style="color:#aaa">🔍</span>
+    <input id="srch-storico" placeholder="Cerca cliente, zona, prodotto..." value="${sq}"
+      oninput="sq=this.value;renderListaStorico()" autocomplete="off"></div>
+  <div id="info-storico" style="font-size:12px;color:#888;margin-bottom:6px"></div>
+  <div id="lista-storico" class="card"></div>`;
+  renderListaStorico();
+}
+function renderListaStorico(){
   const q=sq.toLowerCase();
   const all=DB.storico.filter(s=>!q||s.nome_cliente.toLowerCase().includes(q)||(s.zona||'').toLowerCase().includes(q)||
     (s.formato||'').toLowerCase().includes(q)||(s.miscela||'').toLowerCase().includes(q)||(s.n_ordine||'').toLowerCase().includes(q));
   const ul=all.slice(-100).reverse();
-  let h=`<div class="sb"><span style="color:#aaa">🔍</span>
-    <input id="srch-storico" placeholder="Cerca cliente, zona, prodotto..." value="${sq}"
-      oninput="sq=this.value;keepFocus('srch-storico',()=>pgStorico(document.getElementById('cnt')))" autocomplete="off"></div>
-  <div style="font-size:12px;color:#888;margin-bottom:6px">${all.length} consegne totali${all.length>ul.length?' · ultime '+ul.length+' mostrate':''}</div>
-  <div class="card">`;
-  if(!ul.length)h+=`<div class="em" style="padding:20px"><p>Nessuna consegna trovata</p></div>`;
+  const info=document.getElementById('info-storico');
+  if(info)info.textContent=`${all.length} consegne totali${all.length>ul.length?' · ultime '+ul.length+' mostrate':''}`;
+  let h='';
+  if(!ul.length)h=`<div class="em" style="padding:20px"><p>Nessuna consegna trovata</p></div>`;
   ul.forEach(s=>{
     h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
       <div class="nf"><div class="nm" style="font-size:13px">${s.nome_cliente}</div>
@@ -7382,20 +7440,28 @@ function pgStorico(el){
       <div class="rt"><div class="am" style="color:var(--gn);font-size:14px">€${f(s.incassato)}</div></div>
     </div>`;
   });
-  h+=`</div>`;el.innerHTML=h;
+  const list=document.getElementById('lista-storico');
+  if(list)list.innerHTML=h;
 }
 
 // ── LISTINO PRODOTTI ───────────────────────────────────────────────────
 function pgListino(el){
+  el.innerHTML=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Nuovo Prodotto</button>
+  <div class="sb"><span style="color:#aaa">🔍</span>
+    <input id="srch-listino" placeholder="Cerca prodotto..." value="${sq}"
+      oninput="sq=this.value;renderListaListino()" autocomplete="off"></div>
+  <div id="info-listino" style="font-size:12px;color:#888;margin-bottom:6px"></div>
+  <div id="lista-listino" class="card"></div>`;
+  renderListaListino();
+}
+function renderListaListino(){
   const q=sq.toLowerCase();
   const pf=DB.prodotti.filter(p=>!q||p.codice.toLowerCase().includes(q)||p.miscela.toLowerCase().includes(q)||
     p.formato.toLowerCase().includes(q)||p.marchio.toLowerCase().includes(q));
-  let h=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Nuovo Prodotto</button>
-  <div class="sb"><span style="color:#aaa">🔍</span>
-    <input id="srch-listino" placeholder="Cerca prodotto..." value="${sq}"
-      oninput="sq=this.value;keepFocus('srch-listino',()=>pgListino(document.getElementById('cnt')))" autocomplete="off"></div>
-  <div style="font-size:12px;color:#888;margin-bottom:6px">${pf.length} prodotti</div><div class="card">`;
-  if(!pf.length)h+=`<div class="em" style="padding:20px"><p>Nessun prodotto trovato</p></div>`;
+  const info=document.getElementById('info-listino');
+  if(info)info.textContent=pf.length+' prodotti';
+  let h='';
+  if(!pf.length)h=`<div class="em" style="padding:20px"><p>Nessun prodotto trovato</p></div>`;
   pf.forEach(p=>{
     const cod=p.codice.replace(/'/g,"\\'");
     h+=`<div class="li" onclick="apriProdotto('${cod}')">
@@ -7406,7 +7472,8 @@ function pgListino(el){
         <div class="sb">vendita/pz</div></div>
     </div>`;
   });
-  h+=`</div>`;el.innerHTML=h;
+  const list=document.getElementById('lista-listino');
+  if(list)list.innerHTML=h;
 }
 
 function nuovoProdotto(){
