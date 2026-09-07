@@ -6531,32 +6531,43 @@ function pgOrdini(el){
 
 // ── NUOVO ORDINE ─────────────────────────────────────────────────────
 function nuovoOrdine(){
-  let srch='',cl=null,prods=[],dataPrevista='',oraPrevista='',note='';
+  let cl=null,prods=[],dataPrevista='',oraPrevista='',note='';
   function renderSearch(){
     document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>➕ Nuovo Ordine</h3>
       <div class="fg"><label>Cerca Cliente</label>
         <input class="fc" id="sc" placeholder="Nome o zona..." value=""
-          oninput="window._ucs(this.value)" autocomplete="off"></div>
+          oninput="window._ucs()" autocomplete="off"></div>
       <div id="risultati-nuord-cli"></div>`;
-    renderRisultatiCliente();
-    const i=document.getElementById('sc');if(i)setTimeout(()=>i.focus(),50);
-  }
-  function renderRisultatiCliente(){
-    const cf=DB.clienti.filter(c=>!srch||c.nome.toLowerCase().includes(srch.toLowerCase())||(c.zona||'').toLowerCase().includes(srch.toLowerCase())).slice(0,15);
+    // Crea tutte le righe cliente una sola volta; la ricerca poi nasconde/mostra
+    // senza mai toccare il campo di testo o ricostruire il contenitore.
     let h='';
-    cf.forEach(c=>{
+    DB.clienti.forEach(c=>{
+      const chiave=(c.nome+' '+(c.zona||'')).toLowerCase();
       const sp=c.sospeso>0?`<span style="color:var(--rd);font-size:11px"> · Debito €${f(c.sospeso)}</span>`:'';
-      h+=`<div class="li" onclick="window._sc('${c.id}')">
+      h+=`<div class="li nuord-cli-row" data-k="${escHtml(chiave)}" onclick="window._sc('${c.id}')">
         <div class="av" style="background:var(--cr2)">👤</div>
         <div class="nf"><div class="nm">${c.nome}${sp}</div>
           <div class="sb">${c.zona||''} · ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div></div>
         <div class="rt" style="color:var(--br);font-size:20px">›</div>
       </div>`;
     });
-    if(!cf.length)h=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
-    const rEl=document.getElementById('risultati-nuord-cli');
-    if(rEl)rEl.innerHTML=h;
+    h+=`<div class="em" id="nuord-cli-vuoto" style="padding:20px;display:none"><p>Nessun cliente trovato</p></div>`;
+    document.getElementById('risultati-nuord-cli').innerHTML=h;
+    const i=document.getElementById('sc');if(i)setTimeout(()=>i.focus(),50);
   }
+  window._ucs=function(){
+    const inp=document.getElementById('sc');
+    const q=(inp?inp.value:'').toLowerCase();
+    const rows=document.querySelectorAll('.nuord-cli-row');
+    let visibili=0;
+    rows.forEach(r=>{
+      const match=!q||r.getAttribute('data-k').includes(q);
+      r.style.display=match?'':'none';
+      if(match)visibili++;
+    });
+    const vuoto=document.getElementById('nuord-cli-vuoto');
+    if(vuoto)vuoto.style.display=visibili?'none':'';
+  };
   function render(){
     let h='<div class="mh"></div><h3>➕ Nuovo Ordine</h3>';
     h+=`<div class="al as">👤 <strong>${cl.nome}</strong> · ${cl.zona||''}
@@ -6595,7 +6606,6 @@ function nuovoOrdine(){
     }
     document.getElementById('mc').innerHTML=h;
   }
-  window._ucs=v=>{srch=v;renderRisultatiCliente();};
   window._odp=v=>{dataPrevista=v;};
   window._oop=v=>{oraPrevista=v;};
   window._onote=v=>{note=v;};
@@ -6605,36 +6615,41 @@ function nuovoOrdine(){
       prods=[{codice:p?p.codice:'',formato:cl.formato_abituale,marchio:p?p.marchio:'',
         miscela:cl.miscela_abituale,qty:cl.qty_abituale||1,prezzo:cl.prezzo_abituale||(p?p.prezzo_vendita:0)}];
     }render();};
-  window._dc=()=>{cl=null;prods=[];srch='';renderSearch();};
+  window._dc=()=>{cl=null;prods=[];renderSearch();};
   window._ap=(i,k,v)=>{prods[i][k]=k==='qty'?Math.max(1,parseInt(v)||1):v;render();};
   window._rp=i=>{prods.splice(i,1);render();};
   window._add=()=>{
-    let ps='';
     function rpaShell(){
       document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Scegli Prodotto</h3>
         <input class="fc" id="srch-nuord-prod" placeholder="Cerca..." value=""
-          oninput="window._ups(this.value)" style="margin-bottom:10px">
+          oninput="window._ups()" style="margin-bottom:10px">
         <div id="risultati-nuord-prod"></div>`;
-      rpaResults();
-      const i=document.getElementById('srch-nuord-prod');if(i)setTimeout(()=>i.focus(),50);
-    }
-    function rpaResults(){
-      const pf=DB.prodotti.filter(p=>!ps||p.codice.toLowerCase().includes(ps.toLowerCase())||
-        p.miscela.toLowerCase().includes(ps.toLowerCase())||p.formato.toLowerCase().includes(ps.toLowerCase())||
-        p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,25);
       let h='';
-      pf.forEach(p=>{
-        h+=`<div class="li" onclick="window._agp(${DB.prodotti.indexOf(p)})">
+      DB.prodotti.forEach((p,idx)=>{
+        const chiave=(p.codice+' '+p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
+        h+=`<div class="li nuord-prod-row" data-k="${escHtml(chiave)}" onclick="window._agp(${idx})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
             <div class="sb">€${p.prezzo_vendita}/pz</div></div>
           <div class="rt" style="color:var(--br);font-size:20px">+</div>
         </div>`;
       });
-      if(!pf.length)h=`<div class="em" style="padding:20px"><p>Nessun prodotto trovato</p></div>`;
-      const rEl=document.getElementById('risultati-nuord-prod');
-      if(rEl)rEl.innerHTML=h;
+      h+=`<div class="em" id="nuord-prod-vuoto" style="padding:20px;display:none"><p>Nessun prodotto trovato</p></div>`;
+      document.getElementById('risultati-nuord-prod').innerHTML=h;
+      const i=document.getElementById('srch-nuord-prod');if(i)setTimeout(()=>i.focus(),50);
     }
-    window._ups=v=>{ps=v;rpaResults();};
+    window._ups=function(){
+      const inp=document.getElementById('srch-nuord-prod');
+      const q=(inp?inp.value:'').toLowerCase();
+      const rows=document.querySelectorAll('.nuord-prod-row');
+      let visibili=0;
+      rows.forEach(r=>{
+        const match=!q||r.getAttribute('data-k').includes(q);
+        r.style.display=match?'':'none';
+        if(match)visibili++;
+      });
+      const vuoto=document.getElementById('nuord-prod-vuoto');
+      if(vuoto)vuoto.style.display=visibili?'none':'';
+    };
     window._agp=idx=>{const p=DB.prodotti[idx];
       if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,
         miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});render();};
@@ -6733,32 +6748,37 @@ function modificaOrdine(id){
   window._mop=(i,v)=>{prods[i].prezzo=Math.max(0,parseFloat(v)||0);render();};
   window._mor=i=>{prods.splice(i,1);render();};
   window._moadd=()=>{
-    let ps='';
     function rpaShell(){
       document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Scegli Prodotto</h3>
         <input class="fc" id="srch-modord-prod" placeholder="Cerca..." value=""
-          oninput="window._moups(this.value)" style="margin-bottom:10px">
+          oninput="window._moups()" style="margin-bottom:10px">
         <div id="risultati-modord-prod"></div>`;
-      rpaResults();
-      const i=document.getElementById('srch-modord-prod');if(i)setTimeout(()=>i.focus(),50);
-    }
-    function rpaResults(){
-      const pf=DB.prodotti.filter(p=>!ps||p.codice.toLowerCase().includes(ps.toLowerCase())||
-        p.miscela.toLowerCase().includes(ps.toLowerCase())||p.formato.toLowerCase().includes(ps.toLowerCase())||
-        p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,25);
       let h='';
-      pf.forEach(p=>{
-        h+=`<div class="li" onclick="window._moagp(${DB.prodotti.indexOf(p)})">
+      DB.prodotti.forEach((p,idx)=>{
+        const chiave=(p.codice+' '+p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
+        h+=`<div class="li modord-prod-row" data-k="${escHtml(chiave)}" onclick="window._moagp(${idx})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
             <div class="sb">€${p.prezzo_vendita}/pz</div></div>
           <div class="rt" style="color:var(--br);font-size:20px">+</div>
         </div>`;
       });
-      if(!pf.length)h=`<div class="em" style="padding:20px"><p>Nessun prodotto trovato</p></div>`;
-      const rEl=document.getElementById('risultati-modord-prod');
-      if(rEl)rEl.innerHTML=h;
+      h+=`<div class="em" id="modord-prod-vuoto" style="padding:20px;display:none"><p>Nessun prodotto trovato</p></div>`;
+      document.getElementById('risultati-modord-prod').innerHTML=h;
+      const i=document.getElementById('srch-modord-prod');if(i)setTimeout(()=>i.focus(),50);
     }
-    window._moups=v=>{ps=v;rpaResults();};
+    window._moups=function(){
+      const inp=document.getElementById('srch-modord-prod');
+      const q=(inp?inp.value:'').toLowerCase();
+      const rows=document.querySelectorAll('.modord-prod-row');
+      let visibili=0;
+      rows.forEach(r=>{
+        const match=!q||r.getAttribute('data-k').includes(q);
+        r.style.display=match?'':'none';
+        if(match)visibili++;
+      });
+      const vuoto=document.getElementById('modord-prod-vuoto');
+      if(vuoto)vuoto.style.display=visibili?'none':'';
+    };
     window._moagp=idx=>{const p=DB.prodotti[idx];
       if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});
       render();};
@@ -6891,20 +6911,16 @@ function pgClienti(el){
   el.innerHTML=`<button class="btn btn-p" onclick="nuovoCliente()">➕ Nuovo Cliente</button>
   <div class="sb"><span style="color:#aaa;font-size:16px">🔍</span>
     <input id="srch-clienti" placeholder="Cerca cliente o zona..." value="${sq}"
-      oninput="sq=this.value;renderListaClienti()" autocomplete="off"></div>
+      oninput="filtraListaClienti()" autocomplete="off"></div>
   <div id="info-clienti" style="font-size:12px;color:#888;margin-bottom:6px"></div>
   <div id="lista-clienti" class="card"></div>`;
-  renderListaClienti();
-}
-function renderListaClienti(){
-  const q=sq.toLowerCase();
-  const cf=DB.clienti.filter(c=>!q||c.nome.toLowerCase().includes(q)||(c.zona||'').toLowerCase().includes(q));
-  const info=document.getElementById('info-clienti');
-  if(info)info.textContent=cf.length+' clienti';
+  // Crea tutte le righe UNA SOLA VOLTA come nodi DOM reali: la ricerca poi si limita
+  // a nascondere/mostrare righe già esistenti (mai innerHTML sul contenitore),
+  // così il campo di ricerca non viene mai toccato o ricostruito mentre si digita.
   let h='';
-  if(!cf.length)h=`<div class="em" style="padding:20px"><p>Nessun cliente trovato</p></div>`;
-  cf.forEach(c=>{
-    h+=`<div class="li" onclick="apriCliente('${c.id}')">
+  DB.clienti.forEach(c=>{
+    const chiave=(c.nome+' '+(c.zona||'')).toLowerCase();
+    h+=`<div class="li cli-row" data-k="${escHtml(chiave)}" onclick="apriCliente('${c.id}')">
       <div class="av" style="background:${c.sospeso>0?'var(--rd2)':'var(--bl2)'}">
         ${c.sospeso>0?'⚠️':'👤'}</div>
       <div class="nf"><div class="nm">${c.nome}</div>
@@ -6917,8 +6933,25 @@ function renderListaClienti(){
       </div>
     </div>`;
   });
-  const list=document.getElementById('lista-clienti');
-  if(list)list.innerHTML=h;
+  h+=`<div class="em" id="lista-clienti-vuoto" style="padding:20px;display:none"><p>Nessun cliente trovato</p></div>`;
+  document.getElementById('lista-clienti').innerHTML=h;
+  filtraListaClienti();
+}
+function filtraListaClienti(){
+  const inp=document.getElementById('srch-clienti');
+  sq=inp?inp.value:sq;
+  const q=sq.toLowerCase();
+  const rows=document.querySelectorAll('#lista-clienti .cli-row');
+  let visibili=0;
+  rows.forEach(r=>{
+    const match=!q||r.getAttribute('data-k').includes(q);
+    r.style.display=match?'':'none';
+    if(match)visibili++;
+  });
+  const vuoto=document.getElementById('lista-clienti-vuoto');
+  if(vuoto)vuoto.style.display=visibili?'none':'';
+  const info=document.getElementById('info-clienti');
+  if(info)info.textContent=visibili+' clienti';
 }
 
 function nextClientId(){
@@ -6950,34 +6983,40 @@ function nuovoCliente(){
     nc.telefono=(document.getElementById('nc-tel').value||'').trim();
     nc.indirizzo=(document.getElementById('nc-ind').value||'').trim();
     nc.zona=(document.getElementById('nc-zona').value||'').trim();
-    let ps='';
     function rpShell(){
       document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>☕ Prodotto Abituale</h3>
       <div class="al as">👤 ${nc.nome}</div>
       <input class="fc" id="srch-nc-prod" placeholder="Cerca prodotto..." value=""
-        oninput="window._ncps(this.value)" style="margin-bottom:8px">
+        oninput="window._ncps()" style="margin-bottom:8px">
       <div id="risultati-nc-prod" class="card"></div>
       <button class="btn btn-s" onclick="window._ncback()">← Indietro</button>`;
-      rpResults();
-      const i=document.getElementById('srch-nc-prod');if(i)setTimeout(()=>i.focus(),50);
-    }
-    function rpResults(){
-      const pf=DB.prodotti.filter(p=>!ps||p.miscela.toLowerCase().includes(ps.toLowerCase())||
-        p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
       let h='';
-      pf.forEach(p=>{
+      DB.prodotti.forEach(p=>{
         const codEsc=p.codice.replace(/'/g,"\\'");
-        h+=`<div class="li" onclick="window._ncpick('${codEsc}')">
+        const chiave=(p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
+        h+=`<div class="li nc-prod-row" data-k="${escHtml(chiave)}" onclick="window._ncpick('${codEsc}')">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
             <div class="sb">€${p.prezzo_vendita}/pz</div></div>
           <div class="rt" style="color:var(--br);font-size:20px">›</div>
         </div>`;
       });
-      if(!pf.length)h=`<div class="em" style="padding:16px"><p>Nessun prodotto trovato</p></div>`;
-      const rEl=document.getElementById('risultati-nc-prod');
-      if(rEl)rEl.innerHTML=h;
+      h+=`<div class="em" id="nc-prod-vuoto" style="padding:16px;display:none"><p>Nessun prodotto trovato</p></div>`;
+      document.getElementById('risultati-nc-prod').innerHTML=h;
+      const i=document.getElementById('srch-nc-prod');if(i)setTimeout(()=>i.focus(),50);
     }
-    window._ncps=v=>{ps=v;rpResults();};
+    window._ncps=function(){
+      const inp=document.getElementById('srch-nc-prod');
+      const q=(inp?inp.value:'').toLowerCase();
+      const rows=document.querySelectorAll('.nc-prod-row');
+      let visibili=0;
+      rows.forEach(r=>{
+        const match=!q||r.getAttribute('data-k').includes(q);
+        r.style.display=match?'':'none';
+        if(match)visibili++;
+      });
+      const vuoto=document.getElementById('nc-prod-vuoto');
+      if(vuoto)vuoto.style.display=visibili?'none':'';
+    };
     window._ncback=()=>{renderForm();};
     window._ncpick=function(cod){
       const pr=DB.prodotti.find(p=>p.codice===cod);if(!pr)return;
@@ -7114,34 +7153,40 @@ window.salvaSaldoManuale=function(id){
 
 function modificaProdAbit(id){
   const c=DB.clienti.find(x=>x.id===id);if(!c)return;
-  let ps='';
   function rendShell(){
     document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>✏️ Prodotto Abituale</h3>
     <div class="al as">${c.nome} · Attuale: ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
     <input class="fc" id="srch-mpa" placeholder="Cerca prodotto..." value=""
-      oninput="window._mpas(this.value)" style="margin-bottom:8px">
+      oninput="window._mpas()" style="margin-bottom:8px">
     <div id="risultati-mpa" class="card"></div>
     <button class="btn btn-s" onclick="apriCliente('${id}')">← Indietro</button>`;
-    rendResults();
-    const i=document.getElementById('srch-mpa');if(i)setTimeout(()=>i.focus(),50);
-  }
-  function rendResults(){
-    const pf=DB.prodotti.filter(p=>!ps||p.miscela.toLowerCase().includes(ps.toLowerCase())||
-      p.formato.toLowerCase().includes(ps.toLowerCase())||p.marchio.toLowerCase().includes(ps.toLowerCase())).slice(0,20);
     let h='';
-    pf.forEach(p=>{
+    DB.prodotti.forEach(p=>{
       const codEsc=p.codice.replace(/'/g,"\\'");
-      h+=`<div class="li" onclick="window._mpsel('${c.id}','${codEsc}')">
+      const chiave=(p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
+      h+=`<div class="li mpa-row" data-k="${escHtml(chiave)}" onclick="window._mpsel('${c.id}','${codEsc}')">
         <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
           <div class="sb">€${p.prezzo_vendita}/pz</div></div>
         <div class="rt" style="color:var(--br);font-size:20px">›</div>
       </div>`;
     });
-    if(!pf.length)h=`<div class="em" style="padding:16px"><p>Nessun prodotto trovato</p></div>`;
-    const rEl=document.getElementById('risultati-mpa');
-    if(rEl)rEl.innerHTML=h;
+    h+=`<div class="em" id="mpa-vuoto" style="padding:16px;display:none"><p>Nessun prodotto trovato</p></div>`;
+    document.getElementById('risultati-mpa').innerHTML=h;
+    const i=document.getElementById('srch-mpa');if(i)setTimeout(()=>i.focus(),50);
   }
-  window._mpas=v=>{ps=v;rendResults();};
+  window._mpas=function(){
+    const inp=document.getElementById('srch-mpa');
+    const q=(inp?inp.value:'').toLowerCase();
+    const rows=document.querySelectorAll('.mpa-row');
+    let visibili=0;
+    rows.forEach(r=>{
+      const match=!q||r.getAttribute('data-k').includes(q);
+      r.style.display=match?'':'none';
+      if(match)visibili++;
+    });
+    const vuoto=document.getElementById('mpa-vuoto');
+    if(vuoto)vuoto.style.display=visibili?'none':'';
+  };
   window._mpsel=function(cid,cod){
     const cl=DB.clienti.find(x=>x.id===cid);const pr=DB.prodotti.find(p=>p.codice===cod);
     if(!cl||!pr)return;
@@ -7347,23 +7392,16 @@ function pgMagazzino(el){
   el.innerHTML=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Prodotto Mancante / Nuovo</button>
   <div class="sb"><span style="color:#aaa">🔍</span>
     <input id="srch-magazzino" placeholder="Cerca prodotto..." value="${sq}"
-      oninput="sq=this.value;renderListaMagazzino()" autocomplete="off"></div>
+      oninput="filtraListaMagazzino()" autocomplete="off"></div>
   <div id="alert-magazzino"></div>
   <div id="lista-magazzino" class="card"></div>`;
-  renderListaMagazzino();
-}
-function renderListaMagazzino(){
-  const q=sq.toLowerCase();
-  const mf=DB.magazzino.filter(m=>!q||m.codice.toLowerCase().includes(q)||m.miscela.toLowerCase().includes(q)||m.formato.toLowerCase().includes(q)||m.marchio.toLowerCase().includes(q));
-  const dr=mf.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
-  const alertEl=document.getElementById('alert-magazzino');
-  if(alertEl)alertEl.innerHTML=(dr.length>0&&!sq)?`<div class="al ae">⚠️ ${dr.length} prodotti sotto scorta minima</div>`:'';
   let h='';
-  mf.forEach(m=>{
+  DB.magazzino.forEach(m=>{
     const al=m.giacenza<=m.scorta_minima&&m.scorta_minima>0;
     const pct=m.scorta_minima>0?Math.min(100,(m.giacenza/m.scorta_minima)*100):100;
     const cod=m.codice.replace(/'/g,"\\'");
-    h+=`<div class="li" onclick="apriMag('${cod}')">
+    const chiave=(m.codice+' '+m.miscela+' '+m.formato+' '+m.marchio).toLowerCase();
+    h+=`<div class="li magazzino-row" data-k="${escHtml(chiave)}" onclick="apriMag('${cod}')">
       <div class="av" style="background:${al?'var(--rd2)':'var(--gn2)'}">${al?'⚠️':'📦'}</div>
       <div class="nf"><div class="nm" style="font-size:13px">${m.formato} ${m.marchio} ${m.miscela}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
@@ -7376,8 +7414,26 @@ function renderListaMagazzino(){
       </div>
     </div>`;
   });
-  const list=document.getElementById('lista-magazzino');
-  if(list)list.innerHTML=h;
+  h+=`<div class="em" id="magazzino-vuoto" style="padding:20px;display:none"><p>Nessun prodotto trovato</p></div>`;
+  document.getElementById('lista-magazzino').innerHTML=h;
+  filtraListaMagazzino();
+}
+function filtraListaMagazzino(){
+  const inp=document.getElementById('srch-magazzino');
+  sq=inp?inp.value:sq;
+  const q=sq.toLowerCase();
+  const rows=document.querySelectorAll('#lista-magazzino .magazzino-row');
+  let visibili=0;
+  rows.forEach(r=>{
+    const match=!q||r.getAttribute('data-k').includes(q);
+    r.style.display=match?'':'none';
+    if(match)visibili++;
+  });
+  const vuoto=document.getElementById('magazzino-vuoto');
+  if(vuoto)vuoto.style.display=visibili?'none':'';
+  const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
+  const alertEl=document.getElementById('alert-magazzino');
+  if(alertEl)alertEl.innerHTML=(dr.length>0&&!sq)?`<div class="al ae">⚠️ ${dr.length} prodotti sotto scorta minima</div>`:'';
 }
 
 function apriMag(cod){
@@ -7417,22 +7473,14 @@ window.salvRett=function(cod){
 function pgStorico(el){
   el.innerHTML=`<div class="sb"><span style="color:#aaa">🔍</span>
     <input id="srch-storico" placeholder="Cerca cliente, zona, prodotto..." value="${sq}"
-      oninput="sq=this.value;renderListaStorico()" autocomplete="off"></div>
+      oninput="filtraListaStorico()" autocomplete="off"></div>
   <div id="info-storico" style="font-size:12px;color:#888;margin-bottom:6px"></div>
   <div id="lista-storico" class="card"></div>`;
-  renderListaStorico();
-}
-function renderListaStorico(){
-  const q=sq.toLowerCase();
-  const all=DB.storico.filter(s=>!q||s.nome_cliente.toLowerCase().includes(q)||(s.zona||'').toLowerCase().includes(q)||
-    (s.formato||'').toLowerCase().includes(q)||(s.miscela||'').toLowerCase().includes(q)||(s.n_ordine||'').toLowerCase().includes(q));
-  const ul=all.slice(-100).reverse();
-  const info=document.getElementById('info-storico');
-  if(info)info.textContent=`${all.length} consegne totali${all.length>ul.length?' · ultime '+ul.length+' mostrate':''}`;
+  const ul=DB.storico.slice().reverse();
   let h='';
-  if(!ul.length)h=`<div class="em" style="padding:20px"><p>Nessuna consegna trovata</p></div>`;
   ul.forEach(s=>{
-    h+=`<div class="li"><div class="av" style="background:var(--gn2)">✅</div>
+    const chiave=(s.nome_cliente+' '+(s.zona||'')+' '+(s.formato||'')+' '+(s.miscela||'')+' '+(s.n_ordine||'')).toLowerCase();
+    h+=`<div class="li storico-row" data-k="${escHtml(chiave)}"><div class="av" style="background:var(--gn2)">✅</div>
       <div class="nf"><div class="nm" style="font-size:13px">${s.nome_cliente}</div>
         <div class="sb">${s.data} · ${s.formato} ${s.miscela} ×${s.qty}</div>
         ${s.note?`<div class="sb" style="color:var(--br)">📝 ${escHtml(s.note)}</div>`:''}
@@ -7440,8 +7488,25 @@ function renderListaStorico(){
       <div class="rt"><div class="am" style="color:var(--gn);font-size:14px">€${f(s.incassato)}</div></div>
     </div>`;
   });
-  const list=document.getElementById('lista-storico');
-  if(list)list.innerHTML=h;
+  h+=`<div class="em" id="storico-vuoto" style="padding:20px;display:none"><p>Nessuna consegna trovata</p></div>`;
+  document.getElementById('lista-storico').innerHTML=h;
+  filtraListaStorico();
+}
+function filtraListaStorico(){
+  const inp=document.getElementById('srch-storico');
+  sq=inp?inp.value:sq;
+  const q=sq.toLowerCase();
+  const rows=document.querySelectorAll('#lista-storico .storico-row');
+  let visibili=0;
+  rows.forEach(r=>{
+    const match=!q||r.getAttribute('data-k').includes(q);
+    r.style.display=match?'':'none';
+    if(match)visibili++;
+  });
+  const vuoto=document.getElementById('storico-vuoto');
+  if(vuoto)vuoto.style.display=visibili?'none':'';
+  const info=document.getElementById('info-storico');
+  if(info)info.textContent=visibili+' consegne';
 }
 
 // ── LISTINO PRODOTTI ───────────────────────────────────────────────────
@@ -7449,22 +7514,14 @@ function pgListino(el){
   el.innerHTML=`<button class="btn btn-p" onclick="nuovoProdotto()">➕ Nuovo Prodotto</button>
   <div class="sb"><span style="color:#aaa">🔍</span>
     <input id="srch-listino" placeholder="Cerca prodotto..." value="${sq}"
-      oninput="sq=this.value;renderListaListino()" autocomplete="off"></div>
+      oninput="filtraListaListino()" autocomplete="off"></div>
   <div id="info-listino" style="font-size:12px;color:#888;margin-bottom:6px"></div>
   <div id="lista-listino" class="card"></div>`;
-  renderListaListino();
-}
-function renderListaListino(){
-  const q=sq.toLowerCase();
-  const pf=DB.prodotti.filter(p=>!q||p.codice.toLowerCase().includes(q)||p.miscela.toLowerCase().includes(q)||
-    p.formato.toLowerCase().includes(q)||p.marchio.toLowerCase().includes(q));
-  const info=document.getElementById('info-listino');
-  if(info)info.textContent=pf.length+' prodotti';
   let h='';
-  if(!pf.length)h=`<div class="em" style="padding:20px"><p>Nessun prodotto trovato</p></div>`;
-  pf.forEach(p=>{
+  DB.prodotti.forEach(p=>{
     const cod=p.codice.replace(/'/g,"\\'");
-    h+=`<div class="li" onclick="apriProdotto('${cod}')">
+    const chiave=(p.codice+' '+p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
+    h+=`<div class="li listino-row" data-k="${escHtml(chiave)}" onclick="apriProdotto('${cod}')">
       <div class="av" style="background:var(--cr2)">☕</div>
       <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
         <div class="sb">Acquisto €${p.prezzo_acquisto} · ${p.pz_cartone} pz/cartone</div></div>
@@ -7472,8 +7529,25 @@ function renderListaListino(){
         <div class="sb">vendita/pz</div></div>
     </div>`;
   });
-  const list=document.getElementById('lista-listino');
-  if(list)list.innerHTML=h;
+  h+=`<div class="em" id="listino-vuoto" style="padding:20px;display:none"><p>Nessun prodotto trovato</p></div>`;
+  document.getElementById('lista-listino').innerHTML=h;
+  filtraListaListino();
+}
+function filtraListaListino(){
+  const inp=document.getElementById('srch-listino');
+  sq=inp?inp.value:sq;
+  const q=sq.toLowerCase();
+  const rows=document.querySelectorAll('#lista-listino .listino-row');
+  let visibili=0;
+  rows.forEach(r=>{
+    const match=!q||r.getAttribute('data-k').includes(q);
+    r.style.display=match?'':'none';
+    if(match)visibili++;
+  });
+  const vuoto=document.getElementById('listino-vuoto');
+  if(vuoto)vuoto.style.display=visibili?'none':'';
+  const info=document.getElementById('info-listino');
+  if(info)info.textContent=visibili+' prodotti';
 }
 
 function nuovoProdotto(){
