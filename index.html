@@ -6825,15 +6825,43 @@ function registraConsegna(id){
       oninput="window._incTouched=true"
       style="font-size:24px;font-weight:700;text-align:center"></div>
   <div class="fg"><label>Metodo pagamento</label>
-    <select class="fc" id="met">
-      <option>Contanti</option><option>Bonifico</option><option>POS</option><option>Da Saldare</option>
-    </select></div>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <button type="button" id="met-contanti" onclick="window._setMet('Contanti')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--br);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--br);color:#fff">💵 Contanti</button>
+      <button type="button" id="met-bonifico" onclick="window._setMet('Bonifico')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--gy2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">🏦 Bonifico</button>
+      <button type="button" id="met-pos" onclick="window._setMet('POS')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--gy2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">💳 POS</button>
+    </div>
+    <button type="button" id="met-dasaldare" onclick="window._setMet('Da Saldare')"
+      style="width:100%;padding:6px;border:2px dashed var(--gy2);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:#888;margin-bottom:4px">Da Saldare (non incassato ora)</button>
+    <input type="hidden" id="met" value="Contanti"></div>
   <button class="btn btn-ok" onclick="confConsegna('${id}')">✅ Conferma</button>
   <button class="btn btn-s" onclick="apriOrdine('${id}')">← Indietro</button>`;
   window._incTouched=false;
   window._roId=id;
   document.getElementById('mc').innerHTML=h;
 }
+
+window._setMet=function(v){
+  document.getElementById('met').value=v;
+  const mappa={'Contanti':'met-contanti','Bonifico':'met-bonifico','POS':'met-pos','Da Saldare':'met-dasaldare'};
+  ['met-contanti','met-bonifico','met-pos'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(!b)return;
+    const attivo=mappa[v]===id;
+    b.style.background=attivo?'var(--br)':'#fff';
+    b.style.color=attivo?'#fff':'var(--br)';
+    b.style.borderColor=attivo?'var(--br)':'var(--gy2)';
+  });
+  const ds=document.getElementById('met-dasaldare');
+  if(ds){
+    const attivo=v==='Da Saldare';
+    ds.style.background=attivo?'var(--rd2)':'#fff';
+    ds.style.color=attivo?'var(--rd)':'#888';
+    ds.style.borderColor=attivo?'var(--rd)':'var(--gy2)';
+  }
+};
 
 // Modifica prezzo di un prodotto al momento della consegna: ricalcola riga e totale ordine
 window.aggiornaPrezzoProd=function(i,v){
@@ -6921,14 +6949,15 @@ function pgClienti(el){
   DB.clienti.forEach(c=>{
     const chiave=(c.nome+' '+(c.zona||'')).toLowerCase();
     h+=`<div class="li cli-row" data-k="${escHtml(chiave)}" onclick="apriCliente('${c.id}')">
-      <div class="av" style="background:${c.sospeso>0?'var(--rd2)':'var(--bl2)'}">
-        ${c.sospeso>0?'⚠️':'👤'}</div>
+      <div class="av" style="background:${c.sospeso>0?'var(--rd2)':c.sospeso<0?'var(--gn2)':'var(--bl2)'}">
+        ${c.sospeso>0?'⚠️':c.sospeso<0?'✅':'👤'}</div>
       <div class="nf"><div class="nm">${c.nome}</div>
         <div class="sb">${c.zona||''} · ${c.qty_abituale}× ${c.formato_abituale} ${c.miscela_abituale}</div>
         ${c.ultima_consegna_3?`<div class="sb">Ultima: ${c.ultima_consegna_3}</div>`:''}
       </div>
       <div class="rt">
         ${c.sospeso>0?`<div class="am" style="color:var(--rd)">€${f(c.sospeso)}</div><div class="sb">sospeso</div>`:''}
+        ${c.sospeso<0?`<div class="am" style="color:var(--gn)">€${f(Math.abs(c.sospeso))}</div><div class="sb">credito</div>`:''}
         <span style="color:var(--br);font-size:18px">›</span>
       </div>
     </div>`;
@@ -7637,10 +7666,12 @@ function apriMenu(){
     return s+(m.scorta_minima-m.giacenza)*(p?p.prezzo_acquisto:0);
   },0);
   const nSosp=DB.clienti.filter(c=>c.sospeso>0).length;
+  const nCred=DB.clienti.filter(c=>c.sospeso<0).length;
   const nAnomale=trovaDateAnomale().length;
   let h=`<div class="mh"></div><h3>⚙️ Strumenti</h3>
   <button class="btn btn-x" onclick="closeMO();mostraRecuperoDati()">🆘 Recupero Dati</button>
   <button class="btn btn-p" onclick="closeMO();generaReport()">📊 Report Movimenti (PDF/Excel)</button>
+  <button class="btn btn-p" onclick="closeMO();mostraRendicontoSaldi()">📋 Rendiconto Saldi Clienti${(nSosp+nCred)>0?' ('+(nSosp+nCred)+')':''}</button>
   <div class="dv"></div>
   <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
   <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
@@ -7654,6 +7685,71 @@ function apriMenu(){
   <button class="btn btn-s" onclick="importaBackup()">📂 Importa Backup</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
+}
+
+// ── RENDICONTO SALDI CLIENTI (debiti e crediti) ────────────────────────
+function mostraRendicontoSaldi(){
+  const debiti=DB.clienti.filter(c=>c.sospeso>0).sort((a,b)=>b.sospeso-a.sospeso);
+  const crediti=DB.clienti.filter(c=>c.sospeso<0).sort((a,b)=>a.sospeso-b.sospeso);
+  const totDebiti=debiti.reduce((s,c)=>s+c.sospeso,0);
+  const totCrediti=crediti.reduce((s,c)=>s+Math.abs(c.sospeso),0);
+  let h=`<div class="mh"></div><h3>📋 Rendiconto Saldi Clienti</h3>`;
+  if(!debiti.length&&!crediti.length){
+    h+=`<div class="em" style="padding:20px"><p>Nessun cliente con saldo pendente (debito o credito).</p></div>
+    <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+    document.getElementById('mc').innerHTML=h;openMO();
+    return;
+  }
+  if(debiti.length){
+    h+=`<div class="st">⚠️ Clienti con debito (${debiti.length}) — totale €${f(totDebiti)}</div><div class="card" style="margin-bottom:14px">`;
+    debiti.forEach(c=>{
+      h+=`<div class="li" onclick="closeMO();apriCliente('${c.id}')">
+        <div class="av" style="background:var(--rd2)">⚠️</div>
+        <div class="nf"><div class="nm" style="font-size:13px">${escHtml(c.nome)}</div><div class="sb">${escHtml(c.zona||'')}</div></div>
+        <div class="rt"><div class="am" style="color:var(--rd)">€${f(c.sospeso)}</div></div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  if(crediti.length){
+    h+=`<div class="st">✅ Clienti con credito (${crediti.length}) — totale €${f(totCrediti)}</div><div class="card" style="margin-bottom:14px">`;
+    crediti.forEach(c=>{
+      h+=`<div class="li" onclick="closeMO();apriCliente('${c.id}')">
+        <div class="av" style="background:var(--gn2)">✅</div>
+        <div class="nf"><div class="nm" style="font-size:13px">${escHtml(c.nome)}</div><div class="sb">${escHtml(c.zona||'')}</div></div>
+        <div class="rt"><div class="am" style="color:var(--gn)">€${f(Math.abs(c.sospeso))}</div></div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;font-size:13px"><span>Totale debiti clienti</span><strong style="color:var(--rd)">€${f(totDebiti)}</strong></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px"><span>Totale crediti clienti</span><strong style="color:var(--gn)">€${f(totCrediti)}</strong></div>
+  </div>
+  <button class="btn btn-p" onclick="esportaRendicontoSaldi()">📊 Esporta Excel</button>
+  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+
+function esportaRendicontoSaldi(){
+  if(typeof XLSX==='undefined'){toast('Libreria Excel non disponibile: controlla la connessione e riprova');return;}
+  const debiti=DB.clienti.filter(c=>c.sospeso>0).sort((a,b)=>b.sospeso-a.sospeso);
+  const crediti=DB.clienti.filter(c=>c.sospeso<0).sort((a,b)=>a.sospeso-b.sospeso);
+  const rows=[['Rendiconto Saldi Clienti'],['Generato il: '+oggi()],[],
+    ['CLIENTI CON DEBITO'],['Cliente','Zona','Telefono','Debito (EUR)']];
+  debiti.forEach(c=>rows.push([c.nome,c.zona||'',c.telefono||'',c.sospeso]));
+  rows.push(['','','Totale debiti',debiti.reduce((s,c)=>s+c.sospeso,0)]);
+  rows.push([]);
+  rows.push(['CLIENTI CON CREDITO']);
+  rows.push(['Cliente','Zona','Telefono','Credito (EUR)']);
+  crediti.forEach(c=>rows.push([c.nome,c.zona||'',c.telefono||'',Math.abs(c.sospeso)]));
+  rows.push(['','','Totale crediti',crediti.reduce((s,c)=>s+Math.abs(c.sospeso),0)]);
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:28},{wch:16},{wch:16},{wch:14}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Saldi Clienti');
+  XLSX.writeFile(wb,`rendiconto_saldi_${oggi().replace(/\//g,'-')}.xlsx`);
+  toast('Rendiconto scaricato');
 }
 
 window.azzeraSospesi=function(){
