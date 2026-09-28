@@ -6389,6 +6389,8 @@ function pgHome(el){
   const dr=DB.magazzino.filter(m=>m.giacenza<=m.scorta_minima&&m.scorta_minima>0);
   const cc=DB.clienti.filter(c=>c.sospeso>0);
   const ts=cc.reduce((s,c)=>s+c.sospeso,0);
+  const crHome=DB.clienti.filter(c=>c.sospeso<0);
+  const tcr=crHome.reduce((s,c)=>s+Math.abs(c.sospeso),0);
   const og=oggi();
   const co=DB.storico.filter(s=>s.data===og);
   const io=co.reduce((s,c)=>s+(c.incassato||0),0);
@@ -6428,10 +6430,10 @@ function pgHome(el){
       <span class="val">${dr.length}</span>
       <span class="sub">prodotti sotto scorta</span>
     </div>
-    <div class="kpi ${ts>0?'rd':'gn'}" onclick="go('clienti')">
-      <span class="lbl">⚠️ Sospesi</span>
-      <span class="val">${cc.length}</span>
-      <span class="sub">€${f(ts)} totale</span>
+    <div class="kpi ${(cc.length+crHome.length)>0?(ts>0?'rd':'go'):'gn'}" onclick="mostraRendicontoSaldi()">
+      <span class="lbl">⚖️ Saldi clienti</span>
+      <span class="val">${cc.length+crHome.length}</span>
+      <span class="sub">${(cc.length+crHome.length)>0?`debiti €${f(ts)} · crediti €${f(tcr)}`:'nessun saldo aperto'}</span>
     </div>
   </div>`;
   h+=`<button class="btn btn-p" onclick="nuovoOrdine()">➕ Nuovo Ordine</button>`;
@@ -7093,6 +7095,11 @@ function apriCliente(id){
     <div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:6px">Prodotto Abituale</div>
     <div style="font-weight:700;font-size:15px">${c.formato_abituale} ${c.miscela_abituale}</div>
     <div style="color:#666;font-size:13px">${c.qty_abituale} pz × €${c.prezzo_abituale} = <strong>€${f(c.qty_abituale*c.prezzo_abituale)}</strong></div>
+    ${(()=>{const pl=DB.prodotti.find(x=>x.formato===c.formato_abituale&&x.miscela===c.miscela_abituale);
+      if(!pl)return '';
+      return Math.abs((c.prezzo_abituale||0)-pl.prezzo_vendita)>0.0005
+        ?`<div style="margin-top:6px"><span class="tag ty">💶 Prezzo personalizzato</span> <span style="font-size:11px;color:#888">listino €${pl.prezzo_vendita}</span></div>`
+        :`<div style="margin-top:6px;font-size:11px;color:#888">Prezzo di listino</div>`;})()}
   </div>`;
   if(c.sospeso>0){
     h+=`<div class="al ae">⚠️ Debito: <strong>€${f(c.sospeso)}</strong>
@@ -7121,11 +7128,48 @@ function apriCliente(id){
     h+=`</div>`;
   }
   h+=`<button class="btn btn-p" onclick="nuovoOrdineCliente('${id}')">➕ Nuovo Ordine</button>
+  <button class="btn btn-s" onclick="modificaPrezzoCliente('${id}')">💶 Modifica Prezzo Cliente</button>
   <button class="btn btn-s" onclick="modificaProdAbit('${id}')">✏️ Modifica Prodotto Abituale</button>
   <button class="btn btn-s" onclick="modificaSaldoManuale('${id}')">💳 Modifica Saldo</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
+
+// ── PREZZO PERSONALIZZATO PER CLIENTE ─────────────────────────────────
+function modificaPrezzoCliente(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const pl=DB.prodotti.find(x=>x.formato===c.formato_abituale&&x.miscela===c.miscela_abituale);
+  let h=`<div class="mh"></div><h3>💶 Prezzo Cliente</h3>
+  <div class="al as">👤 <strong>${escHtml(c.nome)}</strong><br>${escHtml(c.formato_abituale)} ${escHtml(c.miscela_abituale)}</div>
+  ${pl?`<div style="font-size:12px;color:#888;margin:-2px 0 10px 2px">Prezzo di listino: <strong>€${pl.prezzo_vendita}</strong></div>`:''}
+  <div class="fg"><label>Prezzo per questo cliente (€/pz)</label>
+    <input class="fc" type="number" id="pc-prezzo" value="${c.prezzo_abituale}" step="0.001" min="0"
+      style="font-size:22px;text-align:center"></div>
+  <div class="fg"><label>Quantità abituale</label>
+    <input class="fc" type="number" id="pc-qty" value="${c.qty_abituale||1}" min="1"
+      style="font-size:22px;text-align:center"></div>
+  <div style="font-size:12px;color:#888;margin:-4px 0 12px 2px">Questo prezzo verrà proposto ogni volta che crei un ordine per questo cliente.</div>
+  <button class="btn btn-ok" onclick="salvaPrezzoCliente('${id}')">✅ Salva</button>
+  ${pl?`<button class="btn btn-s" onclick="ripristinaPrezzoListino('${id}')">↩️ Usa prezzo di listino (€${pl.prezzo_vendita})</button>`:''}
+  <button class="btn btn-s" onclick="apriCliente('${id}')">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+window.salvaPrezzoCliente=function(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const prezzo=parseFloat(document.getElementById('pc-prezzo').value);
+  const qty=parseInt(document.getElementById('pc-qty').value);
+  if(!(prezzo>0)){toast('Inserisci un prezzo maggiore di zero');return;}
+  c.prezzo_abituale=Math.round(prezzo*10000)/10000;
+  if(qty>0)c.qty_abituale=qty;
+  saveDB();toast('Prezzo cliente salvato: €'+c.prezzo_abituale);apriCliente(id);
+};
+window.ripristinaPrezzoListino=function(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const pl=DB.prodotti.find(x=>x.formato===c.formato_abituale&&x.miscela===c.miscela_abituale);
+  if(!pl){toast('Prodotto non trovato a listino');return;}
+  c.prezzo_abituale=pl.prezzo_vendita;
+  saveDB();toast('Ripristinato prezzo di listino: €'+pl.prezzo_vendita);apriCliente(id);
+};
 
 function nuovoOrdineCliente(id){
   closeMO();
@@ -7225,7 +7269,7 @@ function modificaProdAbit(id){
     <div class="fg"><label>Quantità abituale</label>
       <input class="fc" type="number" id="mq" value="${cl.qty_abituale||100}" style="font-size:22px;text-align:center"></div>
     <div class="fg"><label>Prezzo (€)</label>
-      <input class="fc" type="number" id="mp" value="${pr.prezzo_vendita}" step="0.001" style="font-size:22px;text-align:center"></div>
+      <input class="fc" type="number" id="mp" value="${(pr.formato===cl.formato_abituale&&pr.miscela===cl.miscela_abituale&&cl.prezzo_abituale)?cl.prezzo_abituale:pr.prezzo_vendita}" step="0.001" style="font-size:22px;text-align:center"></div>
     <button class="btn btn-ok" onclick="window._mpsave('${cid}','${codEsc}')">✅ Salva</button>
     <button class="btn btn-s" onclick="modificaProdAbit('${cid}')">← Indietro</button>`;
   };
