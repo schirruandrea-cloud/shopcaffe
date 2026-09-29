@@ -6272,7 +6272,8 @@ function scansionaVersioniDati(){
     try{d=JSON.parse(localStorage.getItem(k));}catch(e){continue;}
     if(!d||!Array.isArray(d.storico)||!Array.isArray(d.cassa))continue;
     const ultimaData=d.storico.reduce((mx,s)=>Math.max(mx,parseDataIt(s.data)),0);
-    const saldo=(d.saldo_iniziale||0)+d.cassa.reduce((s,c)=>s+(c.entrata||0)-(c.uscita||0),0);
+    const cassaContanti=d.cassa.filter(c=>isContantiMetodo(c.metodo));
+    const saldo=(d.saldo_iniziale||0)+cassaContanti.reduce((s,c)=>s+(c.entrata||0)-(c.uscita||0),0);
     const ordiniAperti=(d.ordini||[]).filter(o=>o.stato==='DA FARE').length;
     risultati.push({
       key:k,
@@ -6906,8 +6907,9 @@ window.confConsegna=function(id){
   // Cassa
   if(inc>0){
     const sp=saldoCassa();
+    const deltaCC=isContantiMetodo(met)?inc:0;
     DB.cassa.push({data:og,descrizione:'Incasso - '+o.nome_cliente,tipo:'Incasso Consegna',
-      riferimento:o.id,entrata:inc,uscita:0,saldo:Math.round((sp+inc)*100)/100,metodo:met,
+      riferimento:o.id,entrata:inc,uscita:0,saldo:Math.round((sp+deltaCC)*100)/100,metodo:met,
       note:o.prodotti.map(p=>p.formato+' '+p.miscela+' ×'+p.qty).join(', ')});
   }
   saveDB();closeMO();
@@ -7184,6 +7186,16 @@ function apriSaldo(id){
     <input class="fc" type="number" id="si" value="${c.sospeso}" step="0.01" min="0"
       style="font-size:24px;font-weight:700;text-align:center"></div>
   <div style="font-size:12px;color:#888;margin:-8px 0 12px 2px">Se paga più del dovuto, il saldo resterà a credito</div>
+  <div class="fg"><label>Metodo pagamento</label>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <button type="button" id="met-contanti" onclick="window._setMet('Contanti')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--br);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:var(--br);color:#fff">💵 Contanti</button>
+      <button type="button" id="met-bonifico" onclick="window._setMet('Bonifico')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--gy2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">🏦 Bonifico</button>
+      <button type="button" id="met-pos" onclick="window._setMet('POS')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--gy2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">💳 POS</button>
+    </div>
+    <input type="hidden" id="met" value="Contanti"></div>
   <button class="btn btn-ok" onclick="confSaldo('${id}')">✅ Conferma</button>
   <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
@@ -7192,11 +7204,13 @@ function apriSaldo(id){
 window.confSaldo=function(id){
   const c=DB.clienti.find(x=>x.id===id);if(!c)return;
   const pag=Math.max(0,parseFloat(document.getElementById('si').value)||0);
+  const met=document.getElementById('met')?document.getElementById('met').value:'Contanti';
   const ns=Math.round((c.sospeso-pag)*100)/100;
   c.sospeso=ns;
   const sp=saldoCassa();
+  const deltaCC=isContantiMetodo(met)?pag:0;
   DB.cassa.push({data:oggi(),descrizione:'Saldo debito - '+c.nome,tipo:'Saldo Debito',
-    riferimento:c.id,entrata:pag,uscita:0,saldo:Math.round((sp+pag)*100)/100,metodo:'Contanti',note:''});
+    riferimento:c.id,entrata:pag,uscita:0,saldo:Math.round((sp+deltaCC)*100)/100,metodo:met,note:''});
   saveDB();closeMO();
   toast(ns>0?`Pagato €${f(pag)} · Residuo debito €${f(ns)}`:ns<0?`Pagato €${f(pag)} · Credito €${f(Math.abs(ns))}`:`Pagato €${f(pag)} · Saldo azzerato`);
   go('clienti');
@@ -7285,9 +7299,13 @@ function modificaProdAbit(id){
 }
 
 // ── CASSA ───────────────────────────────────────────────────────────
+function isContantiMetodo(m){return !m||String(m).trim().toLowerCase()==='contanti';}
 function saldoCassa(){
-  const te=DB.cassa.reduce((s,r)=>s+(r.entrata||0),0);
-  const tu=DB.cassa.reduce((s,r)=>s+(r.uscita||0),0);
+  // Il saldo cassa rappresenta il contante fisico: bonifico e POS non passano dalla cassa,
+  // quindi non entrano in questo totale (restano comunque visibili come movimenti nello storico).
+  const cc=DB.cassa.filter(r=>isContantiMetodo(r.metodo));
+  const te=cc.reduce((s,r)=>s+(r.entrata||0),0);
+  const tu=cc.reduce((s,r)=>s+(r.uscita||0),0);
   return Math.round((DB.saldo_iniziale+te-tu)*100)/100;
 }
 
@@ -7331,7 +7349,7 @@ function pgCassa(el){
     h+=`<div class="li">
       <div class="av" style="background:${ie?'var(--gn2)':'var(--rd2)'};font-size:16px">${ie?'↑':'↓'}</div>
       <div class="nf"><div class="nm" style="font-size:13px">${r.descrizione}</div>
-        <div class="sb">${r.data} · ${r.tipo}</div></div>
+        <div class="sb">${r.data} · ${r.tipo}${(r.metodo&&!isContantiMetodo(r.metodo))?' · '+r.metodo+' (non in cassa)':''}</div></div>
       <div class="rt">
         <div class="am" style="color:${ie?'var(--gn)':'var(--rd)'}">${ie?'+':'-'}€${f(ie?r.entrata:r.uscita)}</div>
         <div class="sb">Saldo €${f(r.saldo)}</div>
@@ -7376,11 +7394,13 @@ window.salvaCassa=function(tipo){
   const imp=parseFloat(document.getElementById(ie?'ei':'ui').value)||0;
   const tip=document.getElementById(ie?'et':'ut').value;
   if(!desc||imp<=0){toast('Inserisci descrizione e importo');return;}
+  const metSel=ie?document.getElementById('em').value:'Contanti';
   const sp=saldoCassa();
+  const deltaCC=isContantiMetodo(metSel)?imp:0;
   DB.cassa.push({data:oggi(),descrizione:desc,tipo:tip,riferimento:'',
     entrata:ie?imp:0,uscita:ie?0:imp,
-    saldo:Math.round((sp+(ie?imp:-imp))*100)/100,
-    metodo:ie?document.getElementById('em').value:'Contanti',
+    saldo:Math.round((sp+(ie?deltaCC:-deltaCC))*100)/100,
+    metodo:metSel,
     note:ie?'':(document.getElementById('un').value||'')});
   saveDB();closeMO();toast(`${ie?'Entrata':'Spesa'} €${f(imp)} registrata`);go('cassa');
 };
