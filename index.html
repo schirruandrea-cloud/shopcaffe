@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#3E1F00">
 <title>☕ Shop Caffè</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -6146,6 +6147,34 @@ const INITIAL_DATA = {
 
 const DBK='sc_v6';let DB=null;
 
+// Corrispondenza fornitore -> prodotti: pre-caricata con un esempio reale (bolla del 03/08/2026),
+// così al primo utilizzo la maggior parte delle righe si abbina già da sola. Modificabile/ampliabile
+// da ⚙️ Strumenti → Fornitori e Corrispondenze.
+const INITIAL_FORNITORI=[
+  {nome:"Caffè Espresso di Iazzetta Giuseppina",alias:[
+    {testo:"CIALDORO PALERMO 44 MM",codice:"44 31 CIALDORO PALERMO"},
+    {testo:"CIALDORO ROMA 44 MM",codice:"44 33 CIALDORO ROMA"},
+    {testo:"CIALDORO FIRENZE 44 MM",codice:"44 34 CIALDORO FIRENZE"},
+    {testo:"CIALDORO CAGLIARI 44 MM",codice:"44 36 CIALDORO CAGLIARI"},
+    {testo:"NAPOLIONE ETNA 44 MM",codice:"44 42 MOKONE ETNA"},
+    {testo:"CAFFE' SHOP NERA CIALDA 44 MM",codice:"44 21 CAFFE SHOP NERA"},
+    {testo:"CAFFE' SHOP NESPRESSO BLACK",codice:"NES 21 CAFFE SHOP BLACK"},
+    {testo:"MOKONE NESPRESSO BAR FORTE",codice:"NES 42 MOKONE BAR FORTE"},
+    {testo:"CIALDORO NESPRESSO VENEZIA",codice:"NES 37 CIALDORO VENEZIA"},
+    {testo:"CIALDORO NESPRESSO MILANO",codice:"NES 35 CIALDORO MILANO"},
+    {testo:"CIALDORO D.G PALERMO",codice:"DG 31 CIALDORO PALERMO"},
+    {testo:"CIALDORO D.G. DEK S.MARINO",codice:"DG 38 CIALDORO DECA"},
+    {testo:"CIALDORO D.G. ETNA",codice:"DG 30 CIALDORO ETNA"},
+    {testo:"TRE CERI CAFFE' AL GINSENG 44MM",codice:"44 SANDEMETRIO CAFFE' AL GINSENG"},
+    {testo:"CIALDORO VENEZIA 44 MM",codice:"44 37 CIALDORO VENEZIA"},
+    {testo:"CIALDORO COMPATIBILE SEGAFREDO",codice:"ESSSECAFFE SEGAFREDO CAPSULE"},
+    {testo:"MOKADOR PIU' CREMA",codice:"MKT MOKADOR 01 PIU' CREMA"},
+    {testo:"MOKADOR AROMA TOP",codice:"MKT MOKADOR 03 AROMA TOP"},
+    {testo:"MOKADOR CREMA",codice:"MKT MOKADOR 02 CREMA"},
+    {testo:"CIALDORO POINT ROMA",codice:"POINT 33 CIALDORO ROMA"}
+  ]}
+];
+
 function initDB(){
   const s=localStorage.getItem(DBK);
   if(s){try{DB=JSON.parse(s);}catch(e){DB=null;}}
@@ -6168,9 +6197,14 @@ function initDB(){
       const m2=/ORD-(\d+)/.exec(s.n_ordine||'');if(m2)maxOrd=Math.max(maxOrd,parseInt(m2[1],10));
     });
     DB.cnt={ordine:maxOrd+1,consegna:maxCon+1};
-    saveDB();
   }
+  if(!Array.isArray(DB.fornitori)){
+    DB.fornitori=INITIAL_FORNITORI.map((f,i)=>({id:'FORN-'+String(i+1).padStart(3,'0'),
+      nome:f.nome,alias:f.alias.map(a=>({...a}))}));
+  }
+  if(!DB.cnt.fornitore)DB.cnt.fornitore=DB.fornitori.length+1;
   DB.magazzino.forEach(m=>{m.giacenza=m.carico-m.scarico+m.rettifica;});
+  saveDB();
 }
 function saveDB(){localStorage.setItem(DBK,JSON.stringify(DB));updateBdg();}
 
@@ -7738,6 +7772,8 @@ function apriMenu(){
   <button class="btn btn-p" onclick="closeMO();mostraRendicontoSaldi()">📋 Rendiconto Saldi Clienti${(nSosp+nCred)>0?' ('+(nSosp+nCred)+')':''}</button>
   <div class="dv"></div>
   <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
+  <button class="btn btn-p" onclick="closeMO();apriRegistraBolla()">📷 Registra Arrivo da Bolla (Foto)</button>
+  <button class="btn btn-p" onclick="closeMO();pgFornitori()">🗂️ Fornitori e Corrispondenze</button>
   <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
   <button class="btn btn-p" onclick="closeMO();go('storico')">📜 Storico Consegne</button>
   <button class="btn btn-p" onclick="closeMO();go('listino')">📄 Gestione Listino</button>
@@ -7750,6 +7786,340 @@ function apriMenu(){
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
+
+// ── UTILITÀ RICONOSCIMENTO BOLLA ───────────────────────────────────────
+function normalizzaTesto(s){
+  return String(s||'').toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/['".,;:!?()]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
+const RIGHE_BOLLA_DA_IGNORARE=['DESCRIZIONE','U.M.','Q.TA','QUANTITA','PREZZO UN','SCONTO','IMPONIBILE','% I.V.A','DDT N','CLIENTE','SPETT','DESTINAZIONE','TOTALE','NOTE','FORMA PAGAMENTO','TIPO PAGAMENTO','TRASPORTO A MEZZO','ASPETTO ESTERIORE','CAUSALE TRASPORTO','FIRMA','COLLI','PESO KG','CONSEGNA INIZIO','PORTO','VETTORE','PAGINA','VIA ','TEL.','P.IVA','P. IVA','C.F.','EMAIL','E MAIL'];
+function isRigaProdottoCandidata(riga){
+  const norm=normalizzaTesto(riga);
+  if(norm.length<4)return false;
+  if(RIGHE_BOLLA_DA_IGNORARE.some(k=>norm.includes(k)))return false;
+  if(norm.includes('TRASPORTO')||norm.includes('BANCALE')||norm.includes('IMBALLO'))return false;
+  const numeri=riga.match(/\d+(?:[.,]\d+)?/g)||[];
+  const lettere=(riga.match(/[A-Za-zÀ-ÿ]/g)||[]).length;
+  return numeri.length>=2&&lettere>=4;
+}
+function estraiRigaBolla(riga){
+  const tokens=riga.trim().split(/\s+/);
+  const unitRe=/^(PZ|KG|CF|NR|LT|CT)\.?$/i;
+  const intRe=/^\d{1,5}$/;
+  const decRe=/^\d+[.,]\d+$/;
+  let qty=null,cutIndex=tokens.length;
+  const uIdx=tokens.findIndex(t=>unitRe.test(t));
+  if(uIdx>=0){
+    for(let j=uIdx+1;j<tokens.length;j++){
+      if(intRe.test(tokens[j])){qty=parseInt(tokens[j],10);cutIndex=uIdx;break;}
+    }
+  }
+  if(qty===null){
+    for(let j=0;j<tokens.length-1;j++){
+      if(intRe.test(tokens[j])&&decRe.test(tokens[j+1])){qty=parseInt(tokens[j],10);cutIndex=j;break;}
+    }
+  }
+  const descrizione=tokens.slice(0,cutIndex).join(' ').trim();
+  return{testoGrezzo:riga,descrizione,quantita:qty};
+}
+function trovaMatchProdotto(descrizioneOcr,fornitore){
+  const norm=normalizzaTesto(descrizioneOcr);
+  if(!norm)return{codice:null,confidenza:'nessuna'};
+  const alias=(fornitore&&fornitore.alias)||[];
+  for(const a of alias){if(normalizzaTesto(a.testo)===norm)return{codice:a.codice,confidenza:'alta'};}
+  for(const a of alias){
+    const an=normalizzaTesto(a.testo);
+    if(an&&(norm.includes(an)||an.includes(norm)))return{codice:a.codice,confidenza:'media'};
+  }
+  const parole=new Set(norm.split(' ').filter(w=>w.length>2));
+  let best=null,bestScore=0;
+  alias.forEach(a=>{
+    const aw=new Set(normalizzaTesto(a.testo).split(' ').filter(w=>w.length>2));
+    if(!aw.size)return;
+    let comuni=0;aw.forEach(w=>{if(parole.has(w))comuni++;});
+    const score=comuni/Math.max(aw.size,parole.size);
+    if(score>bestScore){bestScore=score;best=a;}
+  });
+  if(best&&bestScore>=0.5)return{codice:best.codice,confidenza:'bassa'};
+  return{codice:null,confidenza:'nessuna'};
+}
+function opzioniProdottiSelect(selezionato){
+  return DB.prodotti.map(p=>`<option value="${escHtml(p.codice)}"${p.codice===selezionato?' selected':''}>${escHtml(p.formato+' '+p.marchio+' '+p.miscela)}</option>`).join('');
+}
+
+// ── FORNITORI E CORRISPONDENZE ──────────────────────────────────────────
+function pgFornitori(){
+  let h=`<div class="mh"></div><h3>🗂️ Fornitori e Corrispondenze</h3>
+  <div class="al as">Per ogni fornitore, associ come scrive i prodotti in bolla al prodotto corrispondente nel tuo listino. Si usa per leggere le bolle automaticamente.</div>
+  <button class="btn btn-p" onclick="nuovoFornitore()">➕ Nuovo Fornitore</button>
+  <div class="card">`;
+  if(!DB.fornitori.length)h+=`<div class="em" style="padding:16px"><p>Nessun fornitore ancora impostato.</p></div>`;
+  DB.fornitori.forEach(f=>{
+    h+=`<div class="li" onclick="apriFornitore('${f.id}')">
+      <div class="av" style="background:var(--cr2)">🏭</div>
+      <div class="nf"><div class="nm" style="font-size:14px">${escHtml(f.nome)}</div>
+        <div class="sb">${f.alias.length} corrispondenze salvate</div></div>
+      <span style="color:var(--br);font-size:18px">›</span>
+    </div>`;
+  });
+  h+=`</div><button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+function nuovoFornitore(){
+  let h=`<div class="mh"></div><h3>➕ Nuovo Fornitore</h3>
+  <div class="fg"><label>Nome fornitore</label>
+    <input class="fc" id="nf-nome" placeholder="es. Caffè Espresso di Iazzetta Giuseppina" autofocus></div>
+  <button class="btn btn-ok" onclick="salvaNuovoFornitore()">✅ Crea Fornitore</button>
+  <button class="btn btn-s" onclick="pgFornitori()">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;
+}
+window.salvaNuovoFornitore=function(){
+  const nome=(document.getElementById('nf-nome').value||'').trim();
+  if(!nome){toast('Inserisci il nome del fornitore');return;}
+  const id='FORN-'+String(DB.cnt.fornitore).padStart(3,'0');DB.cnt.fornitore++;
+  DB.fornitori.push({id,nome,alias:[]});
+  saveDB();toast('Fornitore creato');pgFornitori();
+};
+function apriFornitore(id){
+  const f=DB.fornitori.find(x=>x.id===id);if(!f)return;
+  let h=`<div class="mh"></div><h3>🏭 ${escHtml(f.nome)}</h3>
+  <button class="btn btn-p" onclick="nuovoAliasFornitore('${id}')">➕ Aggiungi Corrispondenza</button>
+  <div class="card" style="margin-bottom:12px">`;
+  if(!f.alias.length)h+=`<div class="em" style="padding:16px"><p>Nessuna corrispondenza salvata. Verranno proposte automaticamente anche leggendo le prime bolle.</p></div>`;
+  f.alias.forEach((a,i)=>{
+    const p=DB.prodotti.find(x=>x.codice===a.codice);
+    h+=`<div class="li" onclick="modificaAliasFornitore('${id}',${i})">
+      <div class="nf"><div class="nm" style="font-size:13px">${escHtml(a.testo)}</div>
+        <div class="sb">→ ${p?escHtml(p.formato+' '+p.marchio+' '+p.miscela):'⚠️ prodotto non trovato'}</div></div>
+      <span style="color:var(--br);font-size:18px">›</span>
+    </div>`;
+  });
+  h+=`</div>
+  <button class="btn btn-x" onclick="eliminaFornitore('${id}')">🗑 Elimina Fornitore</button>
+  <button class="btn btn-s" onclick="pgFornitori()">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;
+}
+window.eliminaFornitore=function(id){
+  const f=DB.fornitori.find(x=>x.id===id);if(!f)return;
+  if(!confirm(`Eliminare il fornitore "${f.nome}" e tutte le sue ${f.alias.length} corrispondenze?`))return;
+  DB.fornitori=DB.fornitori.filter(x=>x.id!==id);
+  saveDB();toast('Fornitore eliminato');pgFornitori();
+};
+function nuovoAliasFornitore(fornId){
+  let h=`<div class="mh"></div><h3>➕ Nuova Corrispondenza</h3>
+  <div class="fg"><label>Testo come scritto in bolla</label>
+    <input class="fc" id="na-testo" placeholder="es. CIALDORO PALERMO 44 MM" autofocus></div>
+  <div class="fg"><label>Prodotto corrispondente</label>
+    <select class="fc" id="na-prodotto">${opzioniProdottiSelect(null)}</select></div>
+  <button class="btn btn-ok" onclick="salvaAliasFornitore('${fornId}')">✅ Salva</button>
+  <button class="btn btn-s" onclick="apriFornitore('${fornId}')">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;
+}
+window.salvaAliasFornitore=function(fornId){
+  const f=DB.fornitori.find(x=>x.id===fornId);if(!f)return;
+  const testo=(document.getElementById('na-testo').value||'').trim();
+  const codice=document.getElementById('na-prodotto').value;
+  if(!testo){toast('Inserisci il testo come scritto in bolla');return;}
+  f.alias.push({testo,codice});
+  saveDB();toast('Corrispondenza salvata');apriFornitore(fornId);
+};
+function modificaAliasFornitore(fornId,idx){
+  const f=DB.fornitori.find(x=>x.id===fornId);if(!f)return;
+  const a=f.alias[idx];if(!a)return;
+  let h=`<div class="mh"></div><h3>✏️ Modifica Corrispondenza</h3>
+  <div class="fg"><label>Testo come scritto in bolla</label>
+    <input class="fc" id="ea-testo" value="${escHtml(a.testo)}"></div>
+  <div class="fg"><label>Prodotto corrispondente</label>
+    <select class="fc" id="ea-prodotto">${opzioniProdottiSelect(a.codice)}</select></div>
+  <button class="btn btn-ok" onclick="salvaModificaAlias('${fornId}',${idx})">✅ Salva</button>
+  <button class="btn btn-x" onclick="eliminaAliasFornitore('${fornId}',${idx})">🗑 Elimina</button>
+  <button class="btn btn-s" onclick="apriFornitore('${fornId}')">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;
+}
+window.salvaModificaAlias=function(fornId,idx){
+  const f=DB.fornitori.find(x=>x.id===fornId);if(!f)return;
+  const testo=(document.getElementById('ea-testo').value||'').trim();
+  if(!testo){toast('Il testo non può essere vuoto');return;}
+  f.alias[idx]={testo,codice:document.getElementById('ea-prodotto').value};
+  saveDB();toast('Corrispondenza aggiornata');apriFornitore(fornId);
+};
+window.eliminaAliasFornitore=function(fornId,idx){
+  const f=DB.fornitori.find(x=>x.id===fornId);if(!f)return;
+  if(!confirm('Eliminare questa corrispondenza?'))return;
+  f.alias.splice(idx,1);
+  saveDB();toast('Corrispondenza eliminata');apriFornitore(fornId);
+};
+
+// ── REGISTRA ARRIVO DA BOLLA (FOTO) ─────────────────────────────────────
+function apriRegistraBolla(){
+  if(!DB.fornitori.length){
+    let h=`<div class="mh"></div><h3>📷 Registra Arrivo da Bolla</h3>
+    <div class="al aw">Prima serve almeno un fornitore. Ne crei uno e poi si riparte da qui.</div>
+    <button class="btn btn-p" onclick="nuovoFornitoreDaBolla()">➕ Crea il primo Fornitore</button>
+    <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+    document.getElementById('mc').innerHTML=h;openMO();return;
+  }
+  let h=`<div class="mh"></div><h3>📷 Registra Arrivo da Bolla</h3>
+  <div class="fg"><label>Fornitore</label>
+    <select class="fc" id="rb-fornitore">${DB.fornitori.map(f=>`<option value="${f.id}">${escHtml(f.nome)}</option>`).join('')}</select></div>
+  <div style="font-size:12px;color:#888;margin:-4px 0 12px 2px">Se il fornitore non è in elenco, <a href="#" onclick="event.preventDefault();nuovoFornitoreDaBolla()" style="color:var(--br);font-weight:700">crealo qui</a>.</div>
+  <input type="file" accept="image/*" capture="environment" id="rb-foto" style="display:none" onchange="elaboraFotoBolla(this.files[0])">
+  <button class="btn btn-ok" onclick="document.getElementById('rb-foto').click()">📷 Scatta Foto o Carica Bolla</button>
+  <div style="font-size:12px;color:#888;margin:8px 0 12px 2px">Il riconoscimento del testo funziona solo con connessione internet la prima volta che viene usato. Dopo la lettura potrai sempre correggere prodotti e quantità prima di confermare: nulla viene aggiunto al magazzino senza la tua conferma.</div>
+  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+function nuovoFornitoreDaBolla(){
+  let h=`<div class="mh"></div><h3>➕ Nuovo Fornitore</h3>
+  <div class="fg"><label>Nome fornitore</label>
+    <input class="fc" id="nf-nome" placeholder="es. Caffè Espresso di Iazzetta Giuseppina" autofocus></div>
+  <button class="btn btn-ok" onclick="salvaNuovoFornitoreEContinua()">✅ Crea e Continua</button>
+  <button class="btn btn-s" onclick="apriRegistraBolla()">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;
+}
+window.salvaNuovoFornitoreEContinua=function(){
+  const nome=(document.getElementById('nf-nome').value||'').trim();
+  if(!nome){toast('Inserisci il nome del fornitore');return;}
+  const id='FORN-'+String(DB.cnt.fornitore).padStart(3,'0');DB.cnt.fornitore++;
+  DB.fornitori.push({id,nome,alias:[]});
+  saveDB();apriRegistraBolla();
+};
+function ridimensionaImmagine(file,maxLato){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      let{width:w,height:h}=img;
+      if(w>maxLato||h>maxLato){
+        if(w>h){h=Math.round(h*maxLato/w);w=maxLato;}else{w=Math.round(w*maxLato/h);h=maxLato;}
+      }
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(b=>resolve(b),'image/jpeg',0.88);
+    };
+    img.onerror=reject;
+    img.src=url;
+  });
+}
+window.elaboraFotoBolla=async function(file){
+  if(!file)return;
+  const fornId=document.getElementById('rb-fornitore').value;
+  if(typeof Tesseract==='undefined'){toast('Libreria di riconoscimento non disponibile: controlla la connessione e riprova');return;}
+  let h=`<div class="mh"></div><h3>📷 Lettura in corso…</h3>
+  <div class="al as">Sto leggendo la bolla, può richiedere fino a 30 secondi. Non chiudere la schermata.</div>
+  <div id="rb-progress" style="text-align:center;font-size:32px;font-weight:800;color:var(--br);margin:20px 0">0%</div>`;
+  document.getElementById('mc').innerHTML=h;
+  try{
+    const immagine=await ridimensionaImmagine(file,1800);
+    const worker=await Tesseract.createWorker('ita',1,{logger:m=>{
+      if(m.status==='recognizing text'){
+        const el=document.getElementById('rb-progress');
+        if(el)el.textContent=Math.round((m.progress||0)*100)+'%';
+      }
+    }});
+    const{data:{text}}=await worker.recognize(immagine);
+    await worker.terminate();
+    const righe=text.split('\n').map(r=>r.trim()).filter(r=>r.length>0);
+    const candidate=righe.filter(isRigaProdottoCandidata).map(estraiRigaBolla).filter(r=>r.quantita!==null&&r.quantita>0);
+    if(!candidate.length){
+      document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>📷 Nessuna riga riconosciuta</h3>
+        <div class="al ae">Non sono riuscito a leggere righe prodotto in questa foto. Prova con più luce, tenendo il foglio dritto e senza pieghe, oppure inserisci manualmente.</div>
+        <button class="btn btn-p" onclick="apriRegistraBolla()">📷 Riprova Foto</button>
+        <button class="btn btn-s" onclick="mostraRevisioneBolla('${fornId}',[])">✏️ Inserisci Manualmente</button>
+        <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+      return;
+    }
+    mostraRevisioneBolla(fornId,candidate);
+  }catch(e){
+    document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>⚠️ Errore lettura</h3>
+      <div class="al ae">Non sono riuscito a leggere la foto (${escHtml(e.message||'errore sconosciuto')}). Controlla la connessione e riprova.</div>
+      <button class="btn btn-p" onclick="apriRegistraBolla()">📷 Riprova</button>
+      <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+  }
+};
+function mostraRevisioneBolla(fornId,righeGrezze){
+  const f=DB.fornitori.find(x=>x.id===fornId);
+  window._rbRighe=righeGrezze.map(r=>{
+    const m=trovaMatchProdotto(r.descrizione,f);
+    return{testoGrezzo:r.testoGrezzo,descrizione:r.descrizione,quantita:r.quantita,
+      codice:m.codice,confidenza:m.confidenza,ignora:!m.codice&&m.confidenza==='nessuna'&&righeGrezze.length>1?false:false};
+  });
+  window._rbFornId=fornId;
+  renderRevisioneBolla();
+}
+function renderRevisioneBolla(){
+  const righe=window._rbRighe;
+  const f=DB.fornitori.find(x=>x.id===window._rbFornId);
+  const coloreConf={alta:'var(--gn)',media:'var(--go)',bassa:'var(--go)',nessuna:'var(--rd)'};
+  const etichettaConf={alta:'✅ riconosciuto',media:'🟡 probabile',bassa:'🟡 incerto',nessuna:'⚠️ da scegliere'};
+  let h=`<div class="mh"></div><h3>✅ Controlla prima di confermare</h3>
+  <div class="al as">Fornitore: <strong>${escHtml(f?f.nome:'')}</strong> · ${righe.length} righe lette</div>
+  <div class="card" style="margin-bottom:12px">`;
+  righe.forEach((r,i)=>{
+    h+=`<div class="li" style="flex-direction:column;align-items:stretch;opacity:${r.ignora?'0.45':'1'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;width:100%">
+        <div style="flex:1">
+          <div class="sb" style="font-size:11px;color:#999">${escHtml(r.testoGrezzo)}</div>
+          <select class="fc" style="margin:4px 0 6px" onchange="window._rbSetProd(${i},this.value)" ${r.ignora?'disabled':''}>
+            <option value="">-- scegli prodotto --</option>
+            ${opzioniProdottiSelect(r.codice)}
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%">
+        <span style="font-size:11px;font-weight:700;color:${coloreConf[r.confidenza]}">${etichettaConf[r.confidenza]}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:#888">Q.tà</span>
+          <input type="number" value="${r.quantita}" min="0" style="width:64px;padding:5px 6px;border:2px solid var(--gy2);border-radius:8px;font-size:14px;font-weight:700;text-align:center"
+            onchange="window._rbSetQty(${i},this.value)" ${r.ignora?'disabled':''}>
+          <button type="button" onclick="window._rbToggleIgnora(${i})" style="background:none;border:none;font-size:18px;cursor:pointer" title="Ignora riga">${r.ignora?'⬜':'✅'}</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  h+=`</div>
+  <div class="fg" style="display:flex;align-items:center;gap:8px">
+    <input type="checkbox" id="rb-salva-corr" checked style="width:20px;height:20px">
+    <label for="rb-salva-corr" style="font-size:13px">Salva le correzioni fatte per la prossima bolla di questo fornitore</label>
+  </div>
+  <button class="btn btn-ok" onclick="confermaArrivoBolla()">✅ Conferma e Aggiorna Magazzino</button>
+  <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
+  document.getElementById('mc').innerHTML=h;
+}
+window._rbSetProd=function(i,v){window._rbRighe[i].codice=v||null;window._rbRighe[i].confidenza='manuale';};
+window._rbSetQty=function(i,v){window._rbRighe[i].quantita=Math.max(0,parseInt(v)||0);};
+window._rbToggleIgnora=function(i){window._rbRighe[i].ignora=!window._rbRighe[i].ignora;renderRevisioneBolla();};
+window.confermaArrivoBolla=function(){
+  const righe=window._rbRighe.filter(r=>!r.ignora&&r.codice&&r.quantita>0);
+  if(!righe.length){toast('Nessuna riga valida da confermare: scegli almeno un prodotto');return;}
+  const salvaCorrezioni=document.getElementById('rb-salva-corr')&&document.getElementById('rb-salva-corr').checked;
+  const f=DB.fornitori.find(x=>x.id===window._rbFornId);
+  let pezziTotali=0,prodottiTotali=0;
+  righe.forEach(r=>{
+    const m=DB.magazzino.find(x=>x.codice===r.codice);
+    if(m){
+      m.carico=(m.carico||0)+r.quantita;
+      m.giacenza=m.carico-m.scarico+m.rettifica;
+      pezziTotali+=r.quantita;prodottiTotali++;
+    }
+    if(salvaCorrezioni&&f){
+      const normNuovo=normalizzaTesto(r.descrizione);
+      const esiste=f.alias.some(a=>normalizzaTesto(a.testo)===normNuovo);
+      if(!esiste&&r.descrizione)f.alias.push({testo:r.descrizione,codice:r.codice});
+      else{
+        const idx=f.alias.findIndex(a=>normalizzaTesto(a.testo)===normNuovo);
+        if(idx>=0)f.alias[idx].codice=r.codice;
+      }
+    }
+  });
+  saveDB();closeMO();
+  toast(`Magazzino aggiornato: ${prodottiTotali} prodotti, ${pezziTotali} pezzi in arrivo`);
+  go('magazzino');
+};
 
 // ── RENDICONTO SALDI CLIENTI (debiti e crediti) ────────────────────────
 function mostraRendicontoSaldi(){
