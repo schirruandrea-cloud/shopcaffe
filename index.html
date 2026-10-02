@@ -6689,7 +6689,7 @@ function nuovoOrdine(){
     };
     window._agp=idx=>{const p=DB.prodotti[idx];
       if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,
-        miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});render();};
+        miscela:p.miscela,qty:p.pz_cartone||1,prezzo:p.prezzo_vendita});render();};
     rpaShell();
   };
   window._co=()=>{
@@ -6817,7 +6817,7 @@ function modificaOrdine(id){
       if(vuoto)vuoto.style.display=visibili?'none':'';
     };
     window._moagp=idx=>{const p=DB.prodotti[idx];
-      if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,miscela:p.miscela,qty:1,prezzo:p.prezzo_vendita});
+      if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,miscela:p.miscela,qty:p.pz_cartone||1,prezzo:p.prezzo_vendita});
       render();};
     rpaShell();
   };
@@ -6927,7 +6927,7 @@ window.confConsegna=function(id){
   o.prodotti.forEach(p=>{
     const nc='CON-'+String(DB.cnt.consegna).padStart(3,'0');DB.cnt.consegna++;
     DB.storico.push({id_consegna:nc,data:og,id_cliente:o.id_cliente,nome_cliente:o.nome_cliente,
-      zona:o.zona,formato:p.formato,miscela:p.miscela,qty:p.qty,prezzo_unit:p.prezzo,
+      zona:o.zona,codice:p.codice||null,formato:p.formato,miscela:p.miscela,qty:p.qty,prezzo_unit:p.prezzo,
       importo:p.qty*p.prezzo,incassato:inc,n_ordine:o.id,note:o.note||''});
   });
   // Cliente
@@ -7577,9 +7577,10 @@ function apriMag(cod){
   <div class="fg"><label>Aggiungi arrivo merce (pezzi)</label>
     <input class="fc" type="number" id="ap" min="0" placeholder="es. 500" style="font-size:22px;text-align:center"></div>
   <button class="btn btn-p" onclick="salvArr('${cod}')">📦 Registra Arrivo</button>
-  <div class="fg" style="margin-top:12px"><label>Rettifica giacenza (+ aggiunge, - toglie)</label>
-    <input class="fc" type="number" id="rp" value="${m.rettifica}" style="font-size:18px;text-align:center"></div>
-  <button class="btn btn-s" onclick="salvRett('${cod}')">✏️ Salva Rettifica</button>
+  <div class="fg" style="margin-top:12px"><label>Giacenza reale (dopo verifica a vista)</label>
+    <input class="fc" type="number" id="rp" value="${m.giacenza}" min="0" style="font-size:22px;text-align:center"></div>
+  <div style="font-size:12px;color:#888;margin:-8px 0 12px 2px">Scrivi quanti pezzi conti davvero: la differenza con la giacenza attuale (${m.giacenza}) si calcola da sola</div>
+  <button class="btn btn-s" onclick="salvRett('${cod}')">✏️ Salva Giacenza Verificata</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
@@ -7591,9 +7592,17 @@ window.salvArr=function(cod){
   if(m){m.carico+=pz;m.giacenza=m.carico-m.scarico+m.rettifica;saveDB();closeMO();toast(`Arrivo ${pz} pezzi registrato`);go('magazzino');}
 };
 window.salvRett=function(cod){
-  const r=parseInt(document.getElementById('rp').value)||0;
+  const giacenzaReale=document.getElementById('rp').value;
+  if(giacenzaReale===''){toast('Inserisci la giacenza reale contata');return;}
+  const gr=Math.max(0,parseInt(giacenzaReale)||0);
   const m=DB.magazzino.find(x=>x.codice===cod);
-  if(m){m.rettifica=r;m.giacenza=m.carico-m.scarico+m.rettifica;saveDB();closeMO();toast('Rettifica salvata');go('magazzino');}
+  if(m){
+    const differenza=gr-(m.carico-m.scarico);
+    m.rettifica=differenza;
+    m.giacenza=m.carico-m.scarico+m.rettifica;
+    saveDB();closeMO();
+    toast(`Giacenza impostata a ${gr} pezzi`);go('magazzino');
+  }
 };
 
 // ── STORICO ─────────────────────────────────────────────────────────
@@ -8271,9 +8280,20 @@ function moStatistiche(){
     pm[k].c++;pm[k].i+=(s.incassato||0);pm[k].p+=(s.qty||0);
   });
   const mesi=Object.keys(pm).sort().reverse().slice(0,6);
+  // Raggruppa per codice prodotto quando disponibile (stabile anche se la descrizione viene
+  // rinominata in seguito), altrimenti per formato+miscela salvati all'epoca della consegna
+  // (consegne storiche precedenti a questa funzione).
   const pp={};
-  DB.storico.forEach(s=>{const k=`${s.formato} ${s.miscela}`;if(!pp[k])pp[k]=0;pp[k]+=(s.qty||0);});
-  const top=Object.entries(pp).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  DB.storico.forEach(s=>{
+    const chiave=s.codice||`txt:${s.formato} ${s.miscela}`;
+    if(!pp[chiave])pp[chiave]={qty:0,formato:s.formato,miscela:s.miscela};
+    pp[chiave].qty+=(s.qty||0);
+  });
+  const top=Object.entries(pp).map(([chiave,v])=>{
+    const attuale=chiave.startsWith('txt:')?null:DB.prodotti.find(p=>p.codice===chiave);
+    const nome=attuale?`${attuale.formato} ${attuale.miscela}`:`${v.formato} ${v.miscela}`;
+    return[nome,v.qty];
+  }).sort((a,b)=>b[1]-a[1]).slice(0,5);
   let h=`<div class="mh"></div><h3>📊 Statistiche</h3>`;
   if(!mesi.length){h+=`<div class="em"><p>Nessun dato</p></div>`;}
   else{
