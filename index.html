@@ -6237,7 +6237,7 @@ function mostraDateAnomale(){
     h+=`<div class="al as" style="margin-bottom:12px">Trovate ${list.length} consegne con data futura rispetto a oggi — probabile refuso giorno/mese nell'Excel originale (prima fase di test). Per ognuna puoi correggere (scambio automatico giorno↔mese) o eliminare.</div>
     <div class="card" style="margin-bottom:12px">`;
     list.forEach(s=>{
-      const idEsc=s.id_consegna.replace(/'/g,"\\'");
+      const idEsc=escJsAttr(s.id_consegna);
       const proposta=swapGiornoMese(s.data);
       h+=`<div class="li"><div class="nf">
         <div class="nm" style="font-size:13px">${escHtml(s.nome_cliente)}</div>
@@ -7059,7 +7059,7 @@ function nuovoCliente(){
       <button class="btn btn-s" onclick="window._ncback()">← Indietro</button>`;
       let h='';
       DB.prodotti.forEach(p=>{
-        const codEsc=p.codice.replace(/'/g,"\\'");
+        const codEsc=escJsAttr(p.codice);
         const chiave=(p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
         h+=`<div class="li nc-prod-row" data-k="${escHtml(chiave)}" onclick="window._ncpick('${codEsc}')">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
@@ -7087,7 +7087,7 @@ function nuovoCliente(){
     window._ncback=()=>{renderForm();};
     window._ncpick=function(cod){
       const pr=DB.prodotti.find(p=>p.codice===cod);if(!pr)return;
-      const codEsc=cod.replace(/'/g,"\\'");
+      const codEsc=escJsAttr(cod);
       document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Conferma</h3>
       <div class="al as">👤 <strong>${nc.nome}</strong><br>${pr.formato} ${pr.marchio} ${pr.miscela}</div>
       <div class="fg"><label>Quantità abituale</label>
@@ -7283,7 +7283,7 @@ function modificaProdAbit(id){
     <button class="btn btn-s" onclick="apriCliente('${id}')">← Indietro</button>`;
     let h='';
     DB.prodotti.forEach(p=>{
-      const codEsc=p.codice.replace(/'/g,"\\'");
+      const codEsc=escJsAttr(p.codice);
       const chiave=(p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
       h+=`<div class="li mpa-row" data-k="${escHtml(chiave)}" onclick="window._mpsel('${c.id}','${codEsc}')">
         <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
@@ -7311,7 +7311,7 @@ function modificaProdAbit(id){
   window._mpsel=function(cid,cod){
     const cl=DB.clienti.find(x=>x.id===cid);const pr=DB.prodotti.find(p=>p.codice===cod);
     if(!cl||!pr)return;
-    const codEsc=cod.replace(/'/g,"\\'");
+    const codEsc=escJsAttr(cod);
     document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Conferma</h3>
     <div class="al as">${pr.formato} ${pr.marchio} ${pr.miscela}</div>
     <div class="fg"><label>Quantità abituale</label>
@@ -7526,7 +7526,7 @@ function pgMagazzino(el){
   DB.magazzino.forEach(m=>{
     const al=m.giacenza<=m.scorta_minima&&m.scorta_minima>0;
     const pct=m.scorta_minima>0?Math.min(100,(m.giacenza/m.scorta_minima)*100):100;
-    const cod=m.codice.replace(/'/g,"\\'");
+    const cod=escJsAttr(m.codice);
     const chiave=(m.codice+' '+m.miscela+' '+m.formato+' '+m.marchio).toLowerCase();
     h+=`<div class="li magazzino-row" data-k="${escHtml(chiave)}" onclick="apriMag('${cod}')">
       <div class="av" style="background:${al?'var(--rd2)':'var(--gn2)'}">${al?'⚠️':'📦'}</div>
@@ -7565,6 +7565,7 @@ function filtraListaMagazzino(){
 
 function apriMag(cod){
   const m=DB.magazzino.find(x=>x.codice===cod);if(!m)return;
+  const codEsc=escJsAttr(cod);
   const al=m.giacenza<=m.scorta_minima&&m.scorta_minima>0;
   let h=`<div class="mh"></div><h3>${m.formato} ${m.marchio}</h3>
   <div style="font-size:15px;color:#666;margin-bottom:14px">${m.miscela}</div>
@@ -7576,11 +7577,11 @@ function apriMag(cod){
   </div>
   <div class="fg"><label>Aggiungi arrivo merce (pezzi)</label>
     <input class="fc" type="number" id="ap" min="0" placeholder="es. 500" style="font-size:22px;text-align:center"></div>
-  <button class="btn btn-p" onclick="salvArr('${cod}')">📦 Registra Arrivo</button>
+  <button class="btn btn-p" onclick="salvArr('${codEsc}')">📦 Registra Arrivo</button>
   <div class="fg" style="margin-top:12px"><label>Giacenza reale (dopo verifica a vista)</label>
     <input class="fc" type="number" id="rp" value="${m.giacenza}" min="0" style="font-size:22px;text-align:center"></div>
   <div style="font-size:12px;color:#888;margin:-8px 0 12px 2px">Scrivi quanti pezzi conti davvero: la differenza con la giacenza attuale (${m.giacenza}) si calcola da sola</div>
-  <button class="btn btn-s" onclick="salvRett('${cod}')">✏️ Salva Giacenza Verificata</button>
+  <button class="btn btn-s" onclick="salvRett('${codEsc}')">✏️ Salva Giacenza Verificata</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
@@ -7655,7 +7656,7 @@ function pgListino(el){
   <div id="lista-listino" class="card"></div>`;
   let h='';
   DB.prodotti.forEach(p=>{
-    const cod=p.codice.replace(/'/g,"\\'");
+    const cod=escJsAttr(p.codice);
     const chiave=(p.codice+' '+p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
     h+=`<div class="li listino-row" data-k="${escHtml(chiave)}" onclick="apriProdotto('${cod}')">
       <div class="av" style="background:var(--cr2)">☕</div>
@@ -7724,7 +7725,7 @@ window.salvaNuovoProdotto=function(){
 
 function apriProdotto(cod){
   const p=DB.prodotti.find(x=>x.codice===cod);if(!p)return;
-  const codEsc=cod.replace(/'/g,"\\'");
+  const codEsc=escJsAttr(cod);
   let h=`<div class="mh"></div><h3>${p.formato} ${p.marchio}</h3>
   <div style="font-size:13px;color:#888;margin-bottom:14px">${p.codice}</div>
   <div class="fg"><label>Formato</label><input class="fc" id="ep-fmt" value="${p.formato}"></div>
@@ -8339,7 +8340,17 @@ function importaBackup(){
   };i.click();
 }
 // ── REPORT MOVIMENTI (PDF stampabile / Excel CSV) ─────────────────────
-function escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// Rende sicura una stringa (es. un codice prodotto) da inserire come argomento dentro un
+// onclick="funzione('...')" : prima la sfugge per l'attributo HTML (le " spezzerebbero
+// l'attributo stesso, essendo onclick="..." tra doppi apici), poi per la stringa JS tra
+// apici singoli al suo interno. Necessario perché alcuni codici prodotto contengono
+// virgolette doppie o apostrofi (es. GRANI "VENEZIA").
+function escJsAttr(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/'/g,"\\'");
+}
 function inRangeData(dataStr,iniMs,finMs){
   const t=parseDataIt(dataStr);
   if(!t)return false;
