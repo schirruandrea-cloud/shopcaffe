@@ -8007,37 +8007,76 @@ function ridimensionaImmagine(file,maxLato){
       }
       const canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      // Scala di grigi + aumento del contrasto: aiuta molto la lettura su foto fatte a mano
+      // (luce non uniforme, ombre, leggero riflesso), rispetto a una vera scansione piana.
+      const dati=ctx.getImageData(0,0,w,h);
+      const px=dati.data;
+      let min=255,max=0;
+      for(let i=0;i<px.length;i+=4){
+        const g=px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114;
+        px[i]=px[i+1]=px[i+2]=g;
+        if(g<min)min=g;if(g>max)max=g;
+      }
+      const range=Math.max(1,max-min);
+      for(let i=0;i<px.length;i+=4){
+        const v=Math.max(0,Math.min(255,((px[i]-min)/range)*255));
+        px[i]=px[i+1]=px[i+2]=v;
+      }
+      ctx.putImageData(dati,0,0);
       URL.revokeObjectURL(url);
-      canvas.toBlob(b=>resolve(b),'image/jpeg',0.88);
+      canvas.toBlob(b=>resolve(b),'image/jpeg',0.92);
     };
     img.onerror=reject;
     img.src=url;
   });
 }
+async function eseguiOCR(immagine,psm,onProgress){
+  const worker=await Tesseract.createWorker('ita',1,{logger:m=>{
+    if(m.status==='recognizing text'&&onProgress)onProgress(m.progress||0);
+  }});
+  // Modalità "blocco di testo unico": fa leggere la pagina riga per riga in ordine naturale,
+  // invece di provare a riconoscere colonne/blocchi separati (il comportamento di default,
+  // che su una tabella con bordi come questa tende a confondere l'ordine delle righe e a
+  // perderne alcune, soprattutto le prime).
+  await worker.setParameters({tessedit_pageseg_mode:psm});
+  const{data:{text}}=await worker.recognize(immagine);
+  await worker.terminate();
+  return text;
+}
+function righeCandidateDaTesto(text){
+  const righe=text.split('\n').map(r=>r.trim()).filter(r=>r.length>0);
+  return righe.filter(isRigaProdottoCandidata).map(estraiRigaBolla).filter(r=>r.quantita!==null&&r.quantita>0);
+}
 window.elaboraFotoBolla=async function(file){
   if(!file)return;
   const fornId=document.getElementById('rb-fornitore').value;
   if(typeof Tesseract==='undefined'){toast('Libreria di riconoscimento non disponibile: controlla la connessione e riprova');return;}
-  let h=`<div class="mh"></div><h3>📷 Lettura in corso…</h3>
-  <div class="al as">Sto leggendo la bolla, può richiedere fino a 30 secondi. Non chiudere la schermata.</div>
-  <div id="rb-progress" style="text-align:center;font-size:32px;font-weight:800;color:var(--br);margin:20px 0">0%</div>`;
-  document.getElementById('mc').innerHTML=h;
+  function mostraCaricamento(testo){
+    document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>📷 Lettura in corso…</h3>
+    <div class="al as">${testo}</div>
+    <div id="rb-progress" style="text-align:center;font-size:32px;font-weight:800;color:var(--br);margin:20px 0">0%</div>`;
+  }
+  mostraCaricamento('Sto leggendo la bolla, può richiedere fino a 30 secondi. Non chiudere la schermata.');
+  const aggiornaProgresso=p=>{const el=document.getElementById('rb-progress');if(el)el.textContent=Math.round(p*100)+'%';};
   try{
-    const immagine=await ridimensionaImmagine(file,1800);
-    const worker=await Tesseract.createWorker('ita',1,{logger:m=>{
-      if(m.status==='recognizing text'){
-        const el=document.getElementById('rb-progress');
-        if(el)el.textContent=Math.round((m.progress||0)*100)+'%';
-      }
-    }});
-    const{data:{text}}=await worker.recognize(immagine);
-    await worker.terminate();
-    const righe=text.split('\n').map(r=>r.trim()).filter(r=>r.length>0);
-    const candidate=righe.filter(isRigaProdottoCandidata).map(estraiRigaBolla).filter(r=>r.quantita!==null&&r.quantita>0);
+    const immagine=await ridimensionaImmagine(file,2500);
+    const testo1=await eseguiOCR(immagine,Tesseract.PSM.SINGLE_BLOCK,aggiornaProgresso);
+    let candidate=righeCandidateDaTesto(testo1);
+    // Se il primo tentativo trova poche righe, ne provo un secondo con una modalità di
+    // lettura diversa prima di arrendermi: capita che una foto legga meglio con un
+    // approccio e peggio con l'altro, a seconda di luce/angolazione.
+    if(candidate.length<3){
+      mostraCaricamento('Primo tentativo incompleto, ne provo uno secondo con un\'altra modalità di lettura…');
+      const testo2=await eseguiOCR(immagine,Tesseract.PSM.AUTO,aggiornaProgresso);
+      const candidate2=righeCandidateDaTesto(testo2);
+      if(candidate2.length>candidate.length)candidate=candidate2;
+    }
     if(!candidate.length){
       document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>📷 Nessuna riga riconosciuta</h3>
-        <div class="al ae">Non sono riuscito a leggere righe prodotto in questa foto. Prova con più luce, tenendo il foglio dritto e senza pieghe, oppure inserisci manualmente.</div>
+        <div class="al ae">Non sono riuscito a leggere righe prodotto in questa foto.</div>
+        <div class="al as" style="font-size:13px">Consigli per la prossima foto: buona luce (meglio naturale, senza ombre sopra il foglio), foglio ben disteso e dritto, telefono tenuto parallelo al foglio (non di sbieco) e abbastanza vicino da riempire l'inquadratura con la tabella.</div>
         <button class="btn btn-p" onclick="apriRegistraBolla()">📷 Riprova Foto</button>
         <button class="btn btn-s" onclick="mostraRevisioneBolla('${fornId}',[])">✏️ Inserisci Manualmente</button>
         <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
