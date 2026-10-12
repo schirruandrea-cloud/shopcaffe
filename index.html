@@ -7343,17 +7343,33 @@ function saldoCassa(){
   return Math.round((DB.saldo_iniziale+te-tu)*100)/100;
 }
 
+function metodoCassaChiave(m){
+  const k=String(m||'').trim().toLowerCase();
+  if(!k||k==='contanti')return 'contanti';
+  if(k==='bonifico')return 'bonifico';
+  if(k==='pos')return 'pos';
+  return 'altro';
+}
+function metodoCassaLabel(m){
+  const k=metodoCassaChiave(m);
+  if(k==='contanti')return '💵 Contanti';
+  if(k==='bonifico')return '🏦 Bonifico';
+  if(k==='pos')return '💳 POS';
+  return escHtml(m);
+}
+let cassaMetFiltro='tutti';
 function pgCassa(el){
   const sc=saldoCassa();
   const te=DB.cassa.reduce((s,r)=>s+(r.entrata||0),0);
   const tu=DB.cassa.reduce((s,r)=>s+(r.uscita||0),0);
-  const og=oggi();
-  const eo=DB.cassa.filter(r=>r.data===og).reduce((s,r)=>s+(r.entrata||0),0);
-  const uo=DB.cassa.filter(r=>r.data===og).reduce((s,r)=>s+(r.uscita||0),0);
-  const ul=DB.cassa.slice(-30).reverse();
+  const ogMs=parseDataIt(oggi());
+  const eo=DB.cassa.filter(r=>parseDataIt(r.data)===ogMs).reduce((s,r)=>s+(r.entrata||0),0);
+  const uo=DB.cassa.filter(r=>parseDataIt(r.data)===ogMs).reduce((s,r)=>s+(r.uscita||0),0);
+  cassaMetFiltro='tutti';
+  const chips=[['tutti','Tutti'],['contanti','💵 Contanti'],['bonifico','🏦 Bonifico'],['pos','💳 POS']];
   let h=`<div class="kg">
     <div class="kpi br" style="grid-column:1/-1">
-      <span class="lbl">💰 Saldo Attuale</span>
+      <span class="lbl">💰 Saldo Attuale (contanti)</span>
       <span class="val">€${f(sc)}</span>
       <span class="sub">Saldo iniziale: €${f(DB.saldo_iniziale)}</span>
     </div>
@@ -7376,22 +7392,191 @@ function pgCassa(el){
   <div style="margin-bottom:10px">
     <button class="btn btn-s btn-sm" style="width:100%" onclick="moRettificaCassa()">⚖️ Rettifica Cassa (Conguaglio)</button>
   </div>
-  <div class="st">Ultime operazioni</div><div class="card">`;
-  if(!ul.length)h+=`<div class="em" style="padding:20px"><p>Nessuna operazione</p></div>`;
-  ul.forEach(r=>{
-    const ie=r.entrata>0;
-    h+=`<div class="li">
+  <div class="st">Tutti i movimenti</div>
+  <div class="sb"><span style="color:#aaa">🔍</span>
+    <input id="srch-cassa" placeholder="Cerca per cliente, data (es. 06/10/2026)..." value="${escHtml(sq)}"
+      oninput="filtraListaCassa()" autocomplete="off"></div>
+  <div style="display:flex;gap:6px;margin-bottom:8px">
+    ${chips.map(([k,l])=>`<button type="button" id="chip-cassa-${k}" onclick="setFiltroCassaMet('${k}')"
+      style="flex:1;padding:7px 4px;border:2px solid var(--gy2);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">${l}</button>`).join('')}
+  </div>
+  <div style="font-size:12px;color:#888;margin-bottom:6px">Tocca un movimento per vedere i dettagli, correggerlo o eliminarlo.</div>
+  <div id="info-cassa" style="font-size:12px;color:var(--br);font-weight:700;margin-bottom:6px"></div>
+  <div class="card" id="lista-cassa"></div>`;
+  el.innerHTML=h;
+  // Righe create una sola volta (dalla più recente); ricerca e filtri mostrano/nascondono
+  let rows='';
+  for(let i=DB.cassa.length-1;i>=0;i--){
+    const r=DB.cassa[i];
+    const ie=(r.entrata||0)>0;
+    const k=metodoCassaChiave(r.metodo);
+    const ts=parseDataIt(r.data);
+    let dataPad='';
+    if(ts){const d=new Date(ts);dataPad=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
+    const chiave=((r.descrizione||'')+' '+(r.data||'')+' '+dataPad+' '+(r.tipo||'')+' '+k+' '+(r.note||'')+' '+(r.riferimento||'')).toLowerCase();
+    rows+=`<div class="li cassa-row" data-k="${escHtml(chiave)}" data-m="${k}" data-e="${r.entrata||0}" data-u="${r.uscita||0}" onclick="apriMovCassa(${i})">
       <div class="av" style="background:${ie?'var(--gn2)':'var(--rd2)'};font-size:16px">${ie?'↑':'↓'}</div>
-      <div class="nf"><div class="nm" style="font-size:13px">${r.descrizione}</div>
-        <div class="sb">${r.data} · ${r.tipo}${(r.metodo&&!isContantiMetodo(r.metodo))?' · '+r.metodo+' (non in cassa)':''}</div></div>
+      <div class="nf"><div class="nm" style="font-size:13px">${escHtml(r.descrizione)}</div>
+        <div class="sb">${escHtml(r.data)} · ${escHtml(r.tipo)}</div>
+        <div class="sb">${metodoCassaLabel(r.metodo)}</div></div>
       <div class="rt">
         <div class="am" style="color:${ie?'var(--gn)':'var(--rd)'}">${ie?'+':'-'}€${f(ie?r.entrata:r.uscita)}</div>
-        <div class="sb">Saldo €${f(r.saldo)}</div>
+        <div class="sb">${isContantiMetodo(r.metodo)?'Saldo €'+f(r.saldo):'non in cassa'}</div>
       </div>
     </div>`;
-  });
-  h+=`</div>`;el.innerHTML=h;
+  }
+  rows+=`<div class="em" id="lista-cassa-vuoto" style="padding:20px;display:none"><p>Nessun movimento trovato</p></div>`;
+  document.getElementById('lista-cassa').innerHTML=rows;
+  filtraListaCassa();
 }
+function setFiltroCassaMet(k){cassaMetFiltro=k;filtraListaCassa();}
+function filtraListaCassa(){
+  const inp=document.getElementById('srch-cassa');
+  sq=inp?inp.value:sq;
+  const q=sq.toLowerCase().trim();
+  const rows=document.querySelectorAll('#lista-cassa .cassa-row');
+  let n=0,te=0,tu=0;
+  rows.forEach(r=>{
+    const okQ=!q||r.getAttribute('data-k').includes(q);
+    const okM=cassaMetFiltro==='tutti'||r.getAttribute('data-m')===cassaMetFiltro;
+    const ok=okQ&&okM;
+    r.style.display=ok?'':'none';
+    if(ok){n++;te+=parseFloat(r.getAttribute('data-e'))||0;tu+=parseFloat(r.getAttribute('data-u'))||0;}
+  });
+  const vuoto=document.getElementById('lista-cassa-vuoto');
+  if(vuoto)vuoto.style.display=n?'none':'';
+  const info=document.getElementById('info-cassa');
+  if(info)info.textContent=`${n} movimenti · ↑ €${f(te)} · ↓ €${f(tu)}`;
+  ['tutti','contanti','bonifico','pos'].forEach(k=>{
+    const b=document.getElementById('chip-cassa-'+k);if(!b)return;
+    const att=k===cassaMetFiltro;
+    b.style.background=att?'var(--br)':'#fff';
+    b.style.color=att?'#fff':'var(--br)';
+    b.style.borderColor=att?'var(--br)':'var(--gy2)';
+  });
+}
+
+// Ricalcola il saldo progressivo salvato in ogni riga (solo contanti), dopo una modifica
+function ricalcolaSaldiCassa(){
+  let s=DB.saldo_iniziale||0;
+  DB.cassa.forEach(r=>{
+    if(isContantiMetodo(r.metodo))s+=(r.entrata||0)-(r.uscita||0);
+    r.saldo=Math.round(s*100)/100;
+  });
+}
+function infoCollegamentoCassa(r){
+  if(r.tipo==='Incasso Consegna'){
+    const o=DB.ordini.find(x=>x.id===r.riferimento);
+    if(o)return{tipo:'ordine',o,testo:`Questo incasso è collegato all'ordine ${o.id} di ${o.nome_cliente}. Se cambi l'importo, si aggiorna di conseguenza anche il debito del cliente.`,
+      testoElimina:`Il pagamento risulterà non avvenuto: ${o.nome_cliente} risulterà in debito dell'intero importo dell'ordine.`};
+  }
+  if(r.tipo==='Saldo Debito'){
+    const c=DB.clienti.find(x=>x.id===r.riferimento);
+    if(c)return{tipo:'cliente',c,testo:`Questo pagamento è collegato al saldo di ${c.nome}. Se cambi l'importo, si aggiorna di conseguenza anche il suo saldo.`,
+      testoElimina:`Il saldo di ${c.nome} tornerà com'era prima di questo pagamento.`};
+  }
+  return null;
+}
+function riallineaCollegatiCassa(r,nuovo){
+  const coll=infoCollegamentoCassa(r);
+  if(!coll)return '';
+  if(coll.tipo==='ordine'){
+    const o=coll.o;
+    const cl=DB.clienti.find(c=>c.id===o.id_cliente);
+    const oldDp=o.da_pagare||0;
+    const newDp=Math.max(0,Math.round((o.totale-nuovo)*100)/100);
+    o.incassato=nuovo;o.da_pagare=newDp;
+    DB.storico.forEach(s=>{if(s.n_ordine===o.id)s.incassato=nuovo;});
+    if(cl)cl.sospeso=Math.round(((cl.sospeso||0)+(newDp-oldDp))*100)/100;
+    if(cl&&newDp!==oldDp)return ` · Saldo di ${cl.nome}: ${cl.sospeso>0?'debito':cl.sospeso<0?'credito':'a zero'}${cl.sospeso!==0?' €'+f(Math.abs(cl.sospeso)):''}`;
+    return '';
+  }
+  const c=coll.c;
+  const old=r.entrata||0;
+  c.sospeso=Math.round(((c.sospeso||0)+(old-nuovo))*100)/100;
+  return ` · Saldo di ${c.nome}: ${c.sospeso>0?'debito':c.sospeso<0?'credito':'a zero'}${c.sospeso!==0?' €'+f(Math.abs(c.sospeso)):''}`;
+}
+function apriMovCassa(idx){
+  const r=DB.cassa[idx];if(!r)return;
+  const ie=(r.entrata||0)>0;
+  const importo=ie?r.entrata:r.uscita;
+  const ts=parseDataIt(r.data);
+  let iso='';
+  if(ts){const d=new Date(ts);iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  const coll=infoCollegamentoCassa(r);
+  const metCorr=r.metodo||'Contanti';
+  let h=`<div class="mh"></div><h3>${ie?'↑ Entrata':'↓ Uscita'} · dettaglio</h3>
+  <div style="font-size:12px;color:#888;margin-bottom:10px">${escHtml(r.tipo)}${r.riferimento?' · rif. '+escHtml(r.riferimento):''}</div>
+  ${coll?`<div class="al aw" style="font-size:12px">${escHtml(coll.testo)}</div>`:''}
+  <div class="fg"><label>Descrizione</label>
+    <input class="fc" id="mv-desc" value="${escHtml(r.descrizione)}"></div>
+  <div class="fg"><label>Data</label>
+    <input class="fc" type="date" id="mv-data" value="${iso}"></div>
+  <div class="fg"><label>Importo (€)</label>
+    <input class="fc" type="number" id="mv-importo" value="${importo}" step="0.01" min="0" style="font-size:22px;text-align:center"></div>
+  <div class="fg"><label>Metodo di pagamento</label>
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <button type="button" id="met-contanti" onclick="window._setMet('Contanti')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--gy2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">💵 Contanti</button>
+      <button type="button" id="met-bonifico" onclick="window._setMet('Bonifico')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--gy2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">🏦 Bonifico</button>
+      <button type="button" id="met-pos" onclick="window._setMet('POS')"
+        style="flex:1;padding:10px 6px;border:2px solid var(--gy2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">💳 POS</button>
+    </div>
+    <input type="hidden" id="met" value="${escHtml(metCorr)}"></div>
+  <div style="font-size:12px;color:#888;margin:-4px 0 10px 2px">Solo i pagamenti in contanti contano nel saldo cassa; bonifico e POS restano registrati ma non in cassa.</div>
+  <div class="fg"><label>Note</label>
+    <input class="fc" id="mv-note" value="${escHtml(r.note||'')}"></div>
+  <button class="btn btn-ok" onclick="salvaMovCassa(${idx})">✅ Salva Modifiche</button>
+  <button class="btn btn-x" onclick="eliminaMovCassa(${idx})">🗑 Elimina Movimento</button>
+  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+  window._setMet(metCorr);
+}
+window.salvaMovCassa=function(idx){
+  const r=DB.cassa[idx];if(!r)return;
+  const ie=(r.entrata||0)>0;
+  const vecchio=ie?r.entrata:r.uscita;
+  const desc=(document.getElementById('mv-desc').value||'').trim();
+  const imp=Math.round((parseFloat(document.getElementById('mv-importo').value)||0)*100)/100;
+  if(!desc){toast('Inserisci una descrizione');return;}
+  if(!(imp>0)){toast("L'importo deve essere maggiore di zero (per annullare il movimento usa Elimina)");return;}
+  const met=document.getElementById('met').value||'Contanti';
+  let msg='';
+  if(Math.abs(imp-vecchio)>0.004)msg=riallineaCollegatiCassa(r,imp);
+  if(ie)r.entrata=imp;else r.uscita=imp;
+  r.descrizione=desc;
+  r.metodo=met;
+  r.note=(document.getElementById('mv-note').value||'').trim();
+  const isoNuovo=document.getElementById('mv-data').value;
+  if(isoNuovo){
+    const ts=parseDataIt(r.data);
+    let isoVecchio='';
+    if(ts){const d=new Date(ts);isoVecchio=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+    if(isoNuovo!==isoVecchio){
+      const p=isoNuovo.split('-');
+      r.data=new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('it-IT');
+    }
+  }
+  ricalcolaSaldiCassa();
+  saveDB();closeMO();
+  toast('Movimento aggiornato'+msg);
+  pgCassa(document.getElementById('cnt'));
+};
+window.eliminaMovCassa=function(idx){
+  const r=DB.cassa[idx];if(!r)return;
+  const ie=(r.entrata||0)>0;
+  const imp=ie?r.entrata:r.uscita;
+  const coll=infoCollegamentoCassa(r);
+  if(!confirm(`Eliminare questo movimento (${r.descrizione}, €${f(imp)})?`+(coll?'\n\n'+coll.testoElimina:'')+'\n\nNon è reversibile.'))return;
+  let msg='';
+  if(coll)msg=riallineaCollegatiCassa(r,0);
+  DB.cassa.splice(idx,1);
+  ricalcolaSaldiCassa();
+  saveDB();closeMO();
+  toast('Movimento eliminato'+msg);
+  pgCassa(document.getElementById('cnt'));
+};
 
 function moEntrata(){
   let h=`<div class="mh"></div><h3>↑ Registra Entrata</h3>
