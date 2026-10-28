@@ -6567,6 +6567,26 @@ function pgOrdini(el){
 }
 
 // ── NUOVO ORDINE ─────────────────────────────────────────────────────
+// Prezzo da proporre per un prodotto in un ordine di un cliente. Ordine di priorità:
+// 1) prezzo specifico del prodotto per quel cliente (cl.prezzi), 2) prezzo abituale del cliente
+// se il prodotto è il suo prodotto abituale, 3) prezzo abituale del cliente per tutto il formato
+// quando il suo prodotto abituale è generico (solo formato, senza miscela), 4) listino generale.
+function prezzoPerCliente(cl,p){
+  if(cl&&p){
+    if(cl.prezzi&&cl.prezzi[p.codice]>0)return{prezzo:cl.prezzi[p.codice],fonte:'cliente'};
+    const miscelaVuota=!cl.miscela_abituale||String(cl.miscela_abituale).trim()===''||String(cl.miscela_abituale).trim()==='0';
+    if(cl.prezzo_abituale>0){
+      if(cl.formato_abituale===p.formato&&cl.miscela_abituale===p.miscela)return{prezzo:cl.prezzo_abituale,fonte:'cliente'};
+      if(miscelaVuota&&cl.formato_abituale&&cl.formato_abituale===p.formato)return{prezzo:cl.prezzo_abituale,fonte:'cliente'};
+    }
+  }
+  return{prezzo:p?p.prezzo_vendita:0,fonte:'listino'};
+}
+function etichettaPrezzoCliente(cl,p){
+  const r=prezzoPerCliente(cl,p);
+  return `€${r.prezzo}/pz${r.fonte==='cliente'?' · 💶 prezzo cliente':''}`;
+}
+
 function nuovoOrdine(){
   let cl=null,prods=[],dataPrevista='',oraPrevista='',note='';
   function renderSearch(){
@@ -6625,9 +6645,12 @@ function nuovoOrdine(){
           <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
             <input type="number" value="${p.qty}" min="1" style="width:70px;padding:5px 8px;border:2px solid var(--gy2);border-radius:8px;font-size:14px;font-weight:700"
               onchange="window._ap(${i},'qty',this.value)">
-            <span style="color:#888;font-size:12px">× €${p.prezzo}</span>
+            <span style="color:#888;font-size:12px">× €</span>
+            <input type="number" value="${p.prezzo}" step="0.001" min="0" style="width:72px;padding:5px 8px;border:2px solid var(--gy2);border-radius:8px;font-size:14px;font-weight:700"
+              onchange="window._ap(${i},'prezzo',this.value)">
             <strong style="color:var(--br)">€${f(p.qty*p.prezzo)}</strong>
           </div>
+          <div style="margin-top:4px;font-size:11px;color:#888">${p.fonte==='cliente'?'<span style="color:var(--gn);font-weight:700">💶 prezzo cliente</span>':p.fonte==='manuale'?'✏️ prezzo modificato':'listino generale'}${(p.codice&&p.fonte!=='cliente')?` · <a href="#" onclick="event.preventDefault();window._rpc(${i})" style="color:var(--br);font-weight:700">💾 ricorda per questo cliente</a>`:''}</div>
         </div>
         <button onclick="window._rp(${i})" style="color:var(--rd);font-size:20px;background:none;border:none;cursor:pointer;padding:0 4px">🗑</button>
       </div>`;
@@ -6649,11 +6672,22 @@ function nuovoOrdine(){
   window._sc=id=>{cl=DB.clienti.find(c=>c.id===id);
     if(cl&&cl.formato_abituale){
       const p=DB.prodotti.find(p=>p.formato===cl.formato_abituale&&p.miscela===cl.miscela_abituale);
+      const r=p?prezzoPerCliente(cl,p):{prezzo:cl.prezzo_abituale||0,fonte:'cliente'};
       prods=[{codice:p?p.codice:'',formato:cl.formato_abituale,marchio:p?p.marchio:'',
-        miscela:cl.miscela_abituale,qty:cl.qty_abituale||1,prezzo:cl.prezzo_abituale||(p?p.prezzo_vendita:0)}];
+        miscela:cl.miscela_abituale,qty:cl.qty_abituale||1,prezzo:r.prezzo||(p?p.prezzo_vendita:0),fonte:r.fonte}];
     }render();};
   window._dc=()=>{cl=null;prods=[];renderSearch();};
-  window._ap=(i,k,v)=>{prods[i][k]=k==='qty'?Math.max(1,parseInt(v)||1):v;render();};
+  window._ap=(i,k,v)=>{
+    if(k==='qty')prods[i].qty=Math.max(1,parseInt(v)||1);
+    else if(k==='prezzo'){prods[i].prezzo=Math.max(0,parseFloat(v)||0);prods[i].fonte='manuale';}
+    else prods[i][k]=v;
+    render();};
+  window._rpc=i=>{
+    const pr=prods[i];
+    if(!cl||!pr||!pr.codice||!(pr.prezzo>0)){toast('Prezzo non valido');return;}
+    cl.prezzi=cl.prezzi||{};
+    cl.prezzi[pr.codice]=Math.round(pr.prezzo*10000)/10000;
+    pr.fonte='cliente';saveDB();toast('Prezzo salvato per '+cl.nome);render();};
   window._rp=i=>{prods.splice(i,1);render();};
   window._add=()=>{
     function rpaShell(){
@@ -6666,7 +6700,7 @@ function nuovoOrdine(){
         const chiave=(p.codice+' '+p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
         h+=`<div class="li nuord-prod-row" data-k="${escHtml(chiave)}" onclick="window._agp(${idx})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
-            <div class="sb">€${p.prezzo_vendita}/pz</div></div>
+            <div class="sb">${etichettaPrezzoCliente(cl,p)}</div></div>
           <div class="rt" style="color:var(--br);font-size:20px">+</div>
         </div>`;
       });
@@ -6688,8 +6722,10 @@ function nuovoOrdine(){
       if(vuoto)vuoto.style.display=visibili?'none':'';
     };
     window._agp=idx=>{const p=DB.prodotti[idx];
-      if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,
-        miscela:p.miscela,qty:p.pz_cartone||1,prezzo:p.prezzo_vendita});render();};
+      if(p){const r=prezzoPerCliente(cl,p);
+        prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,
+          miscela:p.miscela,qty:p.pz_cartone||1,prezzo:r.prezzo,fonte:r.fonte});}
+      render();};
     rpaShell();
   };
   window._co=()=>{
@@ -6751,6 +6787,7 @@ function modificaOrdine(id){
   const o=DB.ordini.find(x=>x.id===id);if(!o)return;
   if(o.stato!=='DA FARE'){toast('Puoi modificare solo ordini non ancora consegnati');apriOrdine(id);return;}
   let prods=o.prodotti.map(p=>({...p}));
+  const cliOrd=DB.clienti.find(c=>c.id===o.id_cliente);
   function render(){
     let h=`<div class="mh"></div><h3>✏️ Modifica Ordine</h3>
     <div class="al as">👤 <strong>${o.nome_cliente}</strong> · ${o.zona||''}</div>
@@ -6771,7 +6808,8 @@ function modificaOrdine(id){
         <button onclick="window._mor(${i})" style="color:var(--rd);font-size:20px;background:none;border:none;cursor:pointer;padding:0 4px">🗑</button>
       </div>`;
     });
-    h+=`<button class="btn btn-s" onclick="window._moadd()">➕ Aggiungi prodotto</button>`;
+    h+=`<button class="btn btn-s" onclick="window._moadd()">➕ Aggiungi prodotto</button>
+    <button class="btn btn-s" onclick="window._moapplica()">💶 Applica prezzi del cliente</button>`;
     const tot=prods.reduce((s,p)=>s+p.qty*p.prezzo,0);
     h+=`<div style="background:var(--cr2);border-radius:10px;padding:12px;margin-bottom:12px;text-align:right">
       <span style="font-size:13px;color:#666">Totale: </span>
@@ -6784,6 +6822,15 @@ function modificaOrdine(id){
   window._moq=(i,v)=>{prods[i].qty=Math.max(1,parseInt(v)||1);render();};
   window._mop=(i,v)=>{prods[i].prezzo=Math.max(0,parseFloat(v)||0);render();};
   window._mor=i=>{prods.splice(i,1);render();};
+  window._moapplica=()=>{
+    let n=0;
+    prods.forEach(p=>{
+      const pr=DB.prodotti.find(x=>x.codice===p.codice);
+      if(pr){const r=prezzoPerCliente(cliOrd,pr);
+        if(Math.abs(r.prezzo-p.prezzo)>0.00001){p.prezzo=r.prezzo;p.fonte=r.fonte;n++;}}
+    });
+    toast(n?`Prezzi del cliente applicati a ${n} righe`:'Nessuna riga da aggiornare');
+    render();};
   window._moadd=()=>{
     function rpaShell(){
       document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>Scegli Prodotto</h3>
@@ -6795,7 +6842,7 @@ function modificaOrdine(id){
         const chiave=(p.codice+' '+p.miscela+' '+p.formato+' '+p.marchio).toLowerCase();
         h+=`<div class="li modord-prod-row" data-k="${escHtml(chiave)}" onclick="window._moagp(${idx})">
           <div class="nf"><div class="nm" style="font-size:13px">${p.formato} ${p.marchio} ${p.miscela}</div>
-            <div class="sb">€${p.prezzo_vendita}/pz</div></div>
+            <div class="sb">${etichettaPrezzoCliente(cliOrd,p)}</div></div>
           <div class="rt" style="color:var(--br);font-size:20px">+</div>
         </div>`;
       });
@@ -6817,7 +6864,8 @@ function modificaOrdine(id){
       if(vuoto)vuoto.style.display=visibili?'none':'';
     };
     window._moagp=idx=>{const p=DB.prodotti[idx];
-      if(p)prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,miscela:p.miscela,qty:p.pz_cartone||1,prezzo:p.prezzo_vendita});
+      if(p){const r=prezzoPerCliente(cliOrd,p);
+        prods.push({codice:p.codice,formato:p.formato,marchio:p.marchio,miscela:p.miscela,qty:p.pz_cartone||1,prezzo:r.prezzo,fonte:r.fonte});}
       render();};
     rpaShell();
   };
@@ -7165,6 +7213,7 @@ function apriCliente(id){
   }
   h+=`<button class="btn btn-p" onclick="nuovoOrdineCliente('${id}')">➕ Nuovo Ordine</button>
   <button class="btn btn-s" onclick="modificaPrezzoCliente('${id}')">💶 Modifica Prezzo Cliente</button>
+  <button class="btn btn-s" onclick="prezziCliente('${id}')">📋 Prezzi per Prodotto${Object.keys(c.prezzi||{}).length?' ('+Object.keys(c.prezzi).length+')':''}</button>
   <button class="btn btn-s" onclick="modificaProdAbit('${id}')">✏️ Modifica Prodotto Abituale</button>
   <button class="btn btn-s" onclick="modificaSaldoManuale('${id}')">💳 Modifica Saldo</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
@@ -7205,6 +7254,86 @@ window.ripristinaPrezzoListino=function(id){
   if(!pl){toast('Prodotto non trovato a listino');return;}
   c.prezzo_abituale=pl.prezzo_vendita;
   saveDB();toast('Ripristinato prezzo di listino: €'+pl.prezzo_vendita);apriCliente(id);
+};
+
+// ── PREZZI PER PRODOTTO DI UN CLIENTE (listino cliente) ───────────────
+function prezziCliente(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const keys=Object.keys(c.prezzi||{});
+  let h=`<div class="mh"></div><h3>📋 Prezzi per Prodotto</h3>
+  <div class="al as">👤 <strong>${escHtml(c.nome)}</strong></div>
+  <div style="font-size:12px;color:#666;margin:-2px 0 10px 2px;line-height:1.5">Creando un ordine per questo cliente, il prezzo viene scelto così: <strong>1)</strong> prezzo specifico del prodotto (qui sotto), <strong>2)</strong> prezzo abituale del cliente${c.prezzo_abituale?' (€'+c.prezzo_abituale+')':''}, <strong>3)</strong> listino generale.</div>
+  <button class="btn btn-p" onclick="nuovoPrezzoProdCliente('${id}')">➕ Aggiungi prezzo per un prodotto</button>
+  <div class="card" style="margin-bottom:12px">`;
+  if(!keys.length)h+=`<div class="em" style="padding:16px"><p>Nessun prezzo specifico impostato per questo cliente.</p></div>`;
+  keys.forEach((k,i)=>{
+    const p=DB.prodotti.find(x=>x.codice===k);
+    h+=`<div class="li" onclick="modificaPrezzoProdCliente('${id}',${i})">
+      <div class="nf"><div class="nm" style="font-size:13px">${p?escHtml(p.formato+' '+p.marchio+' '+p.miscela):escHtml(k)}</div>
+        <div class="sb">${p?'Listino generale €'+p.prezzo_vendita:'prodotto non più a listino'}</div></div>
+      <div class="rt"><div class="am" style="color:var(--br)">€${c.prezzi[k]}</div></div>
+    </div>`;
+  });
+  h+=`</div><button class="btn btn-s" onclick="apriCliente('${id}')">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;openMO();
+}
+function nuovoPrezzoProdCliente(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  let h=`<div class="mh"></div><h3>➕ Prezzo per Prodotto</h3>
+  <div class="al as">👤 <strong>${escHtml(c.nome)}</strong></div>
+  <div class="fg"><label>Prodotto</label>
+    <select class="fc" id="pp-prod" onchange="window._ppPre('${id}')">${opzioniProdottiSelect(null)}</select></div>
+  <div class="fg"><label>Prezzo per questo cliente (€/pz)</label>
+    <input class="fc" type="number" id="pp-prezzo" step="0.001" min="0" style="font-size:22px;text-align:center"></div>
+  <button class="btn btn-ok" onclick="salvaPrezzoProdCliente('${id}')">✅ Salva</button>
+  <button class="btn btn-s" onclick="prezziCliente('${id}')">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;
+  window._ppPre(id);
+}
+window._ppPre=function(id){
+  const c=DB.clienti.find(x=>x.id===id);
+  const sel=document.getElementById('pp-prod'),inp=document.getElementById('pp-prezzo');
+  if(!c||!sel||!inp)return;
+  const p=DB.prodotti.find(x=>x.codice===sel.value);
+  if(p)inp.value=prezzoPerCliente(c,p).prezzo;
+};
+window.salvaPrezzoProdCliente=function(id){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const cod=document.getElementById('pp-prod').value;
+  const prezzo=parseFloat(document.getElementById('pp-prezzo').value);
+  if(!cod){toast('Scegli un prodotto');return;}
+  if(!(prezzo>0)){toast('Inserisci un prezzo maggiore di zero');return;}
+  c.prezzi=c.prezzi||{};
+  c.prezzi[cod]=Math.round(prezzo*10000)/10000;
+  saveDB();toast('Prezzo salvato');prezziCliente(id);
+};
+function modificaPrezzoProdCliente(id,i){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const k=Object.keys(c.prezzi||{})[i];if(k===undefined)return;
+  const p=DB.prodotti.find(x=>x.codice===k);
+  let h=`<div class="mh"></div><h3>✏️ Prezzo Cliente</h3>
+  <div class="al as">👤 <strong>${escHtml(c.nome)}</strong><br>${p?escHtml(p.formato+' '+p.marchio+' '+p.miscela):escHtml(k)}</div>
+  ${p?`<div style="font-size:12px;color:#888;margin:-2px 0 10px 2px">Listino generale: <strong>€${p.prezzo_vendita}</strong></div>`:''}
+  <div class="fg"><label>Prezzo per questo cliente (€/pz)</label>
+    <input class="fc" type="number" id="pp-prezzo" value="${c.prezzi[k]}" step="0.001" min="0" style="font-size:22px;text-align:center"></div>
+  <button class="btn btn-ok" onclick="salvaModificaPrezzoProdCliente('${id}',${i})">✅ Salva</button>
+  <button class="btn btn-x" onclick="eliminaPrezzoProdCliente('${id}',${i})">🗑 Rimuovi (torna al prezzo abituale/listino)</button>
+  <button class="btn btn-s" onclick="prezziCliente('${id}')">← Indietro</button>`;
+  document.getElementById('mc').innerHTML=h;
+}
+window.salvaModificaPrezzoProdCliente=function(id,i){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const k=Object.keys(c.prezzi||{})[i];if(k===undefined)return;
+  const prezzo=parseFloat(document.getElementById('pp-prezzo').value);
+  if(!(prezzo>0)){toast('Inserisci un prezzo maggiore di zero');return;}
+  c.prezzi[k]=Math.round(prezzo*10000)/10000;
+  saveDB();toast('Prezzo aggiornato');prezziCliente(id);
+};
+window.eliminaPrezzoProdCliente=function(id,i){
+  const c=DB.clienti.find(x=>x.id===id);if(!c)return;
+  const k=Object.keys(c.prezzi||{})[i];if(k===undefined)return;
+  delete c.prezzi[k];
+  saveDB();toast('Prezzo specifico rimosso');prezziCliente(id);
 };
 
 function nuovoOrdineCliente(id){
