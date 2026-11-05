@@ -6513,6 +6513,8 @@ function liOrdine(o){
     <div class="nf"><div class="nm">${o.ora_prevista?'🕐 '+o.ora_prevista+' · ':''}${o.nome_cliente}</div>
       <div class="sb">${o.data_ordine} · ${cl?cl.zona:''}</div>
       <div class="sb">${o.prodotti.map(p=>p.qty+'× '+p.formato+' '+p.miscela).join(', ')}</div>
+      ${cl&&cl.sospeso>0?`<div class="sb" style="color:var(--rd);font-weight:700">⚠️ + debito precedente €${f(cl.sospeso)} → da incassare €${f(o.totale+cl.sospeso)}</div>`:''}
+      ${cl&&cl.sospeso<0?`<div class="sb" style="color:var(--gn);font-weight:700">✅ credito cliente €${f(Math.abs(cl.sospeso))}</div>`:''}
       ${o.note?`<div class="sb" style="color:var(--br);font-weight:600">📝 ${escHtml(o.note)}</div>`:''}
     </div>
     <div class="rt"><div class="am" style="color:var(--br)">€${f(o.totale)}</div>
@@ -6905,8 +6907,19 @@ function registraConsegna(id){
       <strong style="color:var(--br);font-size:18px" id="tot-ord">€${f(o.totale)}</strong>
     </div>
   </div>
+  <div style="background:#fff;border:2px solid var(--br);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px">
+    <div style="display:flex;justify-content:space-between"><span>Questo ordine</span><strong id="dv-ord">€${f(o.totale)}</strong></div>
+    ${saldoCliente>0?`<div style="display:flex;justify-content:space-between;margin-top:4px"><span>Debito precedente</span><strong style="color:var(--rd)">+ €${f(saldoCliente)}</strong></div>`:''}
+    ${saldoCliente<0?`<div style="display:flex;justify-content:space-between;margin-top:4px"><span>Credito del cliente</span><strong style="color:var(--gn)">- €${f(Math.abs(saldoCliente))}</strong></div>`:''}
+    <div class="dv"></div>
+    <div style="display:flex;justify-content:space-between;font-size:16px"><span style="font-weight:700">Da incassare</span><strong id="dv-tot" style="color:var(--br)">€${f(Math.max(0,Math.round((o.totale+saldoCliente)*100)/100))}</strong></div>
+    ${saldoCliente!==0?`<div style="display:flex;gap:8px;margin-top:8px">
+      <button type="button" onclick="window._setInc('tutto')" style="flex:1;padding:8px 4px;border:2px solid var(--br);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:var(--br);color:#fff">Tutto (ordine + saldo)</button>
+      <button type="button" onclick="window._setInc('ordine')" style="flex:1;padding:8px 4px;border:2px solid var(--gy2);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:var(--br)">Solo questo ordine</button>
+    </div>`:''}
+  </div>
   <div class="fg"><label>Importo incassato (€)</label>
-    <input class="fc" type="number" id="inc" value="${o.totale}" step="0.01" min="0"
+    <input class="fc" type="number" id="inc" value="${Math.max(0,Math.round((o.totale+saldoCliente)*100)/100)}" step="0.01" min="0"
       oninput="window._incTouched=true"
       style="font-size:24px;font-weight:700;text-align:center"></div>
   <div class="fg"><label>Metodo pagamento</label>
@@ -6924,6 +6937,7 @@ function registraConsegna(id){
   <button class="btn btn-ok" onclick="confConsegna('${id}')">✅ Conferma</button>
   <button class="btn btn-s" onclick="apriOrdine('${id}')">← Indietro</button>`;
   window._incTouched=false;
+  window._incModo='tutto';
   window._roId=id;
   document.getElementById('mc').innerHTML=h;
 }
@@ -6949,6 +6963,16 @@ window._setMet=function(v){
 };
 
 // Modifica prezzo di un prodotto al momento della consegna: ricalcola riga e totale ordine
+function incassoSuggerito(o){
+  const cl=DB.clienti.find(c=>c.id===o.id_cliente);
+  const sp=cl?(cl.sospeso||0):0;
+  return window._incModo==='ordine'?o.totale:Math.max(0,Math.round((o.totale+sp)*100)/100);
+}
+window._setInc=function(modo){
+  const o=DB.ordini.find(x=>x.id===window._roId);if(!o)return;
+  window._incModo=modo;window._incTouched=false;
+  const ic=document.getElementById('inc');if(ic)ic.value=incassoSuggerito(o);
+};
 window.aggiornaPrezzoProd=function(i,v){
   const o=DB.ordini.find(x=>x.id===window._roId);if(!o||!o.prodotti[i])return;
   o.prodotti[i].prezzo=Math.max(0,parseFloat(v)||0);
@@ -6956,16 +6980,43 @@ window.aggiornaPrezzoProd=function(i,v){
   saveDB();
   const rt=document.getElementById('tot'+i);if(rt)rt.textContent='€'+f(o.prodotti[i].qty*o.prodotti[i].prezzo);
   const to=document.getElementById('tot-ord');if(to)to.textContent='€'+f(o.totale);
-  if(!window._incTouched){const ic=document.getElementById('inc');if(ic)ic.value=o.totale;}
+  const cl2=DB.clienti.find(c=>c.id===o.id_cliente);
+  const sp2=cl2?(cl2.sospeso||0):0;
+  const dvo=document.getElementById('dv-ord');if(dvo)dvo.textContent='€'+f(o.totale);
+  const dvt=document.getElementById('dv-tot');if(dvt)dvt.textContent='€'+f(Math.max(0,Math.round((o.totale+sp2)*100)/100));
+  if(!window._incTouched){const ic=document.getElementById('inc');if(ic)ic.value=incassoSuggerito(o);}
 };
 
+// Distribuisce l'incassato dell'ordine sulle righe dello storico (proporzionale all'importo),
+// così la somma delle righe coincide con quanto incassato per quell'ordine.
+function impostaIncassatoOrdine(o,quota){
+  const righe=DB.storico.filter(s=>s.n_ordine===o.id);
+  if(!righe.length)return;
+  const tot=righe.reduce((s,r)=>s+(r.importo||0),0);
+  let q=Math.round(quota*100)/100;
+  if(tot>0)q=Math.min(q,Math.round(tot*100)/100);
+  let resto=q;
+  righe.forEach((r,i)=>{
+    let v;
+    if(i===righe.length-1)v=resto;
+    else{v=tot>0?Math.round(q*(r.importo||0)/tot*100)/100:0;v=Math.min(v,resto);}
+    r.incassato=Math.round(v*100)/100;
+    resto=Math.round((resto-v)*100)/100;
+  });
+}
 window.confConsegna=function(id){
   const o=DB.ordini.find(x=>x.id===id);if(!o)return;
-  const inc=parseFloat(document.getElementById('inc').value)||0;
+  const cl=DB.clienti.find(c=>c.id===o.id_cliente);
+  const inc=Math.round((parseFloat(document.getElementById('inc').value)||0)*100)/100;
   const met=document.getElementById('met').value;
-  const dp=Math.max(0,Math.round((o.totale-inc)*100)/100);
+  const saldoPrec=cl?(cl.sospeso||0):0;
+  // L'incasso copre prima questo ordine; quello che avanza salda il debito precedente
+  // (e, se supera anche quello, resta come credito del cliente).
+  const quotaOrdine=Math.min(inc,o.totale);
+  const extra=Math.round((inc-quotaOrdine)*100)/100;
+  const dp=Math.max(0,Math.round((o.totale-quotaOrdine)*100)/100);
   const og=oggi();
-  o.stato='CONSEGNATA';o.data_consegna=og;o.incassato=inc;o.da_pagare=dp;
+  o.stato='CONSEGNATA';o.data_consegna=og;o.incassato=quotaOrdine;o.da_pagare=dp;
   // Magazzino
   o.prodotti.forEach(p=>{
     const m=DB.magazzino.find(m=>m.formato.toUpperCase()===p.formato.toUpperCase()&&m.miscela.toUpperCase()===p.miscela.toUpperCase());
@@ -6976,26 +7027,36 @@ window.confConsegna=function(id){
     const nc='CON-'+String(DB.cnt.consegna).padStart(3,'0');DB.cnt.consegna++;
     DB.storico.push({id_consegna:nc,data:og,id_cliente:o.id_cliente,nome_cliente:o.nome_cliente,
       zona:o.zona,codice:p.codice||null,formato:p.formato,miscela:p.miscela,qty:p.qty,prezzo_unit:p.prezzo,
-      importo:p.qty*p.prezzo,incassato:inc,n_ordine:o.id,note:o.note||''});
+      importo:p.qty*p.prezzo,incassato:0,n_ordine:o.id,note:o.note||''});
   });
-  // Cliente
-  const cl=DB.clienti.find(c=>c.id===o.id_cliente);
+  impostaIncassatoOrdine(o,quotaOrdine);
+  // Cliente: nuovo saldo = saldo precedente + ordine - incassato
   if(cl){
-    if(dp>0)cl.sospeso=Math.round(((cl.sospeso||0)+dp)*100)/100;
+    cl.sospeso=Math.round((saldoPrec+o.totale-inc)*100)/100;
     cl.ultima_consegna_1=cl.ultima_consegna_2||'';
     cl.ultima_consegna_2=cl.ultima_consegna_3||'';
     cl.ultima_consegna_3=og;
   }
-  // Cassa
-  if(inc>0){
+  // Cassa: una riga per l'ordine e, se serve, una per la quota sul saldo del cliente
+  if(quotaOrdine>0){
     const sp=saldoCassa();
-    const deltaCC=isContantiMetodo(met)?inc:0;
+    const deltaCC=isContantiMetodo(met)?quotaOrdine:0;
     DB.cassa.push({data:og,descrizione:'Incasso - '+o.nome_cliente,tipo:'Incasso Consegna',
-      riferimento:o.id,entrata:inc,uscita:0,saldo:Math.round((sp+deltaCC)*100)/100,metodo:met,
+      riferimento:o.id,entrata:quotaOrdine,uscita:0,saldo:Math.round((sp+deltaCC)*100)/100,metodo:met,
       note:o.prodotti.map(p=>p.formato+' '+p.miscela+' ×'+p.qty).join(', ')});
   }
+  if(extra>0&&cl){
+    const sp=saldoCassa();
+    const deltaCC=isContantiMetodo(met)?extra:0;
+    DB.cassa.push({data:og,descrizione:(saldoPrec>0?'Saldo debito precedente - ':'Anticipo - ')+o.nome_cliente,tipo:'Saldo Debito',
+      riferimento:cl.id,entrata:extra,uscita:0,saldo:Math.round((sp+deltaCC)*100)/100,metodo:met,note:'Incassato insieme alla consegna '+o.id});
+  }
   saveDB();closeMO();
-  toast(`✅ Consegnato! €${f(inc)} incassato${dp>0?' · Da pagare €'+f(dp):''}`);
+  let msg=`✅ Consegnato! €${f(inc)} incassato`;
+  if(extra>0)msg+=` (di cui €${f(extra)} sul saldo cliente)`;
+  if(cl&&cl.sospeso>0)msg+=` · Debito cliente €${f(cl.sospeso)}`;
+  else if(cl&&cl.sospeso<0)msg+=` · Credito cliente €${f(Math.abs(cl.sospeso))}`;
+  toast(msg);
   go('ordini');
 };
 
@@ -7614,8 +7675,8 @@ function riallineaCollegatiCassa(r,nuovo){
     const cl=DB.clienti.find(c=>c.id===o.id_cliente);
     const oldDp=o.da_pagare||0;
     const newDp=Math.max(0,Math.round((o.totale-nuovo)*100)/100);
-    o.incassato=nuovo;o.da_pagare=newDp;
-    DB.storico.forEach(s=>{if(s.n_ordine===o.id)s.incassato=nuovo;});
+    o.incassato=Math.min(nuovo,o.totale);o.da_pagare=newDp;
+    impostaIncassatoOrdine(o,nuovo);
     if(cl)cl.sospeso=Math.round(((cl.sospeso||0)+(newDp-oldDp))*100)/100;
     if(cl&&newDp!==oldDp)return ` · Saldo di ${cl.nome}: ${cl.sospeso>0?'debito':cl.sospeso<0?'credito':'a zero'}${cl.sospeso!==0?' €'+f(Math.abs(cl.sospeso)):''}`;
     return '';
