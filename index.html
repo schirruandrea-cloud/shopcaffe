@@ -8331,7 +8331,7 @@ function apriMenu(){
   <button class="btn btn-p" onclick="closeMO();mostraRendicontoSaldi()">📋 Rendiconto Saldi Clienti${(nSosp+nCred)>0?' ('+(nSosp+nCred)+')':''}</button>
   <div class="dv"></div>
   <button class="btn btn-p" onclick="closeMO();moOrdineFornitore()">🏭 Ordine Fornitore${dr.length>0?' ('+dr.length+' prodotti)':''}</button>
-  <button class="btn btn-p" onclick="closeMO();apriRegistraBolla()">📷 Registra Arrivo da Bolla (Foto)</button>
+  <button class="btn btn-p" onclick="closeMO();apriRegistraBolla()">📷 Registra Arrivo da Bolla (Foto, Screenshot o PDF)</button>
   <button class="btn btn-p" onclick="closeMO();pgFornitori()">🗂️ Fornitori e Corrispondenze</button>
   <button class="btn btn-p" onclick="closeMO();moStatistiche()">📊 Statistiche Mensili</button>
   <button class="btn btn-p" onclick="closeMO();go('storico')">📜 Storico Consegne</button>
@@ -8354,35 +8354,220 @@ function normalizzaTesto(s){
     .replace(/\s+/g,' ').trim();
 }
 const RIGHE_BOLLA_DA_IGNORARE=['DESCRIZIONE','U.M.','Q.TA','QUANTITA','PREZZO UN','SCONTO','IMPONIBILE','% I.V.A','DDT N','CLIENTE','SPETT','DESTINAZIONE','TOTALE','NOTE','FORMA PAGAMENTO','TIPO PAGAMENTO','TRASPORTO A MEZZO','ASPETTO ESTERIORE','CAUSALE TRASPORTO','FIRMA','COLLI','PESO KG','CONSEGNA INIZIO','PORTO','VETTORE','PAGINA','VIA ','TEL.','P.IVA','P. IVA','C.F.','EMAIL','E MAIL'];
-function isRigaProdottoCandidata(riga){
+function rigaBollaDaIgnorare(norm){
+  return RIGHE_BOLLA_DA_IGNORARE.some(k=>norm.includes(k))||norm.includes('TRASPORTO')||norm.includes('BANCALE')||norm.includes('IMBALLO');
+}
+// Numero scritto come in bolla: "500", "500,00", "1.250,00", "0,0850" (anche con segni letti male
+// dall'OCR attorno, es. "300,00)"). Restituisce la stringa pulita oppure null se non è un numero.
+function numStrBolla(t){
+  const s=String(t==null?'':t).trim().replace(/^[\s|(\[]+|[\s|)\];:.,]+$/g,'');
+  return /^\d[\d.,]*$/.test(s)?s:null;
+}
+function numBolla(t){
+  let s=numStrBolla(t);
+  if(s===null)return null;
+  if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');
+  const n=parseFloat(s);
+  return isFinite(n)?n:null;
+}
+function isUnitaBolla(t){return /^(PZ|KG|CF|NR|LT|CT)\.?$/i.test(String(t||'').replace(/[|()]/g,''));}
+function normalizzaQta(n){
+  if(n===null||n===undefined||!isFinite(n))return null;
+  const q=Math.round(n);
+  return(q>0&&q<=10000000)?q:null;
+}
+function isRigaProdottoCandidata(riga,opz){
   const norm=normalizzaTesto(riga);
   if(norm.length<4)return false;
-  if(RIGHE_BOLLA_DA_IGNORARE.some(k=>norm.includes(k)))return false;
-  if(norm.includes('TRASPORTO')||norm.includes('BANCALE')||norm.includes('IMBALLO'))return false;
+  if(rigaBollaDaIgnorare(norm))return false;
   const numeri=riga.match(/\d+(?:[.,]\d+)?/g)||[];
   const lettere=(riga.match(/[A-Za-zÀ-ÿ]/g)||[]).length;
-  return numeri.length>=2&&lettere>=4;
+  if(lettere<4)return false;
+  if(numeri.length>=2)return true;
+  // Un solo numero: ha senso solo per screenshot ritagliati con "descrizione + quantità"
+  if(numeri.length===1&&opz&&opz.ritaglio){
+    const tok=riga.replace(/\|/g,' ').trim().split(/\s+/);
+    return numBolla(tok[tok.length-1])!==null;
+  }
+  return false;
 }
-function estraiRigaBolla(riga){
-  const tokens=riga.trim().split(/\s+/);
-  const unitRe=/^(PZ|KG|CF|NR|LT|CT)\.?$/i;
-  const intRe=/^\d{1,5}$/;
-  const decRe=/^\d+[.,]\d+$/;
-  let qty=null,cutIndex=tokens.length;
-  const uIdx=tokens.findIndex(t=>unitRe.test(t));
+// Riga "descrizione + un solo numero in coda" accettata se la descrizione è già un prodotto noto del fornitore
+function rigaUnNumeroNota(riga,fornitore){
+  if(!fornitore)return false;
+  const norm=normalizzaTesto(riga);
+  if(norm.length<4||rigaBollaDaIgnorare(norm))return false;
+  const tok=riga.replace(/\|/g,' ').trim().split(/\s+/);
+  if(tok.length<2||numBolla(tok[tok.length-1])===null)return false;
+  const descr=tok.slice(0,-1).join(' ');
+  if((descr.match(/[A-Za-zÀ-ÿ]/g)||[]).length<4)return false;
+  return !!trovaMatchProdotto(descr,fornitore).codice;
+}
+// Estrae descrizione e quantità da UNA riga di testo (senza posizioni delle colonne).
+// 1) se c'è l'unità di misura (PZ, KG...) la quantità è il primo numero dopo di essa, anche con decimali (500,00);
+// 2) altrimenti guarda i numeri in fondo alla riga: con 3 o più numeri (quantità, prezzo, imponibile, IVA...)
+//    la quantità è il PRIMO; con "ritaglio" (solo descrizione + quantità) è l'ULTIMO. Mai l'IVA a fine riga.
+function estraiRigaBolla(riga,opz){
+  opz=opz||{};
+  const tokens=String(riga).replace(/\|/g,' ').trim().split(/\s+/).filter(Boolean);
+  let qty=null,raw=null,cut=tokens.length,conUnita=false;
+  const uIdx=tokens.findIndex(isUnitaBolla);
   if(uIdx>=0){
     for(let j=uIdx+1;j<tokens.length;j++){
-      if(intRe.test(tokens[j])){qty=parseInt(tokens[j],10);cutIndex=uIdx;break;}
+      const n=numBolla(tokens[j]);
+      if(n!==null){qty=n;raw=numStrBolla(tokens[j]);cut=uIdx;conUnita=true;break;}
     }
   }
   if(qty===null){
-    for(let j=0;j<tokens.length-1;j++){
-      if(intRe.test(tokens[j])&&decRe.test(tokens[j+1])){qty=parseInt(tokens[j],10);cutIndex=j;break;}
+    let st=tokens.length;
+    while(st>0&&numBolla(tokens[st-1])!==null)st--;
+    const run=tokens.slice(st);
+    const val=run.map(numBolla);
+    let k=-1;
+    if(run.length){
+      if(opz.ritaglio)k=run.length-1;
+      else if(run.length>=3)k=0;
+      else if(run.length===2)k=(Number.isInteger(val[0])&&!Number.isInteger(val[1]))?0:1;
+      else k=0;
+      qty=val[k];raw=numStrBolla(run[k]);cut=st+k;
     }
   }
-  const descrizione=tokens.slice(0,cutIndex).join(' ').trim();
-  return{testoGrezzo:riga,descrizione,quantita:qty};
+  const descrizione=tokens.slice(0,cut).join(' ').trim();
+  return{testoGrezzo:riga,descrizione,quantita:normalizzaQta(qty),qtaRaw:raw,conUnita};
 }
+// L'OCR a volte non legge la virgola ("400,00" diventa "40000"). Se nella bolla le quantità sono
+// scritte con due decimali, un numero di 5+ cifre che finisce per 00 e senza separatori è quasi
+// certamente una virgola persa: lo correggo e lo segnalo nella schermata di controllo.
+function correggiVirgolePerse(righe){
+  if(!righe.length)return righe;
+  const dec=righe.filter(r=>/,\d{2}$/.test(String(r.qtaRaw||''))).length;
+  if(dec*2<righe.length)return righe;
+  righe.forEach(r=>{
+    const raw=String(r.qtaRaw||'');
+    if(/^\d{5,}$/.test(raw)&&raw.endsWith('00')){
+      const q=normalizzaQta(parseInt(raw,10)/100);
+      if(q){r.quantita=q;r.avviso='virgola non letta nella foto: ho letto '+raw+' e l\'ho trasformato in '+q+'. Controlla.';}
+    }
+  });
+  return righe;
+}
+function righeCandidateDaTesto(text,fornitore,opz){
+  opz=opz||{};
+  const out=[];
+  text.split('\n').map(r=>r.trim()).filter(r=>r.length>0).forEach(r=>{
+    if(!isRigaProdottoCandidata(r,opz)&&!rigaUnNumeroNota(r,fornitore))return;
+    const e=estraiRigaBolla(r,opz);
+    if(e.quantita===null)return;
+    out.push(e);
+  });
+  return correggiVirgolePerse(out);
+}
+
+// ── Lettura per COLONNE (usa le posizioni delle parole: trova la colonna "Q.tà" dall'intestazione) ──
+function chiaveIntestazione(t){
+  const k=normalizzaTesto(t).replace(/ /g,'');
+  if(!k)return null;
+  if(k==='QTA'||k==='QT'||k==='QTAV'||k.startsWith('QUANT'))return 'qta';
+  if(k.startsWith('DESCRIZ'))return 'desc';
+  if(k==='UM'||k==='UNITA'||k==='UNMIS')return 'um';
+  if(k.startsWith('PREZZO')||k==='UNITARIO')return 'prezzo';
+  if(k.startsWith('SCONTO'))return 'sconto';
+  if(k.startsWith('IMPON')||k.startsWith('IMPORTO'))return 'importo';
+  if(k.includes('IVA')||k.startsWith('ALIQ'))return 'iva';
+  if(k.startsWith('CODICE'))return 'cod';
+  return null;
+}
+function trovaIntestazione(riga){
+  const hdr={};let n=0;
+  for(let i=0;i<riga.length;i++){
+    let k=chiaveIntestazione(riga[i].t),x0=riga[i].x0,x1=riga[i].x1;
+    if(!k&&i+1<riga.length){
+      const kk=chiaveIntestazione(riga[i].t+riga[i+1].t);
+      if(kk){k=kk;x1=riga[i+1].x1;i++;}
+    }
+    if(k&&!hdr[k]){hdr[k]={x0,x1};n++;}
+  }
+  if(!hdr.qta)return null;
+  return(n>=2||riga.length<=3)?hdr:null;
+}
+// Parola numerica che sta sotto l'intestazione Q.tà (per sovrapposizione orizzontale con la colonna)
+function scegliQtaInRiga(riga,hdr){
+  const q=hdr.qta,hw=Math.max(q.x1-q.x0,12),pad=hw*0.5;
+  const L=q.x0-pad,R=q.x1+pad;
+  let best=null,bs=0;
+  riga.forEach(w=>{
+    if(numBolla(w.t)===null)return;
+    const ww=Math.max(w.x1-w.x0,1);
+    const ov=Math.min(R,w.x1)-Math.max(L,w.x0);
+    if(ov<=0)return;
+    const sc=ov/ww;
+    if(sc>bs){bs=sc;best=w;}
+  });
+  return(best&&bs>=0.4)?best:null;
+}
+// linee: array di righe, ogni riga = array di parole {t,x0,x1} ordinate da sinistra a destra.
+// ctx.hdr conserva l'intestazione trovata (utile per i PDF con più pagine). Restituisce null se non trova la colonna Q.tà.
+function righeDaLinee(linee,ctx,opz){
+  let hdr=ctx.hdr||null,start=0,trovata=false;
+  for(let i=0;i<linee.length;i++){
+    const h=trovaIntestazione(linee[i]);
+    if(h){ctx.hdr=h;hdr=h;start=i+1;trovata=true;break;}
+  }
+  if(!hdr)return null;
+  const lim=Math.min(hdr.qta.x0,hdr.um?hdr.um.x0:hdr.qta.x0)-2;
+  const righe=[];
+  for(let i=trovata?start:0;i<linee.length;i++){
+    const L=linee[i];
+    const nuovaHdr=trovaIntestazione(L);
+    if(nuovaHdr)continue;   // intestazione ripetuta a inizio pagina
+    const testo=L.map(w=>w.t).join(' ');
+    const norm=normalizzaTesto(testo);
+    if(norm.length<4||rigaBollaDaIgnorare(norm))continue;
+    const w=scegliQtaInRiga(L,hdr);
+    if(!w){
+      // nessun numero sotto Q.tà: tengo la riga solo se si legge chiaramente l'unità di misura
+      const e=estraiRigaBolla(testo,opz);
+      if(e.conUnita&&e.quantita!==null&&(e.descrizione.match(/[A-Za-zÀ-ÿ]/g)||[]).length>=4)righe.push(e);
+      continue;
+    }
+    const dw=L.filter(x=>(x.x0+x.x1)/2<lim);
+    while(dw.length&&isUnitaBolla(dw[dw.length-1].t))dw.pop();
+    const descrizione=dw.map(x=>x.t).join(' ').trim();
+    if((descrizione.match(/[A-Za-zÀ-ÿ]/g)||[]).length<4)continue;
+    const q=normalizzaQta(numBolla(w.t));
+    if(q===null)continue;
+    righe.push({testoGrezzo:testo,descrizione,quantita:q,qtaRaw:numStrBolla(w.t),conUnita:true});
+  }
+  return righe;
+}
+// Raggruppa parole con coordinate (da PDF) in righe visive
+function raggruppaRighe(parole){
+  const ws=parole.map(w=>({t:String(w.t||'').replace(/[|_\[\]{}]/g,'').trim(),x0:w.x0,x1:w.x1,y0:w.y0,y1:w.y1})).filter(w=>w.t);
+  if(!ws.length)return[];
+  const hs=ws.map(w=>w.y1-w.y0).filter(x=>x>0).sort((a,b)=>a-b);
+  const hMed=hs.length?hs[Math.floor(hs.length/2)]:10;
+  ws.forEach(w=>{w.yc=(w.y0+w.y1)/2;});
+  ws.sort((a,b)=>a.yc-b.yc);
+  const righe=[];
+  ws.forEach(w=>{
+    const r=righe[righe.length-1];
+    if(r&&Math.abs(w.yc-r.yc)<=hMed*0.6){r.w.push(w);r.yc=(r.yc*(r.w.length-1)+w.yc)/r.w.length;}
+    else righe.push({yc:w.yc,w:[w]});
+  });
+  return righe.map(r=>r.w.sort((a,b)=>a.x0-b.x0));
+}
+function lineeDaTesseract(d){
+  return(d.lines||[]).map(l=>(l.words||[]).map(w=>({
+    t:String(w.text||'').replace(/[|_\[\]{}]/g,'').trim(),x0:w.bbox.x0,x1:w.bbox.x1,y0:w.bbox.y0,y1:w.bbox.y1
+  })).filter(w=>w.t)).filter(l=>l.length);
+}
+function righeDaOcr(d,fornitore,opz){
+  const ctx={hdr:null};
+  let r=righeDaLinee(lineeDaTesseract(d),ctx,opz);
+  if(!r||!r.length)r=righeCandidateDaTesto(d.text||'',fornitore,opz);
+  return correggiVirgolePerse(r);
+}
+
 function trovaMatchProdotto(descrizioneOcr,fornitore){
   const norm=normalizzaTesto(descrizioneOcr);
   if(!norm)return{codice:null,confidenza:'nessuna'};
@@ -8524,9 +8709,15 @@ function apriRegistraBolla(){
   <div class="fg"><label>Fornitore</label>
     <select class="fc" id="rb-fornitore">${DB.fornitori.map(f=>`<option value="${f.id}">${escHtml(f.nome)}</option>`).join('')}</select></div>
   <div style="font-size:12px;color:#888;margin:-4px 0 12px 2px">Se il fornitore non è in elenco, <a href="#" onclick="event.preventDefault();nuovoFornitoreDaBolla()" style="color:var(--br);font-weight:700">crealo qui</a>.</div>
-  <input type="file" accept="image/*" capture="environment" id="rb-foto" style="display:none" onchange="elaboraFotoBolla(this.files[0])">
-  <button class="btn btn-ok" onclick="document.getElementById('rb-foto').click()">📷 Scatta Foto o Carica Bolla</button>
-  <div style="font-size:12px;color:#888;margin:8px 0 12px 2px">Il riconoscimento del testo funziona solo con connessione internet la prima volta che viene usato. Dopo la lettura potrai sempre correggere prodotti e quantità prima di confermare: nulla viene aggiunto al magazzino senza la tua conferma.</div>
+  <input type="file" accept="image/*,application/pdf,.pdf" id="rb-file" style="display:none" onchange="const fl=this.files[0];this.value='';elaboraFotoBolla(fl)">
+  <input type="file" accept="image/*" capture="environment" id="rb-foto" style="display:none" onchange="const fl=this.files[0];this.value='';elaboraFotoBolla(fl)">
+  <button class="btn btn-p" onclick="document.getElementById('rb-file').click()">📎 Carica Screenshot, Immagine o PDF</button>
+  <button class="btn btn-ok" onclick="document.getElementById('rb-foto').click()">📷 Scatta Foto alla Bolla</button>
+  <div class="fg" style="display:flex;align-items:flex-start;gap:8px;margin-top:6px">
+    <input type="checkbox" id="rb-ritaglio" style="width:20px;height:20px;margin-top:2px">
+    <label for="rb-ritaglio" style="font-size:13px">Ho ritagliato solo le colonne <strong>Descrizione</strong> e <strong>Quantità</strong> (screenshot senza le altre colonne)</label>
+  </div>
+  <div style="font-size:12px;color:#888;margin:8px 0 12px 2px">Se la bolla ti arriva in <strong>PDF</strong> caricalo direttamente: la colonna Q.tà viene letta dalla tabella. Oppure fai uno screenshot e ritaglia solo Descrizione e Quantità. Il riconoscimento del testo di foto e screenshot richiede internet la prima volta. Prima di confermare potrai sempre correggere prodotti e quantità: nulla viene aggiornato senza la tua conferma.</div>
   <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
@@ -8550,83 +8741,214 @@ function ridimensionaImmagine(file,maxLato){
     const img=new Image();
     const url=URL.createObjectURL(file);
     img.onload=()=>{
-      let{width:w,height:h}=img;
-      if(w>maxLato||h>maxLato){
-        if(w>h){h=Math.round(h*maxLato/w);w=maxLato;}else{w=Math.round(w*maxLato/h);h=maxLato;}
-      }
+      let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+      const lato=Math.max(w,h);
+      let k=1;
+      if(lato>maxLato)k=maxLato/lato;
+      else if(lato<1800)k=Math.min(3,1800/lato);   // screenshot piccoli o ritagliati: li ingrandisco, il testo si legge meglio
+      w=Math.round(w*k);h=Math.round(h*k);
+      const pad=24;   // bordo bianco attorno
       const canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
+      canvas.width=w+pad*2;canvas.height=h+pad*2;
       const ctx=canvas.getContext('2d');
-      ctx.drawImage(img,0,0,w,h);
-      // Scala di grigi + aumento del contrasto: aiuta molto la lettura su foto fatte a mano
-      // (luce non uniforme, ombre, leggero riflesso), rispetto a una vera scansione piana.
-      const dati=ctx.getImageData(0,0,w,h);
-      const px=dati.data;
-      let min=255,max=0;
-      for(let i=0;i<px.length;i+=4){
-        const g=px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114;
-        px[i]=px[i+1]=px[i+2]=g;
-        if(g<min)min=g;if(g>max)max=g;
-      }
-      const range=Math.max(1,max-min);
-      for(let i=0;i<px.length;i+=4){
-        const v=Math.max(0,Math.min(255,((px[i]-min)/range)*255));
-        px[i]=px[i+1]=px[i+2]=v;
-      }
-      ctx.putImageData(dati,0,0);
+      ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+      ctx.drawImage(img,pad,pad,w,h);
+      elaboraCanvasBolla(canvas);
       URL.revokeObjectURL(url);
-      canvas.toBlob(b=>resolve(b),'image/jpeg',0.92);
+      canvas.toBlob(b=>resolve(b),'image/png');
     };
-    img.onerror=reject;
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('immagine non leggibile'));};
     img.src=url;
   });
 }
+// Scala di grigi + contrasto (aiuta su foto con luce non uniforme), schermo scuro invertito,
+// e cancellazione delle linee della tabella (i bordi confondono il riconoscimento delle prime righe).
+function elaboraCanvasBolla(canvas){
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width,h=canvas.height;
+  const dati=ctx.getImageData(0,0,w,h);
+  const px=dati.data;
+  const g=new Uint8ClampedArray(w*h);
+  let min=255,max=0,somma=0;
+  for(let i=0,j=0;i<px.length;i+=4,j++){
+    const v=px[i]*0.299+px[i+1]*0.587+px[i+2]*0.114;
+    g[j]=v;somma+=v;
+    if(v<min)min=v;if(v>max)max=v;
+  }
+  const range=Math.max(1,max-min);
+  for(let j=0;j<g.length;j++)g[j]=((g[j]-min)/range)*255;
+  if(somma/g.length<(min+(max-min)*0.4)){for(let j=0;j<g.length;j++)g[j]=255-g[j];}   // screenshot a tema scuro
+  pulisciTabellaBolla(g,w,h);
+  for(let i=0,j=0;i<px.length;i+=4,j++){px[i]=px[i+1]=px[i+2]=g[j];px[i+3]=255;}
+  ctx.putImageData(dati,0,0);
+}
+function pulisciTabellaBolla(g,w,h){
+  const SOGLIA=150,minO=Math.max(40,Math.round(w*0.04)),minV=Math.max(40,Math.round(h*0.03));
+  const rim=new Uint8Array(w*h);
+  let n=0;
+  for(let y=0;y<h;y++){
+    const riga=y*w;let x=0;
+    while(x<w){
+      if(g[riga+x]<SOGLIA){
+        let x2=x;while(x2<w&&g[riga+x2]<SOGLIA)x2++;
+        if(x2-x>=minO){for(let k=x;k<x2;k++){rim[riga+k]=1;n++;}}
+        x=x2;
+      }else x++;
+    }
+  }
+  for(let x=0;x<w;x++){
+    let y=0;
+    while(y<h){
+      if(g[y*w+x]<SOGLIA){
+        let y2=y;while(y2<h&&g[y2*w+x]<SOGLIA)y2++;
+        if(y2-y>=minV){for(let k=y;k<y2;k++){rim[k*w+x]=1;n++;}}
+        y=y2;
+      }else y++;
+    }
+  }
+  if(n/(w*h)>0.2)return;   // troppo "scuro": non è una tabella con linee, non tocco niente
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=y*w+x;
+      if(!rim[i]&&g[i]<215&&(rim[i-1]||rim[i+1]||rim[i-w]||rim[i+w]))g[i]=255;
+    }
+  }
+  for(let i=0;i<g.length;i++)if(rim[i])g[i]=255;
+}
 async function eseguiOCR(immagine,psm,onProgress){
+  if(typeof Tesseract==='undefined')throw new Error('Libreria di riconoscimento non disponibile: controlla la connessione');
   const worker=await Tesseract.createWorker('ita',1,{logger:m=>{
     if(m.status==='recognizing text'&&onProgress)onProgress(m.progress||0);
   }});
-  // Modalità "blocco di testo unico": fa leggere la pagina riga per riga in ordine naturale,
-  // invece di provare a riconoscere colonne/blocchi separati (il comportamento di default,
-  // che su una tabella con bordi come questa tende a confondere l'ordine delle righe e a
-  // perderne alcune, soprattutto le prime).
+  // Modalità "blocco di testo unico": fa leggere la pagina riga per riga in ordine naturale.
   await worker.setParameters({tessedit_pageseg_mode:psm});
-  const{data:{text}}=await worker.recognize(immagine);
+  const{data}=await worker.recognize(immagine);
   await worker.terminate();
-  return text;
+  return{text:data.text||'',lines:data.lines||[]};
 }
-function righeCandidateDaTesto(text){
-  const righe=text.split('\n').map(r=>r.trim()).filter(r=>r.length>0);
-  return righe.filter(isRigaProdottoCandidata).map(estraiRigaBolla).filter(r=>r.quantita!==null&&r.quantita>0);
+async function righeDaImmagine(file,fornitore,opz,mostra,aggiornaProgresso){
+  const immagine=await ridimensionaImmagine(file,2500);
+  const d1=await eseguiOCR(immagine,Tesseract.PSM.SINGLE_BLOCK,aggiornaProgresso);
+  let righe=righeDaOcr(d1,fornitore,opz);
+  // Primo tentativo incompleto: ne provo un secondo con un'altra modalità di lettura
+  if(righe.length<3){
+    mostra('Primo tentativo incompleto, ne provo uno secondo con un\'altra modalità di lettura…');
+    const d2=await eseguiOCR(immagine,Tesseract.PSM.AUTO,aggiornaProgresso);
+    const r2=righeDaOcr(d2,fornitore,opz);
+    if(r2.length>righe.length)righe=r2;
+  }
+  return righe;
+}
+// ── PDF: testo digitale letto direttamente (colonne esatte), pagine scansionate lette con OCR ──
+const PDFJS_URLS=[
+  ['https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'],
+  ['https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js','https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js']
+];
+function caricaPdfJs(){
+  return new Promise((resolve,reject)=>{
+    if(window.pdfjsLib){resolve(window.pdfjsLib);return;}
+    let i=0;
+    const prova=()=>{
+      if(i>=PDFJS_URLS.length){reject(new Error('libreria PDF non raggiungibile: controlla la connessione'));return;}
+      const [src,worker]=PDFJS_URLS[i++];
+      const sc=document.createElement('script');
+      sc.src=src;
+      sc.onload=()=>{
+        if(!window.pdfjsLib){prova();return;}
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc=worker;
+        resolve(window.pdfjsLib);
+      };
+      sc.onerror=()=>{sc.remove();prova();};
+      document.head.appendChild(sc);
+    };
+    prova();
+  });
+}
+function leggiFileBuffer(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result);
+    r.onerror=()=>reject(r.error||new Error('lettura del file non riuscita'));
+    r.readAsArrayBuffer(file);
+  });
+}
+async function paroleDaPaginaPdf(page){
+  const vp=page.getViewport({scale:1});
+  const tc=await page.getTextContent();
+  const parole=[];
+  tc.items.forEach(it=>{
+    const str=it.str;
+    if(!str||!str.trim())return;
+    const x0=it.transform[4],yBase=it.transform[5];
+    const hh=it.height||Math.abs(it.transform[3])||10,ww=it.width||0;
+    const y1=vp.height-yBase,y0=y1-hh;
+    const tot=str.length||1;
+    const re=/\S+/g;let m;
+    while((m=re.exec(str))){
+      parole.push({t:m[0],x0:x0+ww*m.index/tot,x1:x0+ww*(m.index+m[0].length)/tot,y0,y1});
+    }
+  });
+  return parole;
+}
+async function renderPaginaPdf(page){
+  const vp0=page.getViewport({scale:1});
+  const scala=Math.min(4,2400/Math.max(vp0.width,vp0.height));
+  const vp=page.getViewport({scale:scala});
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.round(vp.width);canvas.height=Math.round(vp.height);
+  await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+  return new Promise(res=>canvas.toBlob(b=>res(b),'image/png'));
+}
+async function righeDaPdf(file,fornitore,opz,mostra,aggiornaProgresso){
+  mostra('Apro il PDF…');
+  const pdfjs=await caricaPdfJs();
+  const buf=await leggiFileBuffer(file);
+  const pdf=await pdfjs.getDocument({data:new Uint8Array(buf)}).promise;
+  const maxPag=Math.min(pdf.numPages,6);
+  const ctx={hdr:null};
+  let tutte=[];
+  const scansionate=[];
+  for(let p=1;p<=maxPag;p++){
+    const page=await pdf.getPage(p);
+    const parole=await paroleDaPaginaPdf(page);
+    if(parole.length>=8){
+      const linee=raggruppaRighe(parole);
+      let r=righeDaLinee(linee,ctx,opz);
+      if(!r||!r.length)r=righeCandidateDaTesto(linee.map(L=>L.map(w=>w.t).join(' ')).join('\n'),fornitore,opz);
+      tutte=tutte.concat(r);
+    }else scansionate.push(page);
+  }
+  for(const page of scansionate){
+    mostra('Il PDF è una scansione: lo leggo come immagine, può richiedere fino a 30 secondi…');
+    const blob=await renderPaginaPdf(page);
+    tutte=tutte.concat(await righeDaImmagine(blob,fornitore,opz,mostra,aggiornaProgresso));
+  }
+  return correggiVirgolePerse(tutte);
 }
 window.elaboraFotoBolla=async function(file){
   if(!file)return;
   const fornId=document.getElementById('rb-fornitore').value;
-  if(typeof Tesseract==='undefined'){toast('Libreria di riconoscimento non disponibile: controlla la connessione e riprova');return;}
+  const fornitore=DB.fornitori.find(x=>x.id===fornId);
+  const ritEl=document.getElementById('rb-ritaglio');
+  const opz={ritaglio:!!(ritEl&&ritEl.checked)};
+  const èPdf=/pdf/i.test(file.type||'')||/\.pdf$/i.test(file.name||'');
   function mostraCaricamento(testo){
     document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>📷 Lettura in corso…</h3>
     <div class="al as">${testo}</div>
     <div id="rb-progress" style="text-align:center;font-size:32px;font-weight:800;color:var(--br);margin:20px 0">0%</div>`;
   }
-  mostraCaricamento('Sto leggendo la bolla, può richiedere fino a 30 secondi. Non chiudere la schermata.');
+  mostraCaricamento(èPdf?'Sto leggendo il PDF…':'Sto leggendo la bolla, può richiedere fino a 30 secondi. Non chiudere la schermata.');
   const aggiornaProgresso=p=>{const el=document.getElementById('rb-progress');if(el)el.textContent=Math.round(p*100)+'%';};
   try{
-    const immagine=await ridimensionaImmagine(file,2500);
-    const testo1=await eseguiOCR(immagine,Tesseract.PSM.SINGLE_BLOCK,aggiornaProgresso);
-    let candidate=righeCandidateDaTesto(testo1);
-    // Se il primo tentativo trova poche righe, ne provo un secondo con una modalità di
-    // lettura diversa prima di arrendermi: capita che una foto legga meglio con un
-    // approccio e peggio con l'altro, a seconda di luce/angolazione.
-    if(candidate.length<3){
-      mostraCaricamento('Primo tentativo incompleto, ne provo uno secondo con un\'altra modalità di lettura…');
-      const testo2=await eseguiOCR(immagine,Tesseract.PSM.AUTO,aggiornaProgresso);
-      const candidate2=righeCandidateDaTesto(testo2);
-      if(candidate2.length>candidate.length)candidate=candidate2;
-    }
+    const candidate=èPdf
+      ?await righeDaPdf(file,fornitore,opz,mostraCaricamento,aggiornaProgresso)
+      :await righeDaImmagine(file,fornitore,opz,mostraCaricamento,aggiornaProgresso);
     if(!candidate.length){
       document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>📷 Nessuna riga riconosciuta</h3>
-        <div class="al ae">Non sono riuscito a leggere righe prodotto in questa foto.</div>
-        <div class="al as" style="font-size:13px">Consigli per la prossima foto: buona luce (meglio naturale, senza ombre sopra il foglio), foglio ben disteso e dritto, telefono tenuto parallelo al foglio (non di sbieco) e abbastanza vicino da riempire l'inquadratura con la tabella.</div>
-        <button class="btn btn-p" onclick="apriRegistraBolla()">📷 Riprova Foto</button>
+        <div class="al ae">Non sono riuscito a leggere righe prodotto in questo file.</div>
+        <div class="al as" style="font-size:13px">Prova così: carica uno <strong>screenshot ritagliato</strong> con solo le colonne Descrizione e Quantità e spunta "Ho ritagliato solo le colonne Descrizione e Quantità". Se invece scatti una foto: buona luce, foglio disteso e dritto, telefono parallelo al foglio e abbastanza vicino da riempire l'inquadratura.</div>
+        <button class="btn btn-p" onclick="apriRegistraBolla()">📎 Riprova</button>
         <button class="btn btn-s" onclick="mostraRevisioneBolla('${fornId}',[])">✏️ Inserisci Manualmente</button>
         <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
       return;
@@ -8634,8 +8956,8 @@ window.elaboraFotoBolla=async function(file){
     mostraRevisioneBolla(fornId,candidate);
   }catch(e){
     document.getElementById('mc').innerHTML=`<div class="mh"></div><h3>⚠️ Errore lettura</h3>
-      <div class="al ae">Non sono riuscito a leggere la foto (${escHtml(e.message||'errore sconosciuto')}). Controlla la connessione e riprova.</div>
-      <button class="btn btn-p" onclick="apriRegistraBolla()">📷 Riprova</button>
+      <div class="al ae">Non sono riuscito a leggere il file (${escHtml(e.message||'errore sconosciuto')}). Controlla la connessione e riprova.</div>
+      <button class="btn btn-p" onclick="apriRegistraBolla()">📎 Riprova</button>
       <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
   }
 };
@@ -8644,6 +8966,7 @@ function mostraRevisioneBolla(fornId,righeGrezze){
   window._rbRighe=righeGrezze.map(r=>{
     const m=trovaMatchProdotto(r.descrizione,f);
     return{testoGrezzo:r.testoGrezzo,descrizione:r.descrizione,quantita:r.quantita,
+      avviso:r.avviso||(r.quantita>=10000?'quantità molto alta: controlla':''),
       codice:m.codice,confidenza:m.confidenza,ignora:!m.codice&&m.confidenza==='nessuna'&&righeGrezze.length>1?false:false};
   });
   window._rbFornId=fornId;
@@ -8662,6 +8985,7 @@ function renderRevisioneBolla(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;width:100%">
         <div style="flex:1">
           <div class="sb" style="font-size:11px;color:#999">${escHtml(r.testoGrezzo)}</div>
+          ${r.avviso?`<div style="font-size:11px;font-weight:700;color:var(--rd)">⚠️ ${escHtml(r.avviso)}</div>`:''}
           <select class="fc" style="margin:4px 0 6px" onchange="window._rbSetProd(${i},this.value)" ${r.ignora?'disabled':''}>
             <option value="">-- scegli prodotto --</option>
             ${opzioniProdottiSelect(r.codice)}
