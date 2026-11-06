@@ -6203,6 +6203,8 @@ function initDB(){
       nome:f.nome,alias:f.alias.map(a=>({...a}))}));
   }
   if(!DB.cnt.fornitore)DB.cnt.fornitore=DB.fornitori.length+1;
+  if(!Array.isArray(DB.categorie_spesa))DB.categorie_spesa=['Acquisto Merce','Carburante','Telefono/Internet','Altra Uscita'];
+  if(!DB.categorie_spesa.includes('Altra Uscita'))DB.categorie_spesa.push('Altra Uscita');
   DB.magazzino.forEach(m=>{m.giacenza=m.carico-m.scarico+m.rettifica;});
   saveDB();
 }
@@ -7582,6 +7584,9 @@ function pgCassa(el){
   <div style="margin-bottom:10px">
     <button class="btn btn-s btn-sm" style="width:100%" onclick="moRettificaCassa()">⚖️ Rettifica Cassa (Conguaglio)</button>
   </div>
+  <div style="margin-bottom:10px">
+    <button class="btn btn-s btn-sm" style="width:100%" onclick="moSpeseCategorie()">📊 Spese per Categoria</button>
+  </div>
   <div class="st">Tutti i movimenti</div>
   <div class="sb"><span style="color:#aaa">🔍</span>
     <input id="srch-cassa" placeholder="Cerca per cliente, data (es. 06/10/2026)..." value="${escHtml(sq)}"
@@ -7715,6 +7720,8 @@ function apriMovCassa(idx){
     </div>
     <input type="hidden" id="met" value="${escHtml(metCorr)}"></div>
   <div style="font-size:12px;color:#888;margin:-4px 0 10px 2px">Solo i pagamenti in contanti contano nel saldo cassa; bonifico e POS restano registrati ma non in cassa.</div>
+  ${(!ie&&r.tipo!=='Rettifica')?`<div class="fg"><label>Categoria di spesa</label>
+    <select class="fc" id="mv-cat">${optCategorieSpesa(r.tipo,true)}</select></div>`:''}
   <div class="fg"><label>Note</label>
     <input class="fc" id="mv-note" value="${escHtml(r.note||'')}"></div>
   <button class="btn btn-ok" onclick="salvaMovCassa(${idx})">✅ Salva Modifiche</button>
@@ -7737,6 +7744,8 @@ window.salvaMovCassa=function(idx){
   if(ie)r.entrata=imp;else r.uscita=imp;
   r.descrizione=desc;
   r.metodo=met;
+  const catEl=document.getElementById('mv-cat');
+  if(catEl&&!ie&&catEl.value!=='__keep__')r.tipo=catEl.value;
   r.note=(document.getElementById('mv-note').value||'').trim();
   const isoNuovo=document.getElementById('mv-data').value;
   if(isoNuovo){
@@ -7790,7 +7799,7 @@ function moUscita(){
   <div class="fg"><label>Importo (€)</label>
     <input class="fc" type="number" id="ui" step="0.01" min="0" style="font-size:24px;text-align:center"></div>
   <div class="fg"><label>Tipo</label>
-    <select class="fc" id="ut"><option>Acquisto Merce</option><option>Carburante</option><option>Telefono/Internet</option><option>Altra Uscita</option></select></div>
+    <select class="fc" id="ut">${optCategorieSpesa('')}</select></div>
   <div class="fg"><label>Note</label><input class="fc" id="un" placeholder="Facoltativo..."></div>
   <button class="btn btn-x" onclick="salvaCassa('u')">✅ Salva Spesa</button>
   <button class="btn btn-s" onclick="closeMO()">Annulla</button>`;
@@ -7812,6 +7821,147 @@ window.salvaCassa=function(tipo){
     metodo:metSel,
     note:ie?'':(document.getElementById('un').value||'')});
   saveDB();closeMO();toast(`${ie?'Entrata':'Spesa'} €${f(imp)} registrata`);go('cassa');
+};
+
+// ── CATEGORIE DI SPESA ────────────────────────────────────────────────
+// Le spese sono i movimenti di cassa in uscita (escluse le rettifiche di cassa);
+// la categoria è il campo "tipo" del movimento. L'elenco delle categorie è in DB.categorie_spesa.
+const CAT_FALLBACK='Altra Uscita';
+let spPer='tutto',spOpen=null;
+function optCategorieSpesa(sel,mantieniVuota){
+  const cats=DB.categorie_spesa||[];
+  let h='';
+  if(sel&&!cats.includes(sel))h+=`<option value="__keep__" selected>${escHtml(sel)} (non in elenco)</option>`;
+  else if(!sel&&mantieniVuota)h+=`<option value="__keep__" selected>Senza categoria</option>`;
+  else if(!sel&&!cats.length)h+=`<option>${CAT_FALLBACK}</option>`;
+  cats.forEach(c=>{h+=`<option value="${escHtml(c)}"${c===sel?' selected':''}>${escHtml(c)}</option>`;});
+  return h;
+}
+function spInPeriodo(r,per){
+  if(per==='tutto')return true;
+  const ts=parseDataIt(r.data);if(!ts)return false;
+  const d=new Date(ts),n=new Date();
+  if(per==='anno')return d.getFullYear()===n.getFullYear();
+  if(per==='mese')return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();
+  if(per==='mesep'){const q=new Date(n.getFullYear(),n.getMonth()-1,1);return d.getFullYear()===q.getFullYear()&&d.getMonth()===q.getMonth();}
+  return true;
+}
+function spGruppi(per){
+  const cats=DB.categorie_spesa||[];
+  const gr=cats.map(c=>({label:c,tipo:c,rows:[],tot:0,extra:false}));
+  const extra={};
+  DB.cassa.forEach((r,i)=>{
+    if(!((r.uscita||0)>0)||r.tipo==='Rettifica')return;
+    if(!spInPeriodo(r,per))return;
+    let g=gr.find(x=>x.tipo===r.tipo);
+    if(!g){
+      const k=r.tipo||'';
+      if(!extra[k]){extra[k]={label:k?k+' (non in elenco)':'Senza categoria',tipo:k,rows:[],tot:0,extra:true};gr.push(extra[k]);}
+      g=extra[k];
+    }
+    g.rows.push({r,i});g.tot+=r.uscita||0;
+  });
+  return gr;
+}
+function moSpeseCategorie(){
+  spOpen=null;
+  const h=`<div class="mh"></div><h3>📊 Spese per Categoria</h3>
+  <div class="fg"><label>Periodo</label>
+    <select class="fc" id="sp-per" onchange="spSetPer(this.value)">
+      <option value="tutto">Tutto</option><option value="mese">Mese corrente</option>
+      <option value="mesep">Mese scorso</option><option value="anno">Anno corrente</option></select></div>
+  <div id="sp-body"></div>
+  <div class="st">Gestisci categorie</div>
+  <div id="sp-gest"></div>
+  <div class="fg" style="margin-top:8px"><label>Nuova categoria</label>
+    <input class="fc" id="sp-new" placeholder="es. Spesa alimentare" autocomplete="off"></div>
+  <button class="btn btn-ok" onclick="spAggiungi()">➕ Aggiungi categoria</button>
+  <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
+  document.getElementById('mc').innerHTML=h;
+  document.getElementById('sp-per').value=spPer;
+  spRender();openMO();
+}
+window.spSetPer=function(v){spPer=v;spOpen=null;spRender();};
+function spRender(){
+  const gr=spGruppi(spPer);
+  const tot=gr.reduce((a,g)=>a+g.tot,0),n=gr.reduce((a,g)=>a+g.rows.length,0);
+  let h=`<div class="card"><table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:var(--cr2);color:var(--br)"><th style="text-align:left;padding:8px 10px">Categoria</th>
+    <th style="text-align:right;padding:8px 4px">N°</th><th style="text-align:right;padding:8px 4px">Totale</th>
+    <th style="text-align:right;padding:8px 10px">%</th></tr></thead><tbody>`;
+  gr.forEach((g,gi)=>{
+    if(g.extra&&!g.rows.length)return;
+    const aperta=spOpen===g.label;
+    h+=`<tr style="border-top:1px solid var(--gy);cursor:pointer;${aperta?'background:var(--cr2)':''}" onclick="spToggle(${gi})">
+      <td style="padding:9px 10px;font-weight:700">${aperta?'▾':'▸'} ${escHtml(g.label)}</td>
+      <td style="text-align:right;padding:9px 4px">${g.rows.length}</td>
+      <td style="text-align:right;padding:9px 4px;font-weight:700;color:var(--rd)">€${f(g.tot)}</td>
+      <td style="text-align:right;padding:9px 10px;color:#888">${tot>0?Math.round(g.tot/tot*100):0}%</td></tr>`;
+    if(aperta){
+      h+=`<tr><td colspan="4" style="padding:4px 10px 10px;background:var(--cr2)">`;
+      g.rows.slice().reverse().forEach(x=>{
+        h+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--gy)">
+          <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis">${escHtml(x.r.descrizione)}</div>
+            <div style="font-size:11px;color:#888">${escHtml(x.r.data)} · €${f(x.r.uscita)}</div></div>
+          <select class="fc" style="width:46%;padding:6px;font-size:12px" onclick="event.stopPropagation()" onchange="spRiclassifica(${x.i},this.value)">
+            <option value="">Sposta in…</option>${(DB.categorie_spesa||[]).map((c,ci)=>c===x.r.tipo?'':`<option value="${ci}">${escHtml(c)}</option>`).join('')}</select></div>`;
+      });
+      h+=`</td></tr>`;
+    }
+  });
+  h+=`</tbody><tfoot><tr style="border-top:2px solid var(--br);font-weight:800">
+    <td style="padding:10px">Totale spese</td><td style="text-align:right;padding:10px 4px">${n}</td>
+    <td style="text-align:right;padding:10px 4px;color:var(--rd)">€${f(tot)}</td><td></td></tr></tfoot></table></div>
+    <div style="font-size:12px;color:#888;margin-bottom:6px">Tocca una categoria per vedere le sue spese e spostarle in un'altra categoria. Le rettifiche di cassa non sono spese e restano escluse.</div>`;
+  document.getElementById('sp-body').innerHTML=h;
+  let g2='';
+  (DB.categorie_spesa||[]).forEach((c,ci)=>{
+    const fissa=c===CAT_FALLBACK;
+    g2+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--gy)">
+      <div style="flex:1;font-size:14px;font-weight:600">${escHtml(c)}${fissa?' <span style="font-size:11px;color:#888;font-weight:400">(categoria di riserva)</span>':''}</div>
+      ${fissa?'':`<button class="btn btn-s btn-sm" style="width:auto;margin:0;padding:6px 10px" onclick="spRinomina(${ci})">✏️</button>
+      <button class="btn btn-x btn-sm" style="width:auto;margin:0;padding:6px 10px" onclick="spElimina(${ci})">🗑</button>`}</div>`;
+  });
+  document.getElementById('sp-gest').innerHTML=g2;
+}
+window.spToggle=function(gi){
+  const g=spGruppi(spPer)[gi];if(!g)return;
+  spOpen=(spOpen===g.label)?null:g.label;spRender();
+};
+function spAggiorna(){saveDB();spRender();if(page==='cassa')pgCassa(document.getElementById('cnt'));}
+window.spRiclassifica=function(idx,v){
+  if(v==='')return;
+  const r=DB.cassa[idx],c=(DB.categorie_spesa||[])[parseInt(v,10)];
+  if(!r||!c)return;
+  r.tipo=c;spAggiorna();toast('Spesa spostata in '+c);
+};
+window.spAggiungi=function(){
+  const el=document.getElementById('sp-new');
+  const nome=(el.value||'').trim();
+  if(!nome){toast('Scrivi il nome della categoria');return;}
+  if(nome.toLowerCase()==='rettifica'){toast('Nome riservato');return;}
+  if(DB.categorie_spesa.some(c=>c.toLowerCase()===nome.toLowerCase())){toast('Categoria già presente');return;}
+  DB.categorie_spesa.push(nome);el.value='';spAggiorna();toast('Categoria aggiunta');
+};
+window.spRinomina=function(ci){
+  const vecchio=DB.categorie_spesa[ci];if(vecchio===undefined||vecchio===CAT_FALLBACK)return;
+  const nome=(prompt('Nuovo nome della categoria',vecchio)||'').trim();
+  if(!nome||nome===vecchio)return;
+  if(nome.toLowerCase()==='rettifica'){toast('Nome riservato');return;}
+  if(DB.categorie_spesa.some((c,i)=>i!==ci&&c.toLowerCase()===nome.toLowerCase())){toast('Esiste già una categoria con questo nome');return;}
+  DB.categorie_spesa[ci]=nome;
+  DB.cassa.forEach(r=>{if((r.uscita||0)>0&&r.tipo===vecchio)r.tipo=nome;});
+  if(spOpen===vecchio)spOpen=nome;
+  spAggiorna();toast('Categoria rinominata');
+};
+window.spElimina=function(ci){
+  const c=DB.categorie_spesa[ci];if(c===undefined||c===CAT_FALLBACK)return;
+  const n=DB.cassa.filter(r=>(r.uscita||0)>0&&r.tipo===c).length;
+  if(!confirm(`Eliminare la categoria "${c}"?`+(n?`\n\nLe ${n} spese collegate passeranno a "${CAT_FALLBACK}".`:'')))return;
+  DB.cassa.forEach(r=>{if((r.uscita||0)>0&&r.tipo===c)r.tipo=CAT_FALLBACK;});
+  DB.categorie_spesa.splice(ci,1);
+  if(spOpen===c)spOpen=null;
+  spAggiorna();toast('Categoria eliminata');
 };
 
 // ── RETTIFICA CASSA (conguaglio manuale) ──────────────────────────────
@@ -7956,7 +8106,10 @@ function apriMag(cod){
   <div class="fg" style="margin-top:12px"><label>Giacenza reale (dopo verifica a vista)</label>
     <input class="fc" type="number" id="rp" value="${m.giacenza}" min="0" style="font-size:22px;text-align:center"></div>
   <div style="font-size:12px;color:#888;margin:-8px 0 12px 2px">Scrivi quanti pezzi conti davvero: la differenza con la giacenza attuale (${m.giacenza}) si calcola da sola</div>
-  <button class="btn btn-s" onclick="salvRett('${codEsc}')">✏️ Salva Giacenza Verificata</button>
+  <div class="fg"><label>Scorta minima (pezzi)</label>
+    <input class="fc" type="number" id="smn" value="${m.scorta_minima||0}" min="0" style="font-size:22px;text-align:center"></div>
+  <div style="font-size:12px;color:#888;margin:-8px 0 12px 2px">Sotto questa soglia il prodotto compare tra quelli da riordinare (0 = nessun avviso)</div>
+  <button class="btn btn-s" onclick="salvRett('${codEsc}')">✏️ Salva Giacenza e Scorta Minima</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
   document.getElementById('mc').innerHTML=h;openMO();
 }
@@ -7971,13 +8124,15 @@ window.salvRett=function(cod){
   const giacenzaReale=document.getElementById('rp').value;
   if(giacenzaReale===''){toast('Inserisci la giacenza reale contata');return;}
   const gr=Math.max(0,parseInt(giacenzaReale)||0);
+  const smEl=document.getElementById('smn');
   const m=DB.magazzino.find(x=>x.codice===cod);
   if(m){
     const differenza=gr-(m.carico-m.scarico);
     m.rettifica=differenza;
     m.giacenza=m.carico-m.scarico+m.rettifica;
+    if(smEl)m.scorta_minima=Math.max(0,parseInt(smEl.value)||0);
     saveDB();closeMO();
-    toast(`Giacenza impostata a ${gr} pezzi`);go('magazzino');
+    toast(`Giacenza ${gr} pz · scorta minima ${m.scorta_minima}`);go('magazzino');
   }
 };
 
@@ -7986,13 +8141,15 @@ function pgStorico(el){
   el.innerHTML=`<div class="sb"><span style="color:#aaa">🔍</span>
     <input id="srch-storico" placeholder="Cerca cliente, zona, prodotto..." value="${sq}"
       oninput="filtraListaStorico()" autocomplete="off"></div>
+  <div class="fg" style="margin-bottom:8px"><label>Cliente</label>
+    <select class="fc" id="flt-storico-cli" onchange="filtraListaStorico()">${stoOptClienti()}</select></div>
   <div id="info-storico" style="font-size:12px;color:#888;margin-bottom:6px"></div>
   <div id="lista-storico" class="card"></div>`;
   const ul=DB.storico.slice().reverse();
   let h='';
   ul.forEach(s=>{
     const chiave=(s.nome_cliente+' '+(s.zona||'')+' '+(s.formato||'')+' '+(s.miscela||'')+' '+(s.n_ordine||'')).toLowerCase();
-    h+=`<div class="li storico-row" data-k="${escHtml(chiave)}"><div class="av" style="background:var(--gn2)">✅</div>
+    h+=`<div class="li storico-row" data-k="${escHtml(chiave)}" data-c="${escHtml(s.nome_cliente||'')}" data-i="${s.incassato||0}"><div class="av" style="background:var(--gn2)">✅</div>
       <div class="nf"><div class="nm" style="font-size:13px">${s.nome_cliente}</div>
         <div class="sb">${s.data} · ${s.formato} ${s.miscela} ×${s.qty}</div>
         ${s.note?`<div class="sb" style="color:var(--br)">📝 ${escHtml(s.note)}</div>`:''}
@@ -8004,21 +8161,32 @@ function pgStorico(el){
   document.getElementById('lista-storico').innerHTML=h;
   filtraListaStorico();
 }
+function stoOptClienti(){
+  const n={};
+  DB.storico.forEach(x=>{const c=x.nome_cliente||'';if(c)n[c]=(n[c]||0)+1;});
+  let h=`<option value="">Tutti i clienti (${DB.storico.length})</option>`;
+  Object.keys(n).sort((a,b)=>a.localeCompare(b,'it',{sensitivity:'base'})).forEach(c=>{
+    h+=`<option value="${escHtml(c)}">${escHtml(c)} (${n[c]})</option>`;
+  });
+  return h;
+}
 function filtraListaStorico(){
   const inp=document.getElementById('srch-storico');
   sq=inp?inp.value:sq;
   const q=sq.toLowerCase();
+  const selC=document.getElementById('flt-storico-cli');
+  const cli=selC?selC.value:'';
   const rows=document.querySelectorAll('#lista-storico .storico-row');
-  let visibili=0;
+  let visibili=0,tot=0;
   rows.forEach(r=>{
-    const match=!q||r.getAttribute('data-k').includes(q);
+    const match=(!q||r.getAttribute('data-k').includes(q))&&(!cli||r.getAttribute('data-c')===cli);
     r.style.display=match?'':'none';
-    if(match)visibili++;
+    if(match){visibili++;tot+=parseFloat(r.getAttribute('data-i'))||0;}
   });
   const vuoto=document.getElementById('storico-vuoto');
   if(vuoto)vuoto.style.display=visibili?'none':'';
   const info=document.getElementById('info-storico');
-  if(info)info.textContent=visibili+' consegne';
+  if(info)info.textContent=visibili+' consegne'+(cli?' · incassato €'+f(tot):'');
 }
 
 // ── LISTINO PRODOTTI ───────────────────────────────────────────────────
@@ -8101,6 +8269,7 @@ window.salvaNuovoProdotto=function(){
 function apriProdotto(cod){
   const p=DB.prodotti.find(x=>x.codice===cod);if(!p)return;
   const codEsc=escJsAttr(cod);
+  const mg=DB.magazzino.find(x=>x.codice===cod);
   let h=`<div class="mh"></div><h3>${p.formato} ${p.marchio}</h3>
   <div style="font-size:13px;color:#888;margin-bottom:14px">${p.codice}</div>
   <div class="fg"><label>Formato</label><input class="fc" id="ep-fmt" value="${p.formato}"></div>
@@ -8112,6 +8281,8 @@ function apriProdotto(cod){
     <input class="fc" type="number" id="ep-pa" step="0.0001" min="0" value="${p.prezzo_acquisto}" style="font-size:18px"></div>
   <div class="fg"><label>Pezzi per Cartone</label>
     <input class="fc" type="number" id="ep-pc" min="1" value="${p.pz_cartone}"></div>
+  <div class="fg"><label>Scorta Minima (magazzino)</label>
+    <input class="fc" type="number" id="ep-sm" min="0" value="${mg?mg.scorta_minima||0:0}"></div>
   <button class="btn btn-ok" onclick="salvaModificaProdotto('${codEsc}')">✅ Salva Modifiche</button>
   <button class="btn btn-x" onclick="eliminaProdotto('${codEsc}')">🗑 Elimina Prodotto</button>
   <button class="btn btn-s" onclick="closeMO()">Chiudi</button>`;
@@ -8126,8 +8297,11 @@ window.salvaModificaProdotto=function(cod){
   p.prezzo_vendita=parseFloat(document.getElementById('ep-pv').value)||0;
   p.prezzo_acquisto=parseFloat(document.getElementById('ep-pa').value)||0;
   p.pz_cartone=parseInt(document.getElementById('ep-pc').value)||1;
-  const m=DB.magazzino.find(x=>x.codice===cod);
-  if(m){m.formato=p.formato;m.marchio=p.marchio;m.miscela=p.miscela;}
+  const smEl=document.getElementById('ep-sm');
+  const sm=smEl?Math.max(0,parseInt(smEl.value)||0):null;
+  let m=DB.magazzino.find(x=>x.codice===cod);
+  if(!m&&sm>0){m={codice:cod,formato:p.formato,marchio:p.marchio,miscela:p.miscela,carico:0,scarico:0,rettifica:0,giacenza:0,scorta_minima:0};DB.magazzino.push(m);}
+  if(m){m.formato=p.formato;m.marchio=p.marchio;m.miscela=p.miscela;if(sm!==null)m.scorta_minima=sm;}
   saveDB();closeMO();toast('Prodotto aggiornato! I prezzi si applicano ai nuovi ordini.');go('listino');
 };
 
