@@ -7526,6 +7526,20 @@ function modificaProdAbit(id){
 
 // ── CASSA ───────────────────────────────────────────────────────────
 function isContantiMetodo(m){return !m||String(m).trim().toLowerCase()==='contanti';}
+const MESI_IT=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+// Entrate e uscite di un mese (mese 0-11). Le rettifiche di cassa non sono né incassi né spese e restano escluse.
+function totaliMeseCassa(anno,mese,soloGiorno){
+  let e=0,u=0;
+  DB.cassa.forEach(r=>{
+    if(r.tipo==='Rettifica')return;
+    const ts=parseDataIt(r.data);if(!ts)return;
+    const d=new Date(ts);
+    if(d.getFullYear()!==anno||d.getMonth()!==mese)return;
+    if(soloGiorno&&ts!==soloGiorno)return;
+    e+=r.entrata||0;u+=r.uscita||0;
+  });
+  return{entrate:Math.round(e*100)/100,uscite:Math.round(u*100)/100};
+}
 function saldoCassa(){
   // Il saldo cassa rappresenta il contante fisico: bonifico e POS non passano dalla cassa,
   // quindi non entrano in questo totale (restano comunque visibili come movimenti nello storico).
@@ -7552,11 +7566,13 @@ function metodoCassaLabel(m){
 let cassaMetFiltro='tutti';
 function pgCassa(el){
   const sc=saldoCassa();
-  const te=DB.cassa.reduce((s,r)=>s+(r.entrata||0),0);
-  const tu=DB.cassa.reduce((s,r)=>s+(r.uscita||0),0);
   const ogMs=parseDataIt(oggi());
-  const eo=DB.cassa.filter(r=>parseDataIt(r.data)===ogMs).reduce((s,r)=>s+(r.entrata||0),0);
-  const uo=DB.cassa.filter(r=>parseDataIt(r.data)===ogMs).reduce((s,r)=>s+(r.uscita||0),0);
+  const adesso=new Date(ogMs||Date.now());
+  const aA=adesso.getFullYear(),mA=adesso.getMonth();
+  const dP=new Date(aA,mA-1,1),aP=dP.getFullYear(),mP=dP.getMonth();
+  const tA=totaliMeseCassa(aA,mA),tP=totaliMeseCassa(aP,mP);
+  const oggiM=totaliMeseCassa(aA,mA,ogMs),eo=oggiM.entrate,uo=oggiM.uscite;
+  const nomeMese=(a,m)=>MESI_IT[m]+(a!==aA?' '+a:'');
   cassaMetFiltro='tutti';
   const chips=[['tutti','Tutti'],['contanti','💵 Contanti'],['bonifico','🏦 Bonifico'],['pos','💳 POS']];
   let h=`<div class="kg">
@@ -7566,16 +7582,27 @@ function pgCassa(el){
       <span class="sub">Saldo iniziale: €${f(DB.saldo_iniziale)}</span>
     </div>
     <div class="kpi gn">
-      <span class="lbl">↑ Entrate tot.</span>
-      <span class="val">€${f(te)}</span>
+      <span class="lbl">↑ Entrate ${nomeMese(aP,mP)}</span>
+      <span class="val">€${f(tP.entrate)}</span>
+      <span class="sub">mese precedente</span>
+    </div>
+    <div class="kpi gn">
+      <span class="lbl">↑ Entrate ${nomeMese(aA,mA)}</span>
+      <span class="val">€${f(tA.entrate)}</span>
       <span class="sub">+€${f(eo)} oggi</span>
     </div>
     <div class="kpi rd">
-      <span class="lbl">↓ Uscite tot.</span>
-      <span class="val">€${f(tu)}</span>
+      <span class="lbl">↓ Uscite ${nomeMese(aP,mP)}</span>
+      <span class="val">€${f(tP.uscite)}</span>
+      <span class="sub">mese precedente</span>
+    </div>
+    <div class="kpi rd">
+      <span class="lbl">↓ Uscite ${nomeMese(aA,mA)}</span>
+      <span class="val">€${f(tA.uscite)}</span>
       <span class="sub">-€${f(uo)} oggi</span>
     </div>
   </div>
+  <div style="font-size:11px;color:#999;margin:-4px 2px 10px">Totali mensili di tutti i metodi di pagamento; le rettifiche di cassa non sono incluse.</div>
   <div style="display:flex;gap:8px;margin-bottom:10px">
     <button class="btn btn-ok btn-sm" style="flex:1" onclick="moEntrata()">↑ Entrata</button>
     <button class="btn btn-x btn-sm" style="flex:1" onclick="moUscita()">↓ Spesa</button>
